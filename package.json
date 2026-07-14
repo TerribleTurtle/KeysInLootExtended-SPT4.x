@@ -6,5 +6,9 @@
     "author": "TerribleTurtle",
     "sptVersion": "~4.0.0",
     "akiVersion": "~4.0.0",
+    "scripts": {
+        "compile": "tsc",
+        "build": "tsc && node build.mjs"
+    },
     "dependencies": {}
 }
