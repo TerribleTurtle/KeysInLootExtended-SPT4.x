@@ -1,22 +1,69 @@
 {
-	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value to this value.
-	// default key weights in jackets are like 300-1500 (in SPT 3.8.X, it's last time I checked weights)
-	// set keyWeight to 0 to disable adding keys to loot
-	// higher value = more likely item will spawn
-	"keyWeight": 500,
+	// -----------------------------------------------------------------------------
+	// LOOT WEIGHT SYSTEM (How likely a key is to spawn)
+	// -----------------------------------------------------------------------------
+	// Think of loot weights like lottery tickets in a hat. A standard Jacket has about 200,000 tickets total.
+	// If you give a key 500 weight, you are putting 500 tickets in the hat.
+	//
+	// Vanilla Weight References (Use these as a guide!):
+	// - Very Common (10k - 15k) : e.g., Naliv tech key, Machinery key
+	// - Common (2k - 3k)        : e.g., OLI Storeroom, Dorm 206
+	// - Uncommon (500 - 1k)     : e.g., Danexert key, KIBA Outer
+	// - Rare (100 - 300)        : e.g., Weapon Testing, Marked Room keys
+	// 
+	// ⚠️ WARNING ON GLOBAL WEIGHTS (RARITY FLATTENING) ⚠️
+	// If you set a global weight of 500 for ALL 200+ keys, you are adding 100,000 new tickets to the hat.
+	// This severely dilutes regular loot (like junk and meds) AND flattens key rarity, meaning a Red Keycard 
+	// will spawn just as often as a common dorm key. We highly recommend using the rarity-based config below!
+	// 
+	// DO NOT use decimals or numbers over 1,000,000 (32-bit integer limits).
 	
-	// set keycardWeight to 0 disable adding keycards to loot
-	"keycardWeight": 50,
+	// =============================================================================
+	// EXPERIENCE PROFILES
+	// =============================================================================
+	// You can easily change the entire vibe of the mod by selecting a profile below.
+	// 
+	// 🟢 "Vanilla Plus"          : (Balanced default. Roughly 1 key every 4 jackets)
+	// 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 16 jackets)
+	// 🟡 "The Original Experience": (Mod classic. Flattens rarity, averages 1 key per jacket)
+	// 🟣 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket)
+	// ⚪ "Custom"                : (Uses the manual variable settings defined below)
+	// ❌ "Disabled"              : (Completely bypasses the mod and leaves game 100% vanilla)
+	
+	"activeProfile": "Vanilla Plus",
 
-	// since now finding 3 mil keys is actually a lot easier, this will reduce key sell prices a bit. set both to 1 to not change anything.
-	"keyFleaPricesMultiplier" : 0.75,
-	"keyTraderPricesMultiplier": 0.75,
+	// =============================================================================
+	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "Custom")
+	// =============================================================================
+
+	// Global weights for keys based on their natural rarity
+	// set to 0 to disable adding them to the loot pool
+	// higher value = more likely item will spawn
+	"keyWeight": {
+		"notExist": 200,
+		"common": 200,
+		"rare": 100,
+		"superRare": 40
+	},
+	
+	// Global weights for keycards based on their natural rarity
+	"keycardWeight": {
+		"notExist": 60,
+		"common": 60,
+		"rare": 30,
+		"superRare": 15
+	},
+
+	// Since finding 3-mil keys is now a lot easier, this reduces key sell prices a bit. Set both to 1 to not change anything.
+	"keyFleaPricesMultiplier" : 0.4,
+	"keyTraderPricesMultiplier": 0.4,
 
 	"overrideLootDistribution": true,
 	/*
-	stuff below REPLACES the default loot distribution in jackets, duffle bags and dead scavs. If you want to keep the default loot distribution, set this to false.
-	how it works: the higher the relative probability, the more likely it is that this count will be chosen. The count is the number of items in the container. ALL items, not just keys.
-	example: if you set jacket loot to 
+	WARNING: The stuff below strictly DELETES the vanilla game's table and completely REPLACES it. 
+	Do not use decimal numbers here or the server will crash on map load.
+	How it works: The higher the relative probability, the more likely it is that this count will be chosen. The count is the number of items in the container. ALL items, not just keys.
+	Example: if you set jacket loot to 
 		"overRideLootDistributionJackets": [
 			{
 				"count": 2,
@@ -152,11 +199,14 @@
 		}
 	],
 
-	// Override jacket container size. Default 2x2
+	// Override jacket container size. Vanilla default is 2x2.
 	"cellsH": 3,
 	"cellsV": 3,
-    // When enabled overrides minimum weights for keys and keycards with a per location config file instead of global
-    // weights "keyWeight" and "keycardWeight" in this config file. Edit the config files in the locations folder to change values
-    // while this is enabled.
+	
+	// -----------------------------------------------------------------------------
+	// LOCATION-BASED (PER-MAP) CONFIGURATION
+	// -----------------------------------------------------------------------------
+	// Set this to true if you want to override the global weights and use the specific per-map 
+	// config files found in the 'locations' folder instead.
     "enableLocationsConfig" : false
 }

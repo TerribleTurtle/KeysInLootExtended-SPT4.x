@@ -1,5 +1,5 @@
 {
-    "name": "MusicManiac-KeysInLoot",
+    "name": "TerribleTurtle-KeysInLootExtended",
     "version": "1.7.0",
     "loadBefore": [],
     "loadAfter": [],
@@ -7,8 +7,8 @@
     "isBundleMod": false,
     "main": "src/mod.js",
     "license": "MIT",
-    "author": "MusicManiac",
-    "sptVersion": "3.11.x",
+    "author": "TerribleTurtle (Original by MusicManiac)",
+    "sptVersion": "~4.0.0",
     "scripts": {
         "setup": "npm i",
         "build": "node ./packageBuild.ts",

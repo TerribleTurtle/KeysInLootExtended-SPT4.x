@@ -1,5 +1,83 @@
-# 3.11.3 Keys
-Here are some information about keys in SPT 3.11.3
+# TerribleTurtle - Keys In Loot Extended
+[GitHub Repository](https://github.com/TerribleTurtle/KeysInLootExtended)
+
+> **Based on the original "Keys In Loot" mod by MusicManiac**
+
+This mod allows every single key in Escape from Tarkov to spawn inside standard loot containers (like Jackets and Duffle Bags) instead of being locked exclusively behind bosses and specific map spawns.
+
+## Features
+
+- **Dynamic Loot Adjustment:** Automatically hooks into SPT's database to find all current keys and keycards (including new ones added in recent updates).
+- **Customizable Spawn Weights:** Increases the chance of keys spawning in Jackets, Duffle Bags, and on Dead Scavs based on their rarity (Common, Rare, Superrare, etc.).
+- **Container Overrides:** Modifies the internal probability distributions so that containers are much more likely to spawn multiple items, rather than being empty. 
+- **Expanded Jackets:** Automatically expands the internal size of Jackets (defaulting to 3x3 grid) to mathematically support the increased number of items that can spawn inside them.
+- **Economy Rebalance:** Because keys are now much easier to find, the mod automatically reduces their Flea Market and Trader sell prices (default: 60% reduction) to prevent players from ruining their economy and getting rich too quickly.
+- **Per-Map Configuration:** Allows tweaking spawn weights globally or fine-tuning them on a map-by-map basis using the `locations/` config files.
+
+## Configuration
+
+All global settings can be tweaked in the `config.jsonc` file located in the mod folder:
+
+- `keyWeight` & `keycardWeight`: The target spawn probability weight for keys and keycards.
+- `keyFleaPricesMultiplier` & `keyTraderPricesMultiplier`: Multipliers to adjust the sell price of keys. Set to `1.0` to disable the price nerf.
+- `overRideLootDistributionJackets`: The probability matrix defining how many total items spawn in a jacket. If you feel jackets are still too dense or not dense enough, you can scroll down in the config to the `overRideLootDistributionJackets` array and tweak the probabilities yourself!
+- `cellsH` & `cellsV`: The physical grid size of jacket containers (default is 3x3).
+
+## ⚖️ Understanding Loot Weights & Rarity
+
+Keys In Loot allows you to inject missing keys into the loot pool, but tuning their spawn chances can be tricky. Here is how SPT's underlying math works, decoded for your convenience.
+
+### The "Lottery Ticket" System
+SPT loot generation uses a system called `relativeProbability`. Imagine every loot container (like a Jacket) is a hat filled with lottery tickets. A standard Jacket on Customs contains roughly **200,000 tickets** representing all possible items that can spawn there.
+- Common junk (like matches or bolts) might have ~5,000 tickets.
+- An ultra-rare key might only have ~100 tickets.
+
+When you inject keys using this mod's config, you are adding *new tickets* to the hat.
+
+### 🎮 Experience Profiles
+
+You can completely change the "vibe" of the mod just by changing the `"activeProfile"` setting at the very top of `config.jsonc`. 
+
+Valid options include:
+
+*   🟢 **`"Vanilla Plus"` (Balanced):** The default configuration. Corrects the math so that common keys are found somewhat regularly, while rare keys remain appropriately scarce. Averages roughly 1 key per 4 jackets.
+*   🔴 **`"Hardcore Scarcity"`:** Drastically reduces global key weights and disables jacket density overrides. Averages roughly 1 key per 16 jackets.
+*   🟡 **`"The Original Experience"`:** Restores the mod's original "flat" distribution. Gives common and ultra-rare keys the exact same spawn chance. Averages roughly 1 key per jacket.
+*   🟣 **`"The Loot Piñata"`:** Pure chaos. Heavily suppresses common keys and violently inflates ultra-rare keys. Averages 2-8 high-tier keys per jacket.
+*   ❌ **`"Disabled"`:** Completely skips all logic. Leaves loot tables, prices, and jacket sizes 100% vanilla.
+
+If you want to manually tweak the individual variables, simply set `"activeProfile": "Custom"`. This will tell the mod to ignore the built-in presets and instead use the exact variables defined in your config file.
+
+### Vanilla Key Reference Values
+If you want your injected keys to feel authentic to the vanilla game, use these target weights:
+
+| Rarity Level | Vanilla Weight | Key Examples | Keycard Examples |
+|---|---|---|---|
+| **Very Common** | 10k - 15k | Machinery Key, Naliv tech key | N/A |
+| **Common** | 2k - 3k | Dorm 206, OLI Storeroom key | N/A |
+| **Uncommon** | 500 - 1k | KIBA Outer, Danexert key | Labs Access Keycard |
+| **Rare** | 100 - 300 | Marked Room keys, Weapon Testing | Blue / Green Keycards |
+| **Super Rare** | 10 - 50 | (Extremely rare quest keys) | Red Keycard |
+
+### ⚠️ The Danger of Flat Weights (Rarity Flattening)
+If you set the global weight config to use the same flat number for everything (e.g., setting everything to `500`), you are giving **every single missing key** exactly 500 tickets. 
+This means a super rare Red Keycard and a common Dorms 206 key will both have exactly 500 tickets in the hat, completely destroying the concept of rarity in Tarkov. Always use a tiered approach!
+
+## ⚠️ Troubleshooting & Engine Limitations
+
+**DO NOT set probabilities to absurdly high numbers!**
+Because the SPT game engine adds up all the weights in a container to calculate the total pool size, it is bound by the standard 32-bit integer limit. 
+If the total sum of all weights in a container exceeds `2,147,483,647`, it will trigger an **integer overflow** in the game engine. This will completely break the loot generator, cause the server console to spam red errors, and containers will spawn completely empty. Keep your weights reasonable (e.g. `500` to `5000`).
+
+**No Decimals Allowed!**
+Do not use decimal numbers (e.g., `0.5`) in the `itemcountDistribution` configurations. The game engine expects strict integers, and using decimals will immediately crash the server when you attempt to load a map.
+
+*(Note: The list below is an older reference of keys from SPT 3.11.3, but the mod dynamically pulls all current keys regardless of this list).*
+
+---
+
+# 3.11.3 Keys Reference
+Here is some information about keys in SPT 3.11.3
 
 ## RarityPvE: "Not_exist"
 Count = 31
@@ -79,8 +157,9 @@ Count = 42
 - [39]: "RB-RH key"
 - [40]: "Supply department director's office key"
 - [41]: "Stair landing key"
-- arityPvE: "Rare"
-- t = 68
+
+## RarityPvE: "Rare"
+Count = 68
 - [0]: "Factory emergency exit key"
 - [1]: "Dorm room 214 key"
 - [2]: "Dorm room 220 key"
@@ -149,6 +228,7 @@ Count = 42
 - [65]: "Concordia apartment 8 room key"
 - [66]: "Primorsky 48 apartment key"
 - [67]: "Financial institution small office key"
+
 ## RarityPvE: "Superrare"
 Count = 74
 - [0]: "Dorm room 314 marked key"

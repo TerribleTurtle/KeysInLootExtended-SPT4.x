@@ -48,7 +48,62 @@ export class ConfigLoader
 
     public async loadCoreConfig() : Promise<IKeysInLootCoreConfig>
     {
-        return this.loadConfig<IKeysInLootCoreConfig>("../config.jsonc");
+        const config = await this.loadConfig<IKeysInLootCoreConfig>("../config.jsonc");
+        
+        // Strict schema check for backward compatibility to prevent server crash
+        if (!config.keyWeight || typeof config.keyWeight !== "object" || !config.keycardWeight || typeof config.keycardWeight !== "object") {
+            throw new Error("[KeysInLootExtended] FATAL: Your config.jsonc is outdated. 'keyWeight' and 'keycardWeight' must now be rarity objects, not flat numbers. Please update your config.jsonc to the latest version!");
+        }
+
+        // Apply profile overrides
+        switch (config.activeProfile) {
+            case "Vanilla Plus":
+                config.keyWeight = { notExist: 200, common: 200, rare: 100, superRare: 40 };
+                config.keycardWeight = { notExist: 60, common: 60, rare: 30, superRare: 15 };
+                config.overrideLootDistribution = true;
+                config.keyFleaPricesMultiplier = 0.4;
+                config.keyTraderPricesMultiplier = 0.4;
+                config.cellsH = 3;
+                config.cellsV = 3;
+                break;
+            case "Hardcore Scarcity":
+                config.keyWeight = { notExist: 60, common: 60, rare: 30, superRare: 15 };
+                config.keycardWeight = { notExist: 15, common: 15, rare: 8, superRare: 4 };
+                config.overrideLootDistribution = false;
+                config.keyFleaPricesMultiplier = 1.0;
+                config.keyTraderPricesMultiplier = 1.0;
+                config.cellsH = 3;
+                config.cellsV = 3;
+                break;
+            case "The Original Experience":
+                config.keyWeight = { notExist: 500, common: 500, rare: 500, superRare: 500 };
+                config.keycardWeight = { notExist: 200, common: 200, rare: 200, superRare: 200 };
+                config.overrideLootDistribution = true;
+                config.keyFleaPricesMultiplier = 0.4;
+                config.keyTraderPricesMultiplier = 0.4;
+                config.cellsH = 3;
+                config.cellsV = 3;
+                break;
+            case "The Loot Piñata":
+                config.keyWeight = { notExist: 10, common: 10, rare: 5000, superRare: 10000 };
+                config.keycardWeight = { notExist: 10, common: 10, rare: 1000, superRare: 5000 };
+                config.overrideLootDistribution = true;
+                config.keyFleaPricesMultiplier = 0.1;
+                config.keyTraderPricesMultiplier = 0.1;
+                config.cellsH = 5;
+                config.cellsV = 5;
+                break;
+            case "Disabled":
+                break;
+            case "Custom":
+                break;
+            default:
+                console.warn(`[KeysInLootExtended] WARNING: Unknown profile '${config.activeProfile}' selected. Defaulting to 'Custom' settings.`);
+                config.activeProfile = "Custom";
+                break;
+        }
+        
+        return config;
     }
 
     public async loadLocationConfig(location: LocationsEnum) : Promise<IKeysInLootLocationConfig>
@@ -101,11 +156,11 @@ export class ConfigLoader
     /// <summary>
     /// Creates a default location configuration with the global weights for keys and keycards.
     /// </summary>
-    private static createDefaultLocationConfig(keyWeight: number, keycardWeight: number): IKeysInLootLocationConfig 
+    private static createDefaultLocationConfig(keyWeight: IKeysInLootRarityConfig, keycardWeight: IKeysInLootRarityConfig): IKeysInLootLocationConfig 
     {
         const containerConfig = { 
-            key: { notExist: keyWeight, common: keyWeight, rare: keyWeight, superRare: keyWeight }, 
-            keycard: { notExist: keyWeight, common: keycardWeight, rare: keycardWeight, superRare: keycardWeight } 
+            key: keyWeight, 
+            keycard: keycardWeight 
         };
         return {
             jacketContainer: containerConfig,

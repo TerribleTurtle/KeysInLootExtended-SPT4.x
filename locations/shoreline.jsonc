@@ -1,3 +1,10 @@
+/*
+  LOCATION CONFIGURATION (Advanced Map-Specific Spawn Overrides)
+  - 'notExist', 'common', 'rare', 'superRare' map to the item's internal RarityPvE tag.
+  - The numbers act as the 'relativeProbability' spawn weight.
+  - WARNING: Do not use decimals. Do not use absurdly large numbers. The maximum safe sum of all items in a pool is 2,147,483,647 (32-bit integer limit). If exceeded, loot generation breaks.
+  - This file is ONLY loaded if 'enableLocationsConfig' is set to true in the global config.jsonc.
+*/
 {
     "jacketContainer": {
         // SPT 3.11.3

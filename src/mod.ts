@@ -19,8 +19,8 @@ class KeysInLoot implements IPostDBLoadMod
 
     constructor() 
     {
-        this.mod = "MusicManiac-KeysInLoot";
-        this.modShortName = "KeysInLoot";
+        this.mod = "TerribleTurtle-KeysInLootExtended";
+        this.modShortName = "KeysInLootExtended";
     }
 
     public async postDBLoad(container: DependencyContainer): Promise<void>
@@ -40,6 +40,18 @@ class KeysInLoot implements IPostDBLoadMod
 
         // Load data
         const config = await configLoader.loadCoreConfig();
+        
+        if (config.activeProfile === "Disabled") {
+            logger.info(`[${this.modShortName}] Profile is Disabled. Skipping all modifications.`);
+            return;
+        }
+
+        logger.info(`[${this.modShortName}] Active Profile Loaded: ${config.activeProfile}`);
+        logger.info(`[${this.modShortName}] Global Key Weights: {notExist: ${config.keyWeight.notExist}, common: ${config.keyWeight.common}, rare: ${config.keyWeight.rare}, superRare: ${config.keyWeight.superRare}}`);
+        logger.info(`[${this.modShortName}] Global Keycard Weights: {notExist: ${config.keycardWeight.notExist}, common: ${config.keycardWeight.common}, rare: ${config.keycardWeight.rare}, superRare: ${config.keycardWeight.superRare}}`);
+        logger.info(`[${this.modShortName}] Jacket Density Override: ${config.overrideLootDistribution}`);
+        logger.info(`[${this.modShortName}] Jacket Grid Size: ${config.cellsH}x${config.cellsV}`);
+        
         const tables = db.getTables();
         const sptLocations = [
             tables.locations.bigmap, 
@@ -90,8 +102,8 @@ class KeysInLoot implements IPostDBLoadMod
             console.error(`[${this.modShortName}] Error while processing prices: ${err}`);
         }
 
-        logger.info(`[${this.modShortName}] ${totalResult.adjustedWeights.length} keys weights were adjusted`);
-        logger.info(`[${this.modShortName}] different keys were added ${totalResult.addedWeights.length} times to jacket/duffle/dead scav loot`);
+        logger.info(`[${this.modShortName}] Successfully injected ${totalResult.addedWeights.length} keys across 12 locations!`);
+        logger.info(`[${this.modShortName}] Flea & Trader prices adjusted by a ${config.keyFleaPricesMultiplier}x multiplier.`);
 
         // Adjust jacket cell size
         const itemDB = tables.templates.items;

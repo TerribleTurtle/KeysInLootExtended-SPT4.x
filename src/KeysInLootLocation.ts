@@ -25,21 +25,30 @@ export class KeysInLootLocation
         if (jacketContainer)
         {
             const jacketResult = jacketContainer.modifyItemDistribution();
-            jacketContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionJackets);
+            if (this.coreConfig.overrideLootDistribution)
+            {
+                jacketContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionJackets);
+            }
             result.addResult(jacketResult);
         }
         const duffleBagContainer = this.getDuffleBagContainer();
         if (duffleBagContainer)
         {
             const duffleBagResult = duffleBagContainer.modifyItemDistribution();
-            duffleBagContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionDuffleBags);
+            if (this.coreConfig.overrideLootDistribution)
+            {
+                duffleBagContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionDuffleBags);
+            }
             result.addResult(duffleBagResult);
         }
         const deadScavContainer = this.getDeadScavContainer();
         if (deadScavContainer)
         {
             const deadScavResult = deadScavContainer.modifyItemDistribution();
-            deadScavContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionDeadScavs);
+            if (this.coreConfig.overrideLootDistribution)
+            {
+                deadScavContainer.modifyItemCountDistribution(this.coreConfig.overRideLootDistributionDeadScavs);
+            }
             result.addResult(deadScavResult);
         }
         

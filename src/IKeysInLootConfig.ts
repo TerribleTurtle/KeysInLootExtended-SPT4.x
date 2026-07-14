@@ -2,8 +2,9 @@ import { ItemCountDistribution } from "@spt/models/eft/common/ILocation";
 
 export interface IKeysInLootCoreConfig
 {
-    keyWeight: number;
-    keycardWeight: number;
+    activeProfile: string;
+    keyWeight: IKeysInLootRarityConfig;
+    keycardWeight: IKeysInLootRarityConfig;
     keyTraderPricesMultiplier: number;
     keyFleaPricesMultiplier: number;
     overrideLootDistribution: boolean;
