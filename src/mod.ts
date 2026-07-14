@@ -1,3 +1,4 @@
+console.log("HELLO FROM KEYSINLOOTEXTENDED! If you see this, the mod is being loaded.");
 import { DependencyContainer } from "tsyringe";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
