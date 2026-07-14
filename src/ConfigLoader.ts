@@ -1,6 +1,6 @@
 import { FileSystem } from "@spt/utils/FileSystem";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { IKeysInLootCoreConfig, IKeysInLootLocationConfig } from "./IKeysInLootConfig";
+import { IKeysInLootCoreConfig, IKeysInLootLocationConfig, IKeysInLootRarityConfig } from "./IKeysInLootConfig";
 import path from "path";
 import { ILocation } from "@spt/models/eft/common/ILocation";
 

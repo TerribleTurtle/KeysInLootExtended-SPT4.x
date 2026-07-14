@@ -116,7 +116,7 @@ async function main() {
         // Create a zip archive of the project files.
         logger.log("info", "Beginning folder compression...");
         const zipFilePath = path.join(path.dirname(projectDir), `${projectName}.zip`);
-        await createZipFile(projectDir, zipFilePath, "SPT/user/mods/zz" + packageJson.name);
+        await createZipFile(projectDir, zipFilePath, "SPT/user/mods/" + packageJson.name);
         logger.log("success", "Archive successfully created.");
         logger.log("info", zipFilePath);
 
