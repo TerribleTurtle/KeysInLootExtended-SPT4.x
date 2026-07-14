@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+console.log("HELLO FROM KEYSINLOOTEXTENDED! If you see this, the mod is being loaded.");
 const ItemPriceService_1 = require("./ItemPriceService");
 const ContainerItemDistributionService_1 = require("./ContainerItemDistributionService");
 const KeysInLootModificationResult_1 = require("./KeysInLootModificationResult");
