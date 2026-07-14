@@ -1,14 +1,10 @@
 {
     "name": "KeysInLootExtended",
-    "version": "1.7.0",
-    "loadBefore": [],
-    "loadAfter": [],
-    "incompatibilities": [],
-    "isBundleMod": false,
+    "version": "1.7.1",
     "main": "src/mod.js",
     "license": "MIT",
-    "author": "TerribleTurtle (Original by MusicManiac)",
-    "sptVersion": "~4.0.0",
+    "author": "TerribleTurtle",
+    "sptVersion": ">=4.0.0",
     "scripts": {
         "setup": "npm i",
         "build": "node ./packageBuild.ts",
