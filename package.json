@@ -1,8 +1,8 @@
 {
     "name": "KeysInLootExtended",
-    "version": "1.7.2",
+    "version": "1.7.3",
     "main": "src/mod.js",
     "license": "MIT",
     "author": "TerribleTurtle",
-    "sptVersion": ">=4.0.0"
+    "sptVersion": "~4.0.0"
 }
