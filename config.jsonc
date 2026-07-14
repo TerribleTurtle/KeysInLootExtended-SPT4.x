@@ -6,10 +6,10 @@
 	// If you give a key 500 weight, you are putting 500 tickets in the hat.
 	//
 	// Vanilla Weight References (Use these as a guide!):
-	// - Very Common (10k - 15k) : e.g., Naliv tech key, Machinery key
-	// - Common (2k - 3k)        : e.g., OLI Storeroom, Dorm 206
-	// - Uncommon (500 - 1k)     : e.g., Danexert key, KIBA Outer
-	// - Rare (100 - 300)        : e.g., Weapon Testing, Marked Room keys
+	// - "notExist"  (Very Common): 10,000 - 15,000 (e.g., Machinery key, Naliv tech key)
+	// - "common"    (Common)     : 2,000 - 3,000   (e.g., OLI Storeroom, Dorm 206)
+	// - "rare"      (Rare)       : 500 - 1,000     (e.g., Danexert key, Weapon Testing)
+	// - "superRare" (Ultra Rare) : 10 - 50         (e.g., Marked Room keys, Red Keycard)
 	// 
 	// ⚠️ WARNING ON GLOBAL WEIGHTS (RARITY FLATTENING) ⚠️
 	// If you set a global weight of 500 for ALL 200+ keys, you are adding 100,000 new tickets to the hat.

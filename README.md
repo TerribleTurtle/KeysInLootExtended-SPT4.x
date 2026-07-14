@@ -51,13 +51,12 @@ If you want to manually tweak the individual variables, simply set `"activeProfi
 ### Vanilla Key Reference Values
 If you want your injected keys to feel authentic to the vanilla game, use these target weights:
 
-| Rarity Level | Vanilla Weight | Key Examples | Keycard Examples |
-|---|---|---|---|
-| **Very Common** | 10k - 15k | Machinery Key, Naliv tech key | N/A |
-| **Common** | 2k - 3k | Dorm 206, OLI Storeroom key | N/A |
-| **Uncommon** | 500 - 1k | KIBA Outer, Danexert key | Labs Access Keycard |
-| **Rare** | 100 - 300 | Marked Room keys, Weapon Testing | Blue / Green Keycards |
-| **Super Rare** | 10 - 50 | (Extremely rare quest keys) | Red Keycard |
+| JSON Property | Rarity Level | Vanilla Weight | Key Examples | Keycard Examples |
+|---|---|---|---|---|
+| **`notExist`** | Very Common | 10k - 15k | Machinery Key, Naliv tech key | N/A |
+| **`common`** | Common | 2k - 3k | Dorm 206, OLI Storeroom key | N/A |
+| **`rare`** | Rare | 500 - 1k | KIBA Outer, Danexert key | Labs Access Keycard |
+| **`superRare`** | Ultra Rare | 10 - 50 | (Extremely rare quest keys) | All Colored Labs Keycards |
 
 ### ⚠️ The Danger of Flat Weights (Rarity Flattening)
 If you set the global weight config to use the same flat number for everything (e.g., setting everything to `500`), you are giving **every single missing key** exactly 500 tickets. 
@@ -305,3 +304,23 @@ Count = 74
 - [71]: "Tarkov City souvenir key"
 - [72]: "Old house room key"
 - [73]: "Company director's room key"
+
+---
+
+# 3.11.3 Keycards Reference
+Here is the baseline rarity data for Keycards in SPT 3.11.3
+
+## RarityPvE: "Rare"
+Count = 1
+- [0]: "TerraGroup Labs access keycard"
+
+## RarityPvE: "Superrare"
+Count = 8
+- [0]: "TerraGroup Labs keycard (Blue)"
+- [1]: "TerraGroup Labs keycard (Green)"
+- [2]: "TerraGroup Labs keycard (Red)"
+- [3]: "TerraGroup Labs keycard (Violet)"
+- [4]: "TerraGroup Labs keycard (Yellow)"
+- [5]: "TerraGroup Labs keycard (Black)"
+- [6]: "#11SR secret room keycard"
+- [7]: "#21WS space restriction safe keycard"
