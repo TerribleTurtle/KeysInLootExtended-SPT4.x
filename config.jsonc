@@ -54,31 +54,50 @@
 		"superRare": 15
 	},
 
-	// Since finding 3-mil keys is now a lot easier, this reduces key sell prices a bit. Set both to 1 to not change anything.
+	// -----------------------------------------------------------------------------
+	// ECONOMY REBALANCE (Key Sell Prices)
+	// -----------------------------------------------------------------------------
+	// Because this mod injects highly valuable keys into common containers, it can easily 
+	// ruin the player economy. These multipliers automatically adjust the SELL price of all keys.
+	// 
+	// How to use:
+	// - 1.0 = 100% (Vanilla prices. Keys sell for full value)
+	// - 0.4 = 40% (Default. A key that normally sells for 1,000,000 will now sell for 400,000)
+	// - 0.0 = 0% (Keys become completely worthless and sell for 0 roubles)
+	// 
+	// Limits:
+	// - Minimum: 0.0
+	// - Maximum: None, but anything above 1.0 will artificially inflate key prices.
 	"keyFleaPricesMultiplier" : 0.4,
 	"keyTraderPricesMultiplier": 0.4,
 
+	// -----------------------------------------------------------------------------
+	// CONTAINER DENSITY (Total Items Per Container)
+	// -----------------------------------------------------------------------------
+	// Set to true to override the game's default loot density (how many items spawn in a container).
+	// Set to false to keep vanilla density (highly recommended if you want a hardcore/scarce experience).
 	"overrideLootDistribution": true,
+	
 	/*
-	WARNING: The stuff below strictly DELETES the vanilla game's table and completely REPLACES it. 
-	Do not use decimal numbers here or the server will crash on map load.
-	How it works: The higher the relative probability, the more likely it is that this count will be chosen. The count is the number of items in the container. ALL items, not just keys.
-	Example: if you set jacket loot to 
-		"overRideLootDistributionJackets": [
-			{
-				"count": 2,
-				"relativeProbability": 800
-			},
-			{
-				"count": 1,
-				"relativeProbability": 150
-			},
-			{
-				"count": 0,
-				"relativeProbability": 50
-			}
-		],
-	then there is a 800/1000 chance to get 2 items, a 150/1000 chance to get 1 item and a 50/1000 chance to get 0 items.
+	HOW DENSITY TABLES WORK:
+	The tables below completely DELETE and REPLACE the vanilla game's item count probabilities for Jackets, Duffles, and Scavs. 
+	
+	The "count" is the TOTAL number of items (keys, meds, junk, etc.) that will spawn in the container.
+	The "relativeProbability" is the chance of that count being chosen, calculated against the sum of all probabilities.
+	
+	Example:
+	[ { "count": 2, "relativeProbability": 800 },
+	  { "count": 1, "relativeProbability": 150 },
+	  { "count": 0, "relativeProbability": 50 } ]
+	  
+	In this example, the total sum is 1000. 
+	- 800/1000 (80%) chance to spawn exactly 2 items.
+	- 150/1000 (15%) chance to spawn exactly 1 item.
+	- 50/1000 (5%) chance to spawn 0 items (empty container).
+	
+	Limits & Warnings:
+	- DO NOT use decimals! Decimals will immediately crash the server on map load.
+	- DO NOT exceed a total probability sum of 2,147,483,647 (32-bit limit).
 	*/
 
 	
