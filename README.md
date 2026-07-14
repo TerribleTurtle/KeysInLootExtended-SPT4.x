@@ -48,15 +48,22 @@ Valid options include:
 
 If you want to manually tweak the individual variables, simply set `"activeProfile": "Custom"`. This will tell the mod to ignore the built-in presets and instead use the exact variables defined in your config file.
 
-### Vanilla Key Reference Values
-If you want your injected keys to feel authentic to the vanilla game, use these target weights:
+### ⚠️ The Pool Inflation Problem
+In the actual vanilla game, a "Very Common" key has a raw weight of around 10,000. However, a standard vanilla jacket only has a total ticket pool of about 56,000 (mostly filled with junk items). 
 
-| JSON Property | Rarity Level | Vanilla Weight | Key Examples | Keycard Examples |
-|---|---|---|---|---|
-| **`notExist`** | Very Common | 10k - 15k | Machinery Key, Naliv tech key | N/A |
-| **`common`** | Common | 2k - 3k | Dorm 206, OLI Storeroom key | N/A |
-| **`rare`** | Rare | 500 - 1k | KIBA Outer, Danexert key | Labs Access Keycard |
-| **`superRare`** | Ultra Rare | 10 - 50 | (Extremely rare quest keys) | All Colored Labs Keycards |
+Because this mod injects over **200 missing keys** simultaneously, if we used the raw vanilla weight of 10,000 for all of them, we would instantly bloat the jacket pool to over 500,000 tickets. Keys would become 90% of the entire loot pool, completely destroying the vanilla economy (you would almost never find regular junk or meds in jackets again). 
+
+To solve this, our presets use **Scaled Target Weights**. These mathematically preserve the true rarity ratios of the keys, but shrink their footprint so they don't overpower the junk loot pool. 
+
+### Scaled Reference Values
+If you want to manually tweak the JSON variables to feel authentic to the vanilla game, use these scaled target weights:
+
+| JSON Property | Rarity Level | Scaled Injection Weight | Native Vanilla Equivalent |
+|---|---|---|---|
+| **`notExist`** | Very Common | **200 - 500** | 10k - 15k |
+| **`common`** | Common | **100 - 300** | 2k - 3k |
+| **`rare`** | Rare | **50 - 100** | 500 - 1k |
+| **`superRare`** | Ultra Rare | **10 - 40** | 10 - 50 |
 
 ### ⚠️ The Danger of Flat Weights (Rarity Flattening)
 If you set the global weight config to use the same flat number for everything (e.g., setting everything to `500`), you are giving **every single missing key** exactly 500 tickets. 

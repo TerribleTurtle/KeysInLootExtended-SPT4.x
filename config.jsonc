@@ -5,16 +5,23 @@
 	// Think of loot weights like lottery tickets in a hat. A standard Jacket has about 200,000 tickets total.
 	// If you give a key 500 weight, you are putting 500 tickets in the hat.
 	//
-	// Vanilla Weight References (Use these as a guide!):
-	// - "notExist"  (Very Common): 10,000 - 15,000 (e.g., Machinery key, Naliv tech key)
-	// - "common"    (Common)     : 2,000 - 3,000   (e.g., OLI Storeroom, Dorm 206)
-	// - "rare"      (Rare)       : 500 - 1,000     (e.g., Danexert key, Weapon Testing)
-	// - "superRare" (Ultra Rare) : 10 - 50         (e.g., Marked Room keys, Red Keycard)
+	// -----------------------------------------------------------------------------
+	// SCALED LOOT WEIGHT SYSTEM
+	// -----------------------------------------------------------------------------
+	// Because we are injecting 200+ keys at once, using the raw vanilla game weights 
+	// (which are 10,000+) would bloat the loot pool and make finding junk impossible.
+	// Instead, we highly recommend using these Scaled Target Weights, which are mathematically 
+	// the absolute closest we can get to a true vanilla experience with the mod enabled:
+	// 
+	// - "notExist"  (Very Common): 200 - 500
+	// - "common"    (Common)     : 100 - 300
+	// - "rare"      (Rare)       : 50 - 100
+	// - "superRare" (Ultra Rare) : 10 - 40
 	// 
 	// ⚠️ WARNING ON GLOBAL WEIGHTS (RARITY FLATTENING) ⚠️
-	// If you set a global weight of 500 for ALL 200+ keys, you are adding 100,000 new tickets to the hat.
+	// If you set a global weight of 500 for ALL rarities, you are adding 100,000 new tickets to the hat.
 	// This severely dilutes regular loot (like junk and meds) AND flattens key rarity, meaning a Red Keycard 
-	// will spawn just as often as a common dorm key. We highly recommend using the rarity-based config below!
+	// will spawn just as often as a common dorm key. Always use a tiered approach!
 	// 
 	// DO NOT use decimals or numbers over 1,000,000 (32-bit integer limits).
 	
