@@ -2,8 +2,13 @@
 dist
 
 # Dependency directory
-node_modules
+node_modules/
 package-lock.json
+.DS_Store
+.env
+findings.md
+progress.md
+task_plan.md
 
 # IDE
 .vs
