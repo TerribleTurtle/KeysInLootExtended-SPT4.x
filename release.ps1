@@ -10,5 +10,5 @@ if (Test-Path $zipPath) {
 }
 
 Write-Host "Creating zip archive..."
-Compress-Archive -Path ".\dist\user" -DestinationPath $zipPath -Force
+Compress-Archive -Path ".\dist\SPT" -DestinationPath $zipPath -Force
 Write-Host "Release packaged successfully to $zipPath"
