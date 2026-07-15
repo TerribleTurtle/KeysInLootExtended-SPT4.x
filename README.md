@@ -56,14 +56,6 @@ If `enableLocationsConfig` is set to `true`, the mod will read configuration fil
 
 ---
 
-## 👨‍💻 For Developers
+## 👨‍💻 For Developers & Advanced Users
 
-KeysInLootExtended 2.0.0 has been completely rewritten as a native C# (.NET 9) Server Mod to align with the SPT 4.0+ architecture. It features strict type-checking, dynamic custom map support via Reflection, and memory optimizations using `HashSet<T>` lookups.
-
-### Building from Source
-If you wish to compile the mod yourself:
-1. Ensure you have the **.NET 9 SDK** installed.
-2. Open a terminal in the mod directory and run: `dotnet build KeysInLootExtended/KeysInLootExtended.csproj`
-3. The compiled DLLs will be automatically placed in `dist/user/mods/KeysInLootExtended/`.
-
-> **Note:** For deep-dives into the mathematical weights, integer limits, or architecture changes from the original mod, please reference the `TECHNICAL_README.md` file included in the repository.
+If you are a developer looking to build the mod from source, or an advanced user interested in the underlying mathematical weights, integer limits, and the new C# architecture, please refer to the [TECHNICAL_README.md](TECHNICAL_README.md) file included in this repository.
