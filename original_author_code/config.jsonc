@@ -1,0 +1,162 @@
+{
+	// keyWeight sets missing keys weight to this weight, additionally bumping up weight of keys that already in loot table but below this value to this value.
+	// default key weights in jackets are like 300-1500 (in SPT 3.8.X, it's last time I checked weights)
+	// set keyWeight to 0 to disable adding keys to loot
+	// higher value = more likely item will spawn
+	"keyWeight": 500,
+	
+	// set keycardWeight to 0 disable adding keycards to loot
+	"keycardWeight": 50,
+
+	// since now finding 3 mil keys is actually a lot easier, this will reduce key sell prices a bit. set both to 1 to not change anything.
+	"keyFleaPricesMultiplier" : 0.75,
+	"keyTraderPricesMultiplier": 0.75,
+
+	"overrideLootDistribution": true,
+	/*
+	stuff below REPLACES the default loot distribution in jackets, duffle bags and dead scavs. If you want to keep the default loot distribution, set this to false.
+	how it works: the higher the relative probability, the more likely it is that this count will be chosen. The count is the number of items in the container. ALL items, not just keys.
+	example: if you set jacket loot to 
+		"overRideLootDistributionJackets": [
+			{
+				"count": 2,
+				"relativeProbability": 800
+			},
+			{
+				"count": 1,
+				"relativeProbability": 150
+			},
+			{
+				"count": 0,
+				"relativeProbability": 50
+			}
+		],
+	then there is a 800/1000 chance to get 2 items, a 150/1000 chance to get 1 item and a 50/1000 chance to get 0 items.
+	*/
+
+	
+	"overRideLootDistributionJackets": [
+		{
+			"count": 8,
+			"relativeProbability": 10
+		},
+		{
+			"count": 7,
+			"relativeProbability": 50
+		},
+		{
+			"count": 6,
+			"relativeProbability": 200
+		},
+		{
+			"count": 5,
+			"relativeProbability": 400
+		},
+		{
+			"count": 4,
+			"relativeProbability": 1600
+		},
+		{
+			"count": 3,
+			"relativeProbability": 3200
+		},
+		{
+			"count": 2,
+			"relativeProbability": 12800
+		},
+		{
+			"count": 1,
+			"relativeProbability": 8400
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
+		}
+	],
+
+	"overRideLootDistributionDuffleBags": [
+		{
+			"count": 8,
+			"relativeProbability": 10
+		},
+		{
+			"count": 7,
+			"relativeProbability": 50
+		},
+		{
+			"count": 6,
+			"relativeProbability": 200
+		},
+		{
+			"count": 5,
+			"relativeProbability": 400
+		},
+		{
+			"count": 4,
+			"relativeProbability": 800
+		},
+		{
+			"count": 3,
+			"relativeProbability": 1600
+		},
+		{
+			"count": 2,
+			"relativeProbability": 3200
+		},
+		{
+			"count": 1,
+			"relativeProbability": 4800
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
+		}
+	],
+
+	"overRideLootDistributionDeadScavs": [
+		{
+			"count": 8,
+			"relativeProbability": 10
+		},
+		{
+			"count": 7,
+			"relativeProbability": 50
+		},
+		{
+			"count": 6,
+			"relativeProbability": 200
+		},
+		{
+			"count": 5,
+			"relativeProbability": 400
+		},
+		{
+			"count": 4,
+			"relativeProbability": 800
+		},
+		{
+			"count": 3,
+			"relativeProbability": 3200
+		},
+		{
+			"count": 2,
+			"relativeProbability": 3200
+		},
+		{
+			"count": 1,
+			"relativeProbability": 3200
+		},
+		{
+			"count": 0,
+			"relativeProbability": 200
+		}
+	],
+
+	// Override jacket container size. Default 2x2
+	"cellsH": 3,
+	"cellsV": 3,
+    // When enabled overrides minimum weights for keys and keycards with a per location config file instead of global
+    // weights "keyWeight" and "keycardWeight" in this config file. Edit the config files in the locations folder to change values
+    // while this is enabled.
+    "enableLocationsConfig" : false
+}

@@ -13,9 +13,8 @@ public record ModMetadata : AbstractModMetadata
 {
     public override string ModGuid { get; init; } = "DJ-KeysInLootExtended";
     public override string Name { get; init; } = "KeysInLootExtended";
-    public override string Author { get; init; } = "DJ";
-    public override List<string>? Contributors { get; init; } = new() { "Nootropix" };
-    public override SemanticVersioning.Version Version { get; init; } = new("1.0.12");
+    public override string Author { get; init; } = "TerribleTurtle";
+    public override SemanticVersioning.Version Version { get; init; } = new("2.0.0");
     public override SemanticVersioning.Range SptVersion { get; init; } = new("~4.0.13");
     
     public override List<string>? Incompatibilities { get; init; }
@@ -23,6 +22,7 @@ public record ModMetadata : AbstractModMetadata
     public override string? Url { get; init; }
     public override bool? IsBundleMod { get; init; }
     public override string License { get; init; } = "MIT";
+    public override List<string>? Contributors { get; init; }
 }
 
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
