@@ -22,7 +22,7 @@ namespace KeysInLootExtended.Tests
             var createMockTemplate = (MongoId id) =>
             {
                 var template = (TemplateItem)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(TemplateItem));
-                typeof(TemplateItem).GetProperty("Id").SetValue(template, id);
+                typeof(TemplateItem).GetProperty("Id")!.SetValue(template, id);
 
                 var props = (TemplateItemProperties)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(TemplateItemProperties));
                 
@@ -32,12 +32,12 @@ namespace KeysInLootExtended.Tests
                 gridProps.CellsH = 2; // Original size
                 gridProps.CellsV = 2; // Original size
                 
-                typeof(Grid).GetProperty("Properties").SetValue(grid, gridProps);
+                typeof(Grid).GetProperty("Properties")!.SetValue(grid, gridProps);
                 
                 var grids = new List<Grid> { grid };
-                typeof(TemplateItemProperties).GetProperty("Grids").SetValue(props, grids);
+                typeof(TemplateItemProperties).GetProperty("Grids")!.SetValue(props, grids);
                 
-                typeof(TemplateItem).GetProperty("Properties").SetValue(template, props);
+                typeof(TemplateItem).GetProperty("Properties")!.SetValue(template, props);
                 
                 return template;
             };
@@ -55,10 +55,12 @@ namespace KeysInLootExtended.Tests
             // Assert
             foreach (var id in new[] { jacketId, duffleId, deadScavId })
             {
-                var gridProps = System.Linq.Enumerable.FirstOrDefault(items[id].Properties.Grids)?.Properties;
+                var grids = items[id].Properties?.Grids;
+                Assert.NotNull(grids);
+                var gridProps = System.Linq.Enumerable.FirstOrDefault(grids!)?.Properties;
                 Assert.NotNull(gridProps);
-                Assert.Equal(targetCellsH, gridProps.CellsH);
-                Assert.Equal(targetCellsV, gridProps.CellsV);
+                Assert.Equal(targetCellsH, gridProps!.CellsH);
+                Assert.Equal(targetCellsV, gridProps!.CellsV);
             }
         }
     }

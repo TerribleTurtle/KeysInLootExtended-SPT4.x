@@ -281,7 +281,7 @@ public class LootInjectionService
         ProcessItems(keycards, keycardWeights);
 
         // Clamp total weight to prevent SPT map load crashes and leave ecosystem headroom
-        long totalWeight = distDict.Values.SelectMany(x => x).Sum(x => (long)x.RelativeProbability);
+        long totalWeight = distDict.Values.SelectMany(x => x).Sum(x => (long)(x.RelativeProbability ?? 0));
         int safeCeiling = int.MaxValue / 2;
         if (totalWeight > safeCeiling)
         {
@@ -292,7 +292,7 @@ public class LootInjectionService
                 var updatedList = new List<ItemDistribution>();
                 foreach (var entry in distDict[key])
                 {
-                    var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = Math.Max(1, (int)(entry.RelativeProbability * scale)) };
+                    var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = Math.Max(1, (int)((entry.RelativeProbability ?? 0) * scale)) };
                     updatedList.Add(newEntry);
                 }
                 distDict[key] = updatedList;

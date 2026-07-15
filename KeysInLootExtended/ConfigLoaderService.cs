@@ -151,8 +151,22 @@ public class KeysInLootConfigLoader
             throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize config.jsonc to KeysInLootCoreConfig.");
         }
 
+        string profileKey = config.ActiveProfile?.Trim().ToLowerInvariant() ?? string.Empty;
+        profileKey = profileKey switch
+        {
+            "1" => "balanced",
+            "2" => "bountiful",
+            "3" => "refined",
+            "4" => "hardcore scarcity",
+            "5" => "the mod classic",
+            "6" => "the loot piñata",
+            "7" => "custom",
+            "8" => "disabled",
+            _ => profileKey
+        };
+
         // Apply profile overrides safely handling null profiles
-        if (ProfileDefinitions.TryGetValue(config.ActiveProfile ?? string.Empty, out var profileDef))
+        if (ProfileDefinitions.TryGetValue(profileKey, out var profileDef))
         {
             profileDef.ApplyCoreConfig(config);
         }
