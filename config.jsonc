@@ -31,10 +31,18 @@
 	// You can easily change the entire vibe of the mod by selecting a profile below.
 	// Profiles act as a dynamic multiplier on top of the finely-tuned map locations!
 	// 
-	// 🟢 "Balanced"              : (Default. Roughly 1 key every 4 jackets. Prices are 40%)
+	// --- Expected Outcomes per Container (Based on Simulation) ---
+	// 🟢 "Balanced"          | ~15% chance for a key | ~3,900 expected rouble value
+	// 🔵 "Bountiful"         | ~26% chance for a key | ~3,400 expected rouble value
+	// 🟣 "Refined"           |  ~9% chance for a key | ~3,740 expected rouble value
+	// 🔴 "Hardcore Scarcity" |  ~5% chance for a key | ~2,600 expected rouble value
+	// ❌ "Vanilla (Disabled)"|  ~6% chance for a key | N/A (High-tier keys cannot spawn in containers)
+	// -------------------------------------------------------------
+	// 
+	// 🟢 "Balanced"              : (Default. Roughly 1 key every 7 containers. Prices are 40%)
 	// 🔵 "Bountiful"             : (Double the keys of Balanced. Prices dropped to 20%)
 	// 🟣 "Refined"               : (Massively reduces common keys, buffs rare keys to maintain overall key frequency. Prices are 25%)
-	// 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 16 jackets. Vanilla key prices)
+	// 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 20 containers. Vanilla key prices)
 	// 🟡 "The Mod Classic"       : (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 15%)
 	// 🟠 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket. Vanilla key prices)
 	// ⚪ "Custom"                : (Uses the manual variable settings defined below)

@@ -49,61 +49,31 @@ These files follow a schema utilizing `jacketContainer`, `duffleBagContainer`, a
 > [!WARNING]
 > If enabled, map-specific files in the `locations/` folder will OVERRIDE your global active profile weights for any map they are defined for.
 
-## ⚖️ Understanding Loot Weights & Rarity
+## ⚖️ How the Mod Works (For Normal Humans)
 
-Keys In Loot allows you to inject missing keys into the loot pool, but tuning their spawn chances can be tricky. Here is how SPT's underlying math works, decoded for your convenience.
+Tarkov normally locks most keys behind specific bosses or rare spawn locations. This mod fundamentally changes that by putting *every* key into standard loot containers (Jackets, Duffle Bags, and Dead Scavs).
 
-### The "Lottery Ticket" System
-SPT loot generation uses a system called `relativeProbability`. Imagine every loot container (like a Jacket) is a hat filled with lottery tickets. A standard Jacket on Customs contains roughly **200,000 tickets** representing all possible items that can spawn there.
-- Common junk (like matches or bolts) might have ~5,000 tickets.
-- An ultra-rare key might only have ~100 tickets.
+To prevent the game from becoming too easy or the economy from breaking, the mod does three things:
+1. **Rarity Scaling**: Common dorm keys will spawn frequently, but a Red Keycard will remain incredibly rare.
+2. **Container Expansion**: It makes Jackets physically larger on the inside so there is actual room for the extra keys.
+3. **Price Balancing**: Because you are finding more keys, the mod automatically reduces how much they sell for on the Flea Market and to Traders. This keeps you from becoming a millionaire overnight.
 
-When you inject keys using this mod's config, you are adding *new tickets* to the hat.
+### 🎮 Experience Profiles (Choose Your Vibe)
 
-### 🎮 Experience Profiles
+The easiest way to configure this mod is by picking an `activeProfile` in the `config.jsonc` file. We ran mathematical simulations to show exactly what you can expect from the four main profiles:
 
-## 🛠️ Profiles (Map-Tuned Multipliers)
-
-The easiest way to change the vibe of this mod is by using profiles. 
-By default, this mod uses mathematically precise **per-map tuning** to ensure keys spawn at exactly the same frequency on Customs as they do on Woods, despite differing container counts. When you select a profile, it dynamically scales these map-specific baselines to perfectly achieve your desired experience.
-
-- 🟢 **Balanced**: (Default. Roughly 1 key every 4 jackets. Prices are 40%)
-- 🔵 **Bountiful**: (Double the keys of Balanced. Trader/Flea prices dropped to 20%)
-- 🟣 **Refined**: (Massively reduces common keys, buffs rare keys to maintain overall key frequency. Prices are 25%)
-- 🔴 **Hardcore Scarcity**: (Grind for keys. Roughly 1 key every 16 jackets. Vanilla key prices)
-- 🟡 **The Mod Classic**: (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 15%)
-- 🟠 **The Loot Piñata**: (Absolute chaos. 2-8 ultra-rare keys per jacket. Vanilla key prices)
-- ⚪ **Custom**: (Uses the manual variable settings)
-- ❌ **Disabled**: (Completely bypasses the mod and leaves game 100% vanilla)
-
-If you want to manually tweak the individual variables, simply set `"activeProfile": "Custom"`. This will tell the mod to ignore the built-in presets and instead use the exact variables defined in your config file. *(Note: Invalid profile strings will log a warning and automatically fall back to the "Custom" profile).*
-
-### ⚠️ The Pool Inflation Problem
-In the actual vanilla game, a "Very Common" key has a raw weight of around 10,000. However, a standard vanilla jacket only has a total ticket pool of about 56,000 (mostly filled with junk items). 
-
-Because this mod injects over **200 missing keys** simultaneously, if we used the raw vanilla weight of 10,000 for all of them, we would instantly bloat the jacket pool to over 500,000 tickets. Keys would become 90% of the entire loot pool, completely destroying the vanilla economy (you would almost never find regular junk or meds in jackets again). 
-
-To solve this, our presets use **Scaled Target Weights**. These mathematically preserve the true rarity ratios of the keys, but shrink their footprint so they don't overpower the junk loot pool. 
-
-### Scaled Reference Values
-If you want to manually tweak the JSON variables to feel authentic to the vanilla game, use these scaled target weights:
-
-| JSON Property | Rarity Level | Scaled Injection Weight | Native Vanilla Equivalent |
+| Profile | What it feels like | Key Spawn Chance (Per Box) | Avg. Key Value (Roubles) |
 |---|---|---|---|
-| **`notExist`** | Very Common | **200 - 500** | 10k - 15k |
-| **`common`** | Common | **100 - 300** | 2k - 3k |
-| **`rare`** | Rare | **50 - 100** | 500 - 1k |
-| **`superRare`** | Ultra Rare | **10 - 40** | 10 - 50 |
+| 🟢 **Balanced** | **The Default.** Feels like vanilla Tarkov but you actually find keys. | ~15% (1 in 7 boxes) | ~3,900 |
+| 🔵 **Bountiful** | **Loot Explosion.** You find keys constantly. Sell prices are heavily slashed so it doesn't break the game. | ~26% (1 in 4 boxes) | ~3,400 |
+| 🟣 **Refined** | **Quality over Quantity.** You find fewer junk keys and more rare keys. Very balanced economy. | ~9% (1 in 11 boxes) | ~3,740 |
+| 🔴 **Hardcore** | **The Grind.** Keys spawn slightly less often than vanilla, but the loot pool includes ALL rare keys (like colored keycards). Vanilla sell prices are restored. | ~5% (1 in 20 boxes) | ~2,600 |
+| ❌ **Vanilla (Disabled)** | **No Mod.** You only find common junk keys. High-tier keys NEVER spawn in jackets. | ~6% (1 in 16 boxes) | N/A (High-tier keys cannot spawn here) |
 
-### ⚠️ The Danger of Flat Weights (Rarity Flattening)
-If you set the global weight config to use the same flat number for everything (e.g., setting everything to `500`), you are giving **every single missing key** exactly 500 tickets. 
-This means a super rare Red Keycard and a common Dorms 206 key will both have exactly 500 tickets in the hat, completely destroying the concept of rarity in Tarkov. Always use a tiered approach!
+*Other fun profiles included: `The Mod Classic` (no map tuning, total randomness) and `The Loot Piñata` (absolute chaos, multiple ultra-rare keys per jacket).*
 
-## ⚠️ Troubleshooting & Engine Limitations
+---
 
-**DO NOT set probabilities to absurdly high numbers!**
-Because the SPT game engine adds up all the weights in a container to calculate the total pool size, it is bound by the standard 32-bit integer limit. 
-If the total sum of all weights in a container exceeds `2,147,483,647`, it will trigger an **integer overflow** in the game engine. This will completely break the loot generator, cause the server console to spam red errors, and containers will spawn completely empty. Keep your weights reasonable (e.g. `500` to `5000`).
+### 👨‍💻 For Developers and Advanced Users
 
-**No Decimals Allowed!**
-Do not use decimal numbers (e.g., `0.5`) in the `overrideLootDistribution` configurations. The game engine expects strict integers, and using decimals will immediately crash the server when you attempt to load a map.
+If you want to manually tweak the integer limits, understand the underlying mathematical weights, or see what changed from the original mod's architecture, please read the [TECHNICAL_README.md](TECHNICAL_README.md) file included in this directory.
