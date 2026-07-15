@@ -22,4 +22,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           update_release_body: true
           files: |
-            *.zip
+            .*\.zip$
