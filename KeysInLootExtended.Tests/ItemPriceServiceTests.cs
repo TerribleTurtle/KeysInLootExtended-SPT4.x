@@ -24,8 +24,8 @@ namespace KeysInLootExtended.Tests
             var createHandbookItem = (MongoId id, double price) =>
             {
                 var item = (HandbookItem)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(HandbookItem));
-                typeof(HandbookItem).GetProperty("Id").SetValue(item, id);
-                typeof(HandbookItem).GetProperty("Price").SetValue(item, price);
+                typeof(HandbookItem).GetProperty("Id")!.SetValue(item, id);
+                typeof(HandbookItem).GetProperty("Price")!.SetValue(item, price);
                 return item;
             };
 
@@ -36,11 +36,11 @@ namespace KeysInLootExtended.Tests
             };
 
             var keysService = new InjectedKeysService();
-            keysService.InjectedKeyIds.Add(keyId1.ToString());
-            keysService.InjectedKeyIds.Add(keyId2.ToString());
+            keysService.InjectedKeyIds.Add(keyId1);
+            keysService.InjectedKeyIds.Add(keyId2);
 
             // Act - Multipliers: 0.5x for flea, 2.0x for trader
-            ItemPriceService.AdjustPricesInternal(fleaPrices, handbookItems, keysService, 0.5, 2.0);
+            ItemPriceService.AdjustPricesInternal(fleaPrices, handbookItems, keysService.InjectedKeyIds, 0.5, 2.0);
 
             // Assert
             Assert.Equal(5000, fleaPrices[keyId1]); // 10000 * 0.5

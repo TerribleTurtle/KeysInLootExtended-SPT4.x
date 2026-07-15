@@ -19,11 +19,11 @@ The easiest way to customize your experience is by selecting an `activeProfile` 
 
 | Profile | Description | Key Spawn Chance | Avg. Key Value |
 |---|---|---|---|
-| 🟢 **Balanced** | **The Default.** Feels like vanilla Tarkov, but you actually find keys. | ~15% (1 in 7 boxes) | ~3,900 ₽ |
-| 🔵 **Bountiful** | **Loot Explosion.** Keys are found constantly. Sell prices are heavily slashed to keep the economy intact. | ~26% (1 in 4 boxes) | ~3,400 ₽ |
-| 🟣 **Refined** | **Quality over Quantity.** Fewer junk keys and a higher chance for rare keys. Highly balanced economy. | ~9% (1 in 11 boxes) | ~3,740 ₽ |
-| 🔴 **Hardcore Scarcity** | **The Grind.** Keys spawn slightly less often than vanilla, but the loot pool includes ALL rare keys. Vanilla sell prices are restored. | ~5% (1 in 20 boxes) | ~2,600 ₽ |
-| ❌ **Disabled** | **Disabled.** Only common junk keys spawn. High-tier keys NEVER spawn in standard containers. | ~6% (1 in 16 boxes) | N/A |
+| 1 - 🟢 **Balanced** | **The Default.** Feels like vanilla Tarkov, but you actually find keys. | ~15% (1 in 7 boxes) | ~3,900 ₽ |
+| 2 - 🔵 **Bountiful** | **Loot Explosion.** Keys are found constantly. Sell prices are heavily slashed to keep the economy intact. | ~26% (1 in 4 boxes) | ~3,400 ₽ |
+| 3 - 🟣 **Refined** | **Quality over Quantity.** Fewer junk keys and a higher chance for rare keys. Highly balanced economy. | ~9% (1 in 11 boxes) | ~3,740 ₽ |
+| 4 - 🔴 **Hardcore Scarcity** | **The Grind.** Keys spawn slightly less often than vanilla, but the loot pool includes ALL rare keys. Vanilla sell prices are restored. | ~5% (1 in 20 boxes) | ~2,600 ₽ |
+| 8 - ❌ **Disabled** | **Disabled.** Only common junk keys spawn. High-tier keys NEVER spawn in standard containers. | ~6% (1 in 16 boxes) | N/A |
 
 > *Note: Additional profiles like `The Mod Classic` and `The Loot Piñata` are also included for more chaotic or specialized runs.*
 
