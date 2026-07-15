@@ -11,3 +11,8 @@
 
 ## Communication & Etiquette Rules
 - **Respect Original Authors:** WE DO NOT PUT DOWN THE ORIGINAL AUTHORS AT ALL. When referencing legacy code or original mods, always maintain a respectful and neutral tone. Never use disparaging adjectives (e.g., "slow legacy", "bad code").
+
+## GitHub Release Automation Rules
+- **Automated Deployments Only:** When a user requests to "release", this explicitly means to fully automate building, packaging, and pushing the artifact to GitHub using the `gh release` CLI. NEVER stop at just local zip file creation unless explicitly requested.
+- **Overwrite Safety:** Expose an `-Overwrite` flag in automation scripts so the user can explicitly dictate when an existing GitHub Release or asset should be clobbered.
+- **Fail-Safe Checks:** Automation scripts must perform sanity checks (e.g., checking if a release exists before uploading) instead of blindly running commands and assuming success.

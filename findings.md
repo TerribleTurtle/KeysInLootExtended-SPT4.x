@@ -40,3 +40,7 @@
 ## Rejected Approaches
 *   **[2026-07-15] Purging `distDict` on `0` Weight:** We attempted to handle "0 weight" items by actively calling `distDict.Remove(mongoId)` to clear them from the mod's injected pool. **Why it failed:** Because the source list iterated over *all* keys in the vanilla database, this logic explicitly purged the keys from the native game map, overriding vanilla behavior entirely. We pivoted to a simple `continue;` statement to allow vanilla values to pass through unmolested.
 *   **[2026-07-15] Uniform Fractional Reduction ("Vanilla Less Trash"):** We initially applied a flat `0.3x` scalar to Common keys to reduce trash, leaving Rare keys at `1.0x`. **Why it failed:** Due to the total container mass, this simply dropped the overall chance of finding a key by ~40%, rather than maintaining the same frequency but better quality. We pivoted to a multi-tiered scaling system to redistribute the lost mass.
+
+## Deployment & Release Automation
+*   **GitHub Release CLI Integration:** **[valid_from: 2026-07-15]** The `release.ps1` script natively parses the project version directly from `KeysInLootExtended.csproj` (using XML parsing) and automates pushing the compiled `.zip` artifact directly to GitHub Releases via the `gh release` CLI.
+*   **Safety Overwrites:** GitHub Release automation must explicitly require an `-Overwrite` switch to clobber existing assets to prevent accidental loss of published versions.
