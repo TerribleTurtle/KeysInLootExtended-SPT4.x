@@ -40,11 +40,14 @@ public class ContainerGridService
         if (config.ActiveProfile == "Disabled")
             return;
 
+        int clampedH = Math.Clamp(config.CellsH, 1, 14);
+        int clampedV = Math.Clamp(config.CellsV, 1, 14);
+
         var items = _databaseServer.GetTables().Templates.Items;
 
-        AdjustGridSizesInternal(items, config.CellsH, config.CellsV);
+        AdjustGridSizesInternal(items, clampedH, clampedV);
 
-        _logger.Success($"[KeysInLootExtended] Adjusted Jacket, Duffle Bag, and Dead Scav grid sizes to {config.CellsH}x{config.CellsV}.");
+        _logger.Success($"[KeysInLootExtended] Adjusted Jacket, Duffle Bag, and Dead Scav grid sizes to {clampedH}x{clampedV}.");
     }
 
     public static void AdjustGridSizesInternal(Dictionary<MongoId, TemplateItem> items, int targetCellsH, int targetCellsV)
