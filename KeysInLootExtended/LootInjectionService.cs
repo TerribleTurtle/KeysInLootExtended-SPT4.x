@@ -54,13 +54,17 @@ public class LootInjectionService
         
         foreach (var item in allItems)
         {
-            if (_itemHelper.IsOfBaseclass(item.Id, KEY_BASECLASS))
+            if (_itemHelper.IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
             {
-                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); keys.Add(item); } catch { }
+                keycards.Add(item);
+                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); } 
+                catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping keycard {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
             }
-            else if (_itemHelper.IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
+            else if (_itemHelper.IsOfBaseclass(item.Id, KEY_BASECLASS))
             {
-                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); keycards.Add(item); } catch { }
+                keys.Add(item);
+                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); } 
+                catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping key {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
             }
         }
 
@@ -96,17 +100,20 @@ public class LootInjectionService
 
         int modifiedContainers = 0;
 
-        // Extract all properties from ILocations to get all maps including custom ones if they were added via properties
-        var validLocations = typeof(ILocations).GetProperties()
-            .Where(p => p.PropertyType == typeof(ILocationBase) || typeof(ILocationBase).IsAssignableFrom(p.PropertyType))
-            .Select(p => (ILocationBase?)p.GetValue(db.Locations))
+        // Extract all properties from Locations to get all maps including custom ones if they were added via properties
+        var validLocations = db.Locations.GetType().GetProperties()
+            .Select(p => p.GetValue(db.Locations))
             .Where(l => l != null)
+            .Cast<dynamic>()
             .ToList();
 
         foreach (var location in validLocations)
         {
-            if (location == null || location.Base == null)
-                continue;
+            if (location == null) continue;
+            
+            object? baseObj = null;
+            try { baseObj = location.Base; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { continue; }
+            if (baseObj == null) continue;
 
             var staticLootDict = location.StaticLoot?.Value;
             if (staticLootDict == null)
@@ -119,24 +126,29 @@ public class LootInjectionService
             KeysInLootRarityConfig deadScavKeyWeight = config.KeyWeight;
             KeysInLootRarityConfig deadScavKeycardWeight = config.KeycardWeight;
 
-            if (config.EnableLocationsConfig && locationIdToEnum.TryGetValue(location.Base.Id, out var enumName))
+            if (config.EnableLocationsConfig)
             {
-                var locConfig = _configLoader.LoadLocationConfig(enumName);
-                if (locConfig != null)
+                string baseId = location.Base.Id;
+                if (locationIdToEnum.TryGetValue(baseId, out string enumName))
                 {
-                    jacketKeyWeight = locConfig.JacketContainer?.Key ?? config.KeyWeight;
-                    jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? config.KeycardWeight;
-                    duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? config.KeyWeight;
-                    duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? config.KeycardWeight;
-                    deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? config.KeyWeight;
-                    deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? config.KeycardWeight;
+                    var locConfig = _configLoader.LoadLocationConfig(enumName);
+                    if (locConfig != null)
+                    {
+                        jacketKeyWeight = locConfig.JacketContainer?.Key ?? config.KeyWeight;
+                        jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? config.KeycardWeight;
+                        duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? config.KeyWeight;
+                        duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? config.KeycardWeight;
+                        deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? config.KeyWeight;
+                        deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? config.KeycardWeight;
+                    }
                 }
             }
 
             // Jacket
             var jacketId = new MongoId("578f8778245977358849a9b5");
-            if (staticLootDict.TryGetValue(jacketId, out var jacket))
+            if (staticLootDict.ContainsKey(jacketId))
             {
+                var jacket = staticLootDict[jacketId];
                 ModifyContainer(jacket, keys, jacketKeyWeight, keycards, jacketKeycardWeight);
                 if (jacketCounts != null) jacket.ItemCountDistribution = jacketCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
                 modifiedContainers++;
@@ -144,8 +156,9 @@ public class LootInjectionService
 
             // Duffle Bag
             var duffleId = new MongoId("578f87a3245977356274f2cb");
-            if (staticLootDict.TryGetValue(duffleId, out var duffle))
+            if (staticLootDict.ContainsKey(duffleId))
             {
+                var duffle = staticLootDict[duffleId];
                 ModifyContainer(duffle, keys, duffleKeyWeight, keycards, duffleKeycardWeight);
                 if (duffleCounts != null) duffle.ItemCountDistribution = duffleCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
                 modifiedContainers++;
@@ -153,8 +166,9 @@ public class LootInjectionService
 
             // Dead Scav
             var deadScavId = new MongoId("5909e4b686f7747f5b744fa4");
-            if (staticLootDict.TryGetValue(deadScavId, out var deadScav))
+            if (staticLootDict.ContainsKey(deadScavId))
             {
+                var deadScav = staticLootDict[deadScavId];
                 ModifyContainer(deadScav, keys, deadScavKeyWeight, keycards, deadScavKeycardWeight);
                 if (deadScavCounts != null) deadScav.ItemCountDistribution = deadScavCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
                 modifiedContainers++;
@@ -192,7 +206,12 @@ public class LootInjectionService
                 }
 
                 MongoId itemMongoId;
-                try { itemMongoId = new MongoId(item.Id); } catch { continue; }
+                try { itemMongoId = new MongoId(item.Id); } 
+                catch (FormatException ex) 
+                { 
+                    _logger.Warning($"[KeysInLootExtended] Skipping item {item.Id} in container loop due to invalid MongoId format: {ex.Message}");
+                    continue; 
+                }
 
                 if (targetWeight <= 0) 
                 {

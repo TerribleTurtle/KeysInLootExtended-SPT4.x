@@ -23,4 +23,7 @@
 /findings.md
 /progress.md
 /task_plan.md
-src/**/*.ts
+bin/
+obj/
+KeysInLootExtended.Tests/
+*.zip
