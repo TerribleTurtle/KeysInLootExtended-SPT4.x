@@ -52,6 +52,10 @@ public class LootInjectionService
         var keys = allItems.Where(i => _itemHelper.IsOfBaseclass(i.Id, KEY_BASECLASS)).ToList();
         var keycards = allItems.Where(i => _itemHelper.IsOfBaseclass(i.Id, KEYCARD_BASECLASS)).ToList();
 
+        // Track injected keys globally to prevent O(N) loop additions
+        foreach (var k in keys) _injectedKeysService.InjectedKeyIds.Add(k.Id);
+        foreach (var k in keycards) _injectedKeysService.InjectedKeyIds.Add(k.Id);
+
         _logger.Success($"[KeysInLootExtended] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
 
         var validLocations = new[] { 
@@ -76,6 +80,18 @@ public class LootInjectionService
             {"TarkovStreets", "streets_of_tarkov"},
             {"Woods", "woods"}
         };
+
+        // Precompute count distribution arrays to prevent repeated allocations inside the loop
+        ItemCountDistribution[]? jacketCounts = null;
+        ItemCountDistribution[]? duffleCounts = null;
+        ItemCountDistribution[]? deadScavCounts = null;
+        
+        if (config.OverrideLootDistribution)
+        {
+            jacketCounts = config.OverrideLootDistributionJackets?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+            duffleCounts = config.OverrideLootDistributionDuffleBags?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+            deadScavCounts = config.OverrideLootDistributionDeadScavs?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+        }
 
         int modifiedContainers = 0;
 
@@ -113,10 +129,8 @@ public class LootInjectionService
             var jacketId = new MongoId("578f8778245977358849a9b5");
             if (staticLootDict.TryGetValue(jacketId, out var jacket))
             {
-                ModifyContainer(jacket, keys, jacketKeyWeight);
-                ModifyContainer(jacket, keycards, jacketKeycardWeight);
-                if (config.OverrideLootDistribution)
-                    jacket.ItemCountDistribution = config.OverrideLootDistributionJackets?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray() ?? jacket.ItemCountDistribution;
+                ModifyContainer(jacket, keys, jacketKeyWeight, keycards, jacketKeycardWeight);
+                if (jacketCounts != null) jacket.ItemCountDistribution = jacketCounts;
                 modifiedContainers++;
             }
 
@@ -124,10 +138,8 @@ public class LootInjectionService
             var duffleId = new MongoId("578f87a3245977356274f2cb");
             if (staticLootDict.TryGetValue(duffleId, out var duffle))
             {
-                ModifyContainer(duffle, keys, duffleKeyWeight);
-                ModifyContainer(duffle, keycards, duffleKeycardWeight);
-                if (config.OverrideLootDistribution)
-                    duffle.ItemCountDistribution = config.OverrideLootDistributionDuffleBags?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray() ?? duffle.ItemCountDistribution;
+                ModifyContainer(duffle, keys, duffleKeyWeight, keycards, duffleKeycardWeight);
+                if (duffleCounts != null) duffle.ItemCountDistribution = duffleCounts;
                 modifiedContainers++;
             }
 
@@ -135,10 +147,8 @@ public class LootInjectionService
             var deadScavId = new MongoId("5909e4b686f7747f5b744fa4");
             if (staticLootDict.TryGetValue(deadScavId, out var deadScav))
             {
-                ModifyContainer(deadScav, keys, deadScavKeyWeight);
-                ModifyContainer(deadScav, keycards, deadScavKeycardWeight);
-                if (config.OverrideLootDistribution)
-                    deadScav.ItemCountDistribution = config.OverrideLootDistributionDeadScavs?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray() ?? deadScav.ItemCountDistribution;
+                ModifyContainer(deadScav, keys, deadScavKeyWeight, keycards, deadScavKeycardWeight);
+                if (deadScavCounts != null) deadScav.ItemCountDistribution = deadScavCounts;
                 modifiedContainers++;
             }
         }
@@ -147,58 +157,66 @@ public class LootInjectionService
 
     }
 
-    private void ModifyContainer(StaticLootDetails container, List<TemplateItem> items, KeysInLootRarityConfig weights)
+    private void ModifyContainer(StaticLootDetails container, List<TemplateItem> keys, KeysInLootRarityConfig keyWeights, List<TemplateItem> keycards, KeysInLootRarityConfig keycardWeights)
     {
         var distDict = container.ItemDistribution?.GroupBy(x => x.Tpl).ToDictionary(g => g.Key, g => g.First()) ?? new Dictionary<MongoId, ItemDistribution>();
 
-        foreach (var item in items)
+        void ProcessItems(List<TemplateItem> items, KeysInLootRarityConfig weights)
         {
-            int targetWeight = 0;
-            string rarity = item.Properties.RarityPvE?.ToString() ?? "Not_exist";
-
-            switch (rarity)
+            foreach (var item in items)
             {
-                case "Not_exist": targetWeight = weights.NotExist; break;
-                case "Common": targetWeight = weights.Common; break;
-                case "Rare": targetWeight = weights.Rare; break;
-                case "Superrare": targetWeight = weights.SuperRare; break;
-            }
+                int targetWeight = 0;
+                string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
 
-            if (targetWeight <= 0) continue;
-
-            var itemMongoId = new MongoId(item.Id);
-
-            if (distDict.TryGetValue(itemMongoId, out var existingItem))
-            {
-                if (existingItem.RelativeProbability < targetWeight)
+                switch (rarity)
                 {
-                    existingItem.RelativeProbability = targetWeight;
-                    distDict[itemMongoId] = existingItem;
+                    case "Not_exist": targetWeight = weights.NotExist; break;
+                    case "Common": targetWeight = weights.Common; break;
+                    case "Rare": targetWeight = weights.Rare; break;
+                    case "Superrare": targetWeight = weights.SuperRare; break;
+                }
+
+                var itemMongoId = new MongoId(item.Id);
+
+                if (targetWeight <= 0) 
+                {
+                    distDict.Remove(itemMongoId);
+                    continue;
+                }
+
+                if (distDict.TryGetValue(itemMongoId, out var existingItem))
+                {
+                    if (existingItem.RelativeProbability < targetWeight)
+                    {
+                        existingItem.RelativeProbability = targetWeight;
+                        distDict[itemMongoId] = existingItem;
+                    }
+                }
+                else
+                {
+                    distDict[itemMongoId] = new ItemDistribution
+                    {
+                        Tpl = itemMongoId,
+                        RelativeProbability = targetWeight
+                    };
                 }
             }
-            else
-            {
-                distDict[itemMongoId] = new ItemDistribution
-                {
-                    Tpl = itemMongoId,
-                    RelativeProbability = targetWeight
-                };
-            }
-
-            // Track this key for Phase 4 price modifications
-            _injectedKeysService.InjectedKeyIds.Add(item.Id);
         }
 
-        // Clamp total weight to prevent SPT map load crashes (int.MaxValue blast radius)
+        ProcessItems(keys, keyWeights);
+        ProcessItems(keycards, keycardWeights);
+
+        // Clamp total weight to prevent SPT map load crashes and leave ecosystem headroom
         long totalWeight = distDict.Values.Sum(x => (long)x.RelativeProbability);
-        if (totalWeight > int.MaxValue)
+        int safeCeiling = int.MaxValue / 2;
+        if (totalWeight > safeCeiling)
         {
-            _logger.Warning($"[KeysInLootExtended] A container's weight exceeds int.MaxValue! Normalizing weights...");
-            double scale = (double)int.MaxValue / totalWeight;
+            _logger.Warning($"[KeysInLootExtended] A container's weight exceeds int.MaxValue/2! Normalizing weights to leave ecosystem headroom...");
+            double scale = (double)safeCeiling / totalWeight;
             foreach (var key in distDict.Keys.ToList())
             {
                 var entry = distDict[key];
-                entry.RelativeProbability = (int)(entry.RelativeProbability * scale);
+                entry.RelativeProbability = Math.Max(1, (int)(entry.RelativeProbability * scale));
                 distDict[key] = entry;
             }
         }

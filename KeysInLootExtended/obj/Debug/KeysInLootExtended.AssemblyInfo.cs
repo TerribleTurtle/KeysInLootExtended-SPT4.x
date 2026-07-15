@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KeysInLootExtended")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.12.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.12+24a0a2226e40afb55cc8d3528a134934a76cf91e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.12+6937afd374f279af208d8b76b83a15963068f6b9")]
 [assembly: System.Reflection.AssemblyProductAttribute("KeysInLootExtended")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KeysInLootExtended")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.12.0")]

@@ -57,6 +57,7 @@ public class ItemPriceService
     {
         // Pre-compute MongoIds to prevent repeated string parsing and closure allocations
         var targetMongoIds = new HashSet<MongoId>();
+        var foundFleaKeys = new HashSet<MongoId>();
         foreach (var keyIdString in injectedKeys.InjectedKeyIds)
         {
             var mongoId = new MongoId(keyIdString);
@@ -66,15 +67,21 @@ public class ItemPriceService
             if (fleaPrices.TryGetValue(mongoId, out var currentFleaPrice))
             {
                 fleaPrices[mongoId] = Math.Round(currentFleaPrice * fleaMultiplier);
+                foundFleaKeys.Add(mongoId);
             }
         }
 
+        var foundTraderKeys = new HashSet<MongoId>();
         // 2. Trader Base Prices (O(N) Iteration with O(1) HashSet Lookup)
         foreach (var handbookEntry in handbookItems)
         {
-            if (targetMongoIds.Contains(handbookEntry.Id) && handbookEntry.Price.HasValue)
+            if (targetMongoIds.Contains(handbookEntry.Id))
             {
-                handbookEntry.Price = Math.Round(handbookEntry.Price.Value * traderMultiplier);
+                if (handbookEntry.Price.HasValue)
+                {
+                    handbookEntry.Price = Math.Round(handbookEntry.Price.Value * traderMultiplier);
+                    foundTraderKeys.Add(handbookEntry.Id);
+                }
             }
         }
     }

@@ -28,27 +28,26 @@ public class KeysInLootConfigLoader
     private KeysInLootCoreConfig LoadCoreConfig()
     {
         var pathToMod = _modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
-        
+        var configPath = Path.Combine(pathToMod, "config.jsonc");
+        if (!File.Exists(configPath))
+        {
+            _logger.Error("[KeysInLootExtended] FATAL ERROR: Core config.jsonc not found!");
+            throw new FileNotFoundException($"[KeysInLootExtended] Core config.jsonc not found at {configPath}");
+        }
+
         var jsonSettings = new JsonSerializerOptions
         {
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true
         };
-        
-        var configPath = Path.Combine(pathToMod, "config.jsonc");
-        if (!File.Exists(configPath))
-        {
-            _logger.Error($"[KeysInLootExtended] FATAL: Could not find config.jsonc at {configPath}");
-            return new KeysInLootCoreConfig();
-        }
 
         var configText = File.ReadAllText(configPath);
         var config = JsonSerializer.Deserialize<KeysInLootCoreConfig>(configText, jsonSettings);
 
         if (config == null)
         {
-            _logger.Error("[KeysInLootExtended] FATAL: Failed to deserialize config.jsonc");
-            return new KeysInLootCoreConfig();
+            _logger.Error("[KeysInLootExtended] FATAL ERROR: Failed to deserialize config.jsonc!");
+            throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize config.jsonc to KeysInLootCoreConfig.");
         }
 
         // Apply profile overrides
@@ -113,21 +112,14 @@ public class KeysInLootConfigLoader
             return null;
         }
 
-        try
+        var jsonSettings = new JsonSerializerOptions
         {
-            var jsonSettings = new JsonSerializerOptions
-            {
-                ReadCommentHandling = JsonCommentHandling.Skip,
-                AllowTrailingCommas = true
-            };
-            
-            var configText = File.ReadAllText(configPath);
-            return JsonSerializer.Deserialize<KeysInLootLocationConfig>(configText, jsonSettings);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"[KeysInLootExtended] ERROR: Failed to parse {locationName}.jsonc: {ex.Message}");
-            return null;
-        }
+            ReadCommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true
+        };
+        
+        var configText = File.ReadAllText(configPath);
+        return JsonSerializer.Deserialize<KeysInLootLocationConfig>(configText, jsonSettings) 
+            ?? throw new InvalidDataException($"[KeysInLootExtended] Failed to deserialize location config {locationName}.jsonc.");
     }
 }
