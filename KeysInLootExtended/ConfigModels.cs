@@ -37,10 +37,16 @@ public class CultureInvariantDoubleConverter : JsonConverter<double>
     }
 }
 
+/// <summary>
+/// Core configuration model representing the global state defined in config.jsonc.
+/// </summary>
 public class KeysInLootCoreConfig
 {
+    /// <summary>
+    /// Selects the overarching spawn and economy profile. Valid values include "Balanced", "Bountiful", "Refined", "Hardcore Scarcity", "The Mod Classic", "The Loot Piñata", "Disabled", and "Custom".
+    /// </summary>
     [JsonPropertyName("activeProfile")]
-    public string ActiveProfile { get; set; } = "Vanilla Plus";
+    public string ActiveProfile { get; set; } = "Balanced";
 
     [JsonPropertyName("keyWeight")]
     public KeysInLootRarityConfig KeyWeight { get; set; } = new();
@@ -79,6 +85,9 @@ public class KeysInLootCoreConfig
     public string? ConsoleVerbosity { get; set; }
 }
 
+/// <summary>
+/// Configuration model representing map-specific overrides defined in the locations directory.
+/// </summary>
 public class KeysInLootLocationConfig
 {
     [JsonPropertyName("jacketContainer")]
@@ -91,6 +100,9 @@ public class KeysInLootLocationConfig
     public KeysInLootContainerConfig? DeadScavContainer { get; set; } = null;
 }
 
+/// <summary>
+/// Defines weight overrides for a specific type of container (e.g., Jacket, Duffle Bag).
+/// </summary>
 public class KeysInLootContainerConfig
 {
     [JsonPropertyName("key")]
@@ -100,6 +112,9 @@ public class KeysInLootContainerConfig
     public KeysInLootRarityConfig? Keycard { get; set; } = null;
 }
 
+/// <summary>
+/// Represents the relative probabilities across the four standard SPT item rarities.
+/// </summary>
 public class KeysInLootRarityConfig
 {
     [JsonPropertyName("notExist")]
@@ -115,6 +130,9 @@ public class KeysInLootRarityConfig
     public int SuperRare { get; set; } = 40;
 }
 
+/// <summary>
+/// Represents a targeted configuration for item count distributions within a container grid.
+/// </summary>
 public class ItemCountDistributionConfig
 {
     [JsonPropertyName("count")]

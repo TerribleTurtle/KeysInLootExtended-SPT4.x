@@ -9,6 +9,9 @@ using SPTarkov.Server.Core.Servers;
 
 namespace KeysInLootExtended;
 
+/// <summary>
+/// Defines the required metadata for the mod to be recognized by the SPT server.
+/// </summary>
 public record ModMetadata : AbstractModMetadata
 {
     public override string ModGuid { get; init; } = "DJ-KeysInLootExtended";
@@ -25,6 +28,10 @@ public record ModMetadata : AbstractModMetadata
     public override List<string>? Contributors { get; init; }
 }
 
+/// <summary>
+/// The main entry point for the KeysInLootExtended mod. 
+/// Orchestrates configuration loading, loot injection, and economy adjustments.
+/// </summary>
 [Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 2)]
 public class KeysInLootExtendedPlugin(
     KeysInLootConfigLoader configLoader,

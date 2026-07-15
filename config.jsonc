@@ -36,7 +36,7 @@
 	// 🔵 "Bountiful"         | ~26% chance for a key | ~3,400 expected rouble value
 	// 🟣 "Refined"           |  ~9% chance for a key | ~3,740 expected rouble value
 	// 🔴 "Hardcore Scarcity" |  ~5% chance for a key | ~2,600 expected rouble value
-	// ❌ "Vanilla (Disabled)"|  ~6% chance for a key | N/A (High-tier keys cannot spawn in containers)
+	// ❌ "Disabled"          |  ~6% chance for a key | N/A (High-tier keys cannot spawn in containers)
 	// -------------------------------------------------------------
 	// 
 	// 🟢 "Balanced"              : (Default. Roughly 1 key every 7 containers. Prices are 40%)

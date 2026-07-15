@@ -7,6 +7,9 @@ using SPTarkov.Server.Core.Models.Utils;
 
 namespace KeysInLootExtended;
 
+/// <summary>
+/// Singleton service responsible for loading, parsing, and caching the mod's configuration files (config.jsonc and locations/*.jsonc).
+/// </summary>
 [Injectable(InjectionType.Singleton)]
 public class KeysInLootConfigLoader
 {
@@ -26,6 +29,9 @@ public class KeysInLootConfigLoader
         _jsonSettings.Converters.Add(new CultureInvariantDoubleConverter());
     }
 
+    /// <summary>
+    /// The globally cached core configuration, accessible to other services.
+    /// </summary>
     public KeysInLootCoreConfig Config { get; private set; }
 
     public KeysInLootConfigLoader(
@@ -38,6 +44,9 @@ public class KeysInLootConfigLoader
         Config = LoadCoreConfig();
     }
 
+    /// <summary>
+    /// Loads the core config.jsonc file and applies the selected ActiveProfile overrides.
+    /// </summary>
     private KeysInLootCoreConfig LoadCoreConfig()
     {
         var pathToMod = _modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
@@ -127,6 +136,11 @@ public class KeysInLootConfigLoader
         return config;
     }
 
+    /// <summary>
+    /// Dynamically loads a map-specific location configuration file and applies the ActiveProfile multipliers to it.
+    /// </summary>
+    /// <param name="locationName">The name of the location (e.g. "bigmap", "factory4_day").</param>
+    /// <returns>The parsed and scaled location configuration, or null if the file doesn't exist.</returns>
     public KeysInLootLocationConfig? LoadLocationConfig(string locationName)
     {
         var pathToMod = _modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
@@ -148,6 +162,7 @@ public class KeysInLootConfigLoader
 
     private void ScaleLocationConfig(KeysInLootLocationConfig locConfig, string profile)
     {
+        // By default, if the profile isn't actively adjusting map ratios, we use a 1.0 multiplier (no change).
         double commonScale = 1.0;
         double rareScale = 1.0;
         double superRareScale = 1.0;
@@ -155,15 +170,21 @@ public class KeysInLootConfigLoader
         switch (profile.ToLowerInvariant())
         {
             case "bountiful":
+                // Bountiful flatly doubles all key drops across the board without filtering trash.
                 commonScale = 2.0; rareScale = 2.0; superRareScale = 2.0;
                 break;
             case "refined":
+                // Refined severely drops common trash keys, but redistributes that lost probability mass
+                // up into the Rare and SuperRare brackets to maintain the overall total key drop frequency.
                 commonScale = 0.3; rareScale = 1.7; superRareScale = 2.75;
                 break;
             case "hardcore scarcity":
+                // Hardcore globally suppresses all keys to a fraction of their vanilla map configurations.
                 commonScale = 0.3; rareScale = 0.3; superRareScale = 0.3;
                 break;
             case "the loot piñata":
+                // Loot Piñata almost entirely purges common keys and artificially forces incredibly high
+                // spawn weights for Rare/SuperRare keys to simulate a broken economy.
                 commonScale = 0.05; rareScale = 50.0; superRareScale = 250.0;
                 break;
             case "balanced":
@@ -189,7 +210,10 @@ public class KeysInLootConfigLoader
     {
         if (rarity == null) return;
         
-        // NotExist is intentionally not scaled up by commonScale so that "Vanilla Plus Plus" doesn't double the chance of empty slots
+        // NotExist is intentionally not scaled up by commonScale so that profile modifiers don't accidentally
+        // double the chance of empty container slots when they meant to increase key drops.
+        // We use Math.Max(1, ...) to ensure that low-weight vanilla keys aren't mathematically rounded down 
+        // to 0 and completely purged from the drop pool by fractional scalars (e.g. 0.05).
         rarity.Common = rarity.Common > 0 ? Math.Max(1, (int)Math.Round(rarity.Common * commonScale)) : 0;
         rarity.Rare = rarity.Rare > 0 ? Math.Max(1, (int)Math.Round(rarity.Rare * rareScale)) : 0;
         rarity.SuperRare = rarity.SuperRare > 0 ? Math.Max(1, (int)Math.Round(rarity.SuperRare * superRareScale)) : 0;

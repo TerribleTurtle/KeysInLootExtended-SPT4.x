@@ -48,14 +48,16 @@ public class ContainerGridService
     /// Main entry point to adjust grid sizes based on loaded configurations.
     /// Safely exits early if the profile is set to "Disabled".
     /// </summary>
+    /// <remarks>
+    /// Escape from Tarkov UI has a hard limit where grids > 14x14 will fail to render 
+    /// properly or cause client issues, so we strictly clamp the dimensions.
+    /// </remarks>
     public void AdjustGridSizes()
     {
         var config = _configLoader.Config;
         if (config.ActiveProfile == "Disabled")
             return;
 
-        // Escape from Tarkov UI has a hard limit where grids > 14x14 will fail to render 
-        // properly or cause client issues, so we strictly clamp the dimensions.
         int clampedH = Math.Clamp(config.CellsH, 1, 14);
         int clampedV = Math.Clamp(config.CellsV, 1, 14);
 
@@ -72,6 +74,7 @@ public class ContainerGridService
     /// <param name="items">The dictionary of all item templates.</param>
     /// <param name="targetCellsH">The clamped horizontal cell count.</param>
     /// <param name="targetCellsV">The clamped vertical cell count.</param>
+    /// <exception cref="InvalidOperationException">Thrown when a target container is missing required Properties or Grids.</exception>
     public static void AdjustGridSizesInternal(Dictionary<MongoId, TemplateItem> items, int targetCellsH, int targetCellsV)
     {
         foreach (var containerId in TargetContainerIds)
@@ -85,6 +88,8 @@ public class ContainerGridService
                     throw new InvalidOperationException($"[KeysInLootExtended] Critical Error: TemplateItem {containerId} is missing Properties or Grids. The SPT database schema may have changed.");
                 }
 
+                // We modify only the primary grid (FirstOrDefault). Secondary grids (if they exist)
+                // are usually intended for nested/secure slots which we do not want to arbitrarily expand.
                 var grid = grids.FirstOrDefault();
                 if (grid?.Properties == null)
                 {

@@ -24,13 +24,13 @@ public class LootInjectionService
     private readonly InjectedKeysService _injectedKeysService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LootInjectionService"/> class.
+    /// Initializes the LootInjectionService.
     /// </summary>
-    /// <param name="logger">The SPT logger.</param>
-    /// <param name="databaseServer">The SPT database server.</param>
-    /// <param name="configLoader">The configuration loader containing target weights.</param>
+    /// <param name="logger">The SPT logger instance.</param>
+    /// <param name="databaseServer">The primary SPT database server instance.</param>
+    /// <param name="configLoader">The global configuration loader service.</param>
     /// <param name="itemHelper">Helper for checking item baseclasses.</param>
-    /// <param name="injectedKeysService">Service to record which keys were successfully injected.</param>
+    /// <param name="injectedKeysService">Shared service that stores the MongoIds of all valid keys and keycards discovered during initialization.</param>
     public LootInjectionService(
         ISptLogger<LootInjectionService> logger,
         DatabaseServer databaseServer,
@@ -121,7 +121,8 @@ public class LootInjectionService
 
         int modifiedContainers = 0;
 
-        // Extract all properties from Locations to get all maps including custom ones if they were added via properties
+        // Extract all properties from Locations to get all maps including custom ones if they were added via properties.
+        // This reflection-based approach is intentionally used to bypass hardcoded map lists and dynamically discover custom modded maps.
         var validLocations = db.Locations.GetType().GetProperties()
             .Select(p => p.GetValue(db.Locations))
             .Where(l => l != null)
@@ -168,7 +169,7 @@ public class LootInjectionService
                 }
             }
 
-            // Jacket
+            // Jacket - Standard SPT global static loot template ID
             var jacketId = new MongoId("578f8778245977358849a9b5");
             if (staticLootDict.ContainsKey(jacketId))
             {
@@ -178,7 +179,7 @@ public class LootInjectionService
                 modifiedContainers++;
             }
 
-            // Duffle Bag
+            // Duffle Bag - Standard SPT global static loot template ID
             var duffleId = new MongoId("578f87a3245977356274f2cb");
             if (staticLootDict.ContainsKey(duffleId))
             {
@@ -188,7 +189,7 @@ public class LootInjectionService
                 modifiedContainers++;
             }
 
-            // Dead Scav
+            // Dead Scav - Standard SPT global static loot template ID
             var deadScavId = new MongoId("5909e4b686f7747f5b744fa4");
             if (staticLootDict.ContainsKey(deadScavId))
             {
@@ -227,6 +228,7 @@ public class LootInjectionService
             foreach (var item in items)
             {
                 int targetWeight = 0;
+                // In SPT, a null rarity typically maps to the "Very Common" tier, internally referred to as "Not_exist"
                 string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
 
                 switch (rarity)
@@ -256,6 +258,8 @@ public class LootInjectionService
                     foreach (var entry in existingEntries)
                     {
                         var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = entry.RelativeProbability };
+                        // We use the maximum between the existing weight and the new target weight.
+                        // This prevents accidentally nerfing keys that already have a naturally high vanilla spawn rate.
                         if (newEntry.RelativeProbability < targetWeight)
                         {
                             newEntry.RelativeProbability = targetWeight;

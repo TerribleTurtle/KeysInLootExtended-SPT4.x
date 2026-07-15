@@ -100,6 +100,8 @@ public class ItemPriceService
         }
 
         // 2. Trader Base Prices (O(N) Iteration with O(1) HashSet Lookup)
+        // We purposefully iterate over the Handbook instead of the individual Traders' Assorts.
+        // The Handbook acts as the global base price for all traders, avoiding expensive O(N*M) assort iterations.
         foreach (var handbookEntry in handbookItems)
         {
             if (injectedKeys.InjectedKeyIds.Contains(handbookEntry.Id))

@@ -13,7 +13,8 @@ namespace KeysInLootExtended;
 public class InjectedKeysService
 {
     /// <summary>
-    /// A fast-lookup set of all MongoIds belonging to Keys and Keycards that were successfully injected.
+    /// A fast-lookup set of all MongoIds belonging to valid Keys and Keycards discovered during initialization.
+    /// This state is populated synchronously during the early server startup phase and acts as a write-once cache.
     /// </summary>
     public HashSet<MongoId> InjectedKeyIds { get; } = new HashSet<MongoId>();
 }
