@@ -47,13 +47,13 @@ public class KeysInLootCoreConfig
 public class KeysInLootLocationConfig
 {
     [JsonPropertyName("jacketContainer")]
-    public KeysInLootContainerConfig JacketContainer { get; set; } = new();
+    public KeysInLootContainerConfig? JacketContainer { get; set; } = null;
 
     [JsonPropertyName("duffleBagContainer")]
-    public KeysInLootContainerConfig DuffleBagContainer { get; set; } = new();
+    public KeysInLootContainerConfig? DuffleBagContainer { get; set; } = null;
 
     [JsonPropertyName("deadScavContainer")]
-    public KeysInLootContainerConfig DeadScavContainer { get; set; } = new();
+    public KeysInLootContainerConfig? DeadScavContainer { get; set; } = null;
 }
 
 public class KeysInLootContainerConfig
