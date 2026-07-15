@@ -70,6 +70,8 @@ public class LootInjectionService
 
         _logger.Success($"[KeysInLootExtended] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
 
+
+
         var locationIdToEnum = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"bigmap", "customs"},
@@ -129,18 +131,19 @@ public class LootInjectionService
             if (config.EnableLocationsConfig)
             {
                 string baseId = location.Base.Id;
-                if (locationIdToEnum.TryGetValue(baseId, out string enumName))
+                string enumName = locationIdToEnum.TryGetValue(baseId, out var mappedName) 
+                    ? mappedName 
+                    : baseId.ToLowerInvariant();
+
+                var locConfig = _configLoader.LoadLocationConfig(enumName);
+                if (locConfig != null)
                 {
-                    var locConfig = _configLoader.LoadLocationConfig(enumName);
-                    if (locConfig != null)
-                    {
-                        jacketKeyWeight = locConfig.JacketContainer?.Key ?? config.KeyWeight;
-                        jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? config.KeycardWeight;
-                        duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? config.KeyWeight;
-                        duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? config.KeycardWeight;
-                        deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? config.KeyWeight;
-                        deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? config.KeycardWeight;
-                    }
+                    jacketKeyWeight = locConfig.JacketContainer?.Key ?? config.KeyWeight;
+                    jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? config.KeycardWeight;
+                    duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? config.KeyWeight;
+                    duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? config.KeycardWeight;
+                    deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? config.KeyWeight;
+                    deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? config.KeycardWeight;
                 }
             }
 

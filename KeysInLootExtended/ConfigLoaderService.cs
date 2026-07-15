@@ -41,11 +41,9 @@ public class KeysInLootConfigLoader
             AllowTrailingCommas = true,
             PropertyNameCaseInsensitive = true
         };
+        jsonSettings.Converters.Add(new CultureInvariantDoubleConverter());
 
         var configText = File.ReadAllText(configPath);
-        // Ensure European culture commas in decimals (e.g. "0,4") are replaced with standard dots before parsing
-        // We only replace commas that are surrounded by digits to avoid breaking json strings
-        configText = System.Text.RegularExpressions.Regex.Replace(configText, @"(\d),(\d)", "$1.$2");
         var config = JsonSerializer.Deserialize<KeysInLootCoreConfig>(configText, jsonSettings);
 
         if (config == null)
@@ -122,9 +120,9 @@ public class KeysInLootConfigLoader
             AllowTrailingCommas = true,
             PropertyNameCaseInsensitive = true
         };
+        jsonSettings.Converters.Add(new CultureInvariantDoubleConverter());
         
         var configText = File.ReadAllText(configPath);
-        configText = System.Text.RegularExpressions.Regex.Replace(configText, @"(\d),(\d)", "$1.$2");
         return JsonSerializer.Deserialize<KeysInLootLocationConfig>(configText, jsonSettings) 
             ?? throw new InvalidDataException($"[KeysInLootExtended] Failed to deserialize location config {locationName}.jsonc.");
     }
