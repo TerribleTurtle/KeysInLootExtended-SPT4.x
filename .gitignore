@@ -9,6 +9,9 @@ package-lock.json
 findings.md
 progress.md
 task_plan.md
+taskplan.md
+.agents/
+*.zip
 
 # IDE
 .vs
