@@ -1,4 +1,6 @@
-param()
+param(
+    [switch]$Overwrite
+)
 $ErrorActionPreference = "Stop"
 
 $csprojPath = ".\KeysInLootExtended\KeysInLootExtended.csproj"
@@ -28,8 +30,13 @@ Write-Host "Release packaged successfully to $zipPath"
 Write-Host "Uploading to GitHub Releases..."
 gh release view $version 2>$null
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Release $version already exists. Uploading asset to overwrite..."
-    gh release upload $version $zipPath --clobber
+    if ($Overwrite) {
+        Write-Host "Release $version already exists. -Overwrite flag provided. Uploading asset to overwrite..."
+        gh release upload $version $zipPath --clobber
+    } else {
+        Write-Error "Release $version already exists. Use the -Overwrite switch to force upload and clobber existing assets."
+        exit 1
+    }
 } else {
     Write-Host "Creating new release $version..."
     gh release create $version $zipPath --title "Release $version" --generate-notes
