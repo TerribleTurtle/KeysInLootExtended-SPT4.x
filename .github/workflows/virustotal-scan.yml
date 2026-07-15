@@ -1,0 +1,32 @@
+name: VirusTotal Release Scan
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  scan:
+    name: Scan Release Assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to update the release body with scan results
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release-assets
+          gh release download ${{ github.event.release.tag_name }} --dir release-assets --pattern "*.zip"
+
+      - name: VirusTotal Scan
+        uses: crazy-max/ghaction-virustotal@v4
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          update_release_body: true
+          files: |
+            release-assets/*.zip
