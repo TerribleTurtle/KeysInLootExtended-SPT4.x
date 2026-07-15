@@ -57,13 +57,13 @@ public class KeysInLootCoreConfig
     [JsonPropertyName("overrideLootDistribution")]
     public bool OverrideLootDistribution { get; set; } = true;
 
-    [JsonPropertyName("overRideLootDistributionJackets")]
+    [JsonPropertyName("overrideLootDistributionJackets")]
     public List<ItemCountDistributionConfig> OverrideLootDistributionJackets { get; set; } = new();
 
-    [JsonPropertyName("overRideLootDistributionDuffleBags")]
+    [JsonPropertyName("overrideLootDistributionDuffleBags")]
     public List<ItemCountDistributionConfig> OverrideLootDistributionDuffleBags { get; set; } = new();
 
-    [JsonPropertyName("overRideLootDistributionDeadScavs")]
+    [JsonPropertyName("overrideLootDistributionDeadScavs")]
     public List<ItemCountDistributionConfig> OverrideLootDistributionDeadScavs { get; set; } = new();
 
     [JsonPropertyName("cellsH")]
@@ -73,7 +73,7 @@ public class KeysInLootCoreConfig
     public int CellsV { get; set; } = 3;
 
     [JsonPropertyName("enableLocationsConfig")]
-    public bool EnableLocationsConfig { get; set; } = false;
+    public bool EnableLocationsConfig { get; set; } = true;
 
     [JsonPropertyName("consoleVerbosity")]
     public string? ConsoleVerbosity { get; set; }

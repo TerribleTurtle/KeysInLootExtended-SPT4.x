@@ -29,15 +29,18 @@
 	// EXPERIENCE PROFILES
 	// =============================================================================
 	// You can easily change the entire vibe of the mod by selecting a profile below.
+	// Profiles act as a dynamic multiplier on top of the finely-tuned map locations!
 	// 
-	// 🟢 "Vanilla Plus"          : (Balanced default. Roughly 1 key every 4 jackets)
-	// 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 16 jackets)
-	// 🟡 "The Original Experience": (Mod classic. Flattens rarity, averages 1 key per jacket)
-	// 🟣 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket)
+	// 🟢 "Balanced"              : (Default. Roughly 1 key every 4 jackets. Prices are 40%)
+	// 🔵 "Bountiful"             : (Double the keys of Balanced. Prices dropped to 20%)
+	// 🟣 "Refined"               : (Massively reduces common keys, buffs rare keys to maintain overall key frequency. Prices are 25%)
+	// 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 16 jackets. Vanilla key prices)
+	// 🟡 "The Mod Classic"       : (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 15%)
+	// 🟠 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket. Vanilla key prices)
 	// ⚪ "Custom"                : (Uses the manual variable settings defined below)
 	// ❌ "Disabled"              : (Completely bypasses the mod and leaves game 100% vanilla)
 	
-	"activeProfile": "Vanilla Plus",
+	"activeProfile": "Balanced",
 
 	// =============================================================================
 	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "Custom")
@@ -108,7 +111,7 @@
 	*/
 
 	
-	"overRideLootDistributionJackets": [
+	"overrideLootDistributionJackets": [
 		{
 			"count": 8,
 			"relativeProbability": 10
@@ -147,7 +150,7 @@
 		}
 	],
 
-	"overRideLootDistributionDuffleBags": [
+	"overrideLootDistributionDuffleBags": [
 		{
 			"count": 8,
 			"relativeProbability": 10
@@ -186,7 +189,7 @@
 		}
 	],
 
-	"overRideLootDistributionDeadScavs": [
+	"overrideLootDistributionDeadScavs": [
 		{
 			"count": 8,
 			"relativeProbability": 10
@@ -232,8 +235,15 @@
 	// -----------------------------------------------------------------------------
 	// LOCATION-BASED (PER-MAP) CONFIGURATION
 	// -----------------------------------------------------------------------------
-	    // Set this to true to enable modifying individual map settings
-    // A folder named locations is provided with this mod
-    // Read the read me to understand this completely
-    "enableLocationsConfig": true,
+	// Set this to true to enable modifying individual map settings
+	// A folder named locations is provided with this mod
+	// Read the README.md to understand this completely
+	// WARNING: If enabled, map-specific files in the locations/ folder will OVERRIDE your global active profile weights!
+	"enableLocationsConfig": true,
+
+	// -----------------------------------------------------------------------------
+	// DEBUG & LOGGING
+	// -----------------------------------------------------------------------------
+	// Set consoleVerbosity to control logging detail. Valid values: "info", "debug"
+	"consoleVerbosity": "info"
 }

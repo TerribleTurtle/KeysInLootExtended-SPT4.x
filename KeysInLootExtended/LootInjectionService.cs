@@ -10,6 +10,10 @@ using SPTarkov.Server.Core.Models.Common;
 
 namespace KeysInLootExtended;
 
+/// <summary>
+/// Service responsible for injecting Keys and Keycards into specific static loot containers.
+/// Parses database templates and mutates container probabilities.
+/// </summary>
 [Injectable(InjectionType.Singleton)]
 public class LootInjectionService
 {
@@ -19,6 +23,14 @@ public class LootInjectionService
     private readonly ItemHelper _itemHelper;
     private readonly InjectedKeysService _injectedKeysService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LootInjectionService"/> class.
+    /// </summary>
+    /// <param name="logger">The SPT logger.</param>
+    /// <param name="databaseServer">The SPT database server.</param>
+    /// <param name="configLoader">The configuration loader containing target weights.</param>
+    /// <param name="itemHelper">Helper for checking item baseclasses.</param>
+    /// <param name="injectedKeysService">Service to record which keys were successfully injected.</param>
     public LootInjectionService(
         ISptLogger<LootInjectionService> logger,
         DatabaseServer databaseServer,
@@ -33,6 +45,10 @@ public class LootInjectionService
         _injectedKeysService = injectedKeysService;
     }
 
+    /// <summary>
+    /// Executes the primary loot injection routine.
+    /// Safely exits early if the profile is "Disabled".
+    /// </summary>
     public void InjectKeysIntoLocations()
     {
         var config = _configLoader.Config;
@@ -46,6 +62,7 @@ public class LootInjectionService
         var allItems = db.Templates.Items.Values;
         
         // Find keys and keycards
+        // Note: These baseclass IDs are hardcoded native EFT IDs for "Key" and "Keycard" categories.
         const string KEY_BASECLASS = "543be5e94bdc2df1348b4568";
         const string KEYCARD_BASECLASS = "5c164d2286f774194c5e69fa";
 
@@ -72,6 +89,8 @@ public class LootInjectionService
 
 
 
+        // Internal dictionary to map raw location IDs from the database to cleaner enum-style names
+        // used by our custom JSON configuration files. "Sandbox" is internally "Ground Zero".
         var locationIdToEnum = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"bigmap", "customs"},
@@ -114,6 +133,8 @@ public class LootInjectionService
             if (location == null) continue;
             
             object? baseObj = null;
+            // The db.Locations object is highly dynamic in SPT. Custom maps might be missing a .Base property,
+            // which throws a RuntimeBinderException. We safely swallow this to ignore invalid map objects.
             try { baseObj = location.Base; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { continue; }
             if (baseObj == null) continue;
 
@@ -182,6 +203,14 @@ public class LootInjectionService
 
     }
 
+    /// <summary>
+    /// Internal routine to apply keys and keycards to a single container's loot distribution.
+    /// </summary>
+    /// <param name="container">The specific StaticLoot container to modify.</param>
+    /// <param name="keys">The list of generic key items to inject.</param>
+    /// <param name="keyWeights">The targeted spawn weights for standard keys.</param>
+    /// <param name="keycards">The list of keycard items to inject.</param>
+    /// <param name="keycardWeights">The targeted spawn weights for keycards.</param>
     private void ModifyContainer(StaticLootDetails container, List<TemplateItem> keys, KeysInLootRarityConfig keyWeights, List<TemplateItem> keycards, KeysInLootRarityConfig keycardWeights)
     {
         var existingItems = container.ItemDistribution?.ToList() ?? new List<ItemDistribution>();
@@ -218,7 +247,6 @@ public class LootInjectionService
 
                 if (targetWeight <= 0) 
                 {
-                    distDict.Remove(itemMongoId);
                     continue;
                 }
 
