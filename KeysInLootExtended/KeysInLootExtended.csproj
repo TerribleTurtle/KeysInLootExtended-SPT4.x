@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <Version>2.0.0</Version>
     <Authors>TerribleTurtle</Authors>
-    <OutputPath>..\dist\user\mods\KeysInLootExtended\</OutputPath>
+    <OutputPath>..\dist\SPT\user\mods\KeysInLootExtended\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
