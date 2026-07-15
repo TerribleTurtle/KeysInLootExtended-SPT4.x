@@ -1,0 +1,19 @@
+changelog:
+  categories:
+    - title: 🚀 Features & Enhancements
+      labels:
+        - enhancement
+        - feature
+    - title: 🐛 Bug Fixes
+      labels:
+        - bug
+        - fix
+    - title: 🛠️ Maintenance & Refactoring
+      labels:
+        - refactor
+        - maintenance
+        - dependencies
+  exclude-labels:
+    - skip-changelog
+    - duplicate
+    - invalid
