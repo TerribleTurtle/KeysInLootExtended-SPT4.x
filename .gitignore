@@ -12,6 +12,7 @@ task_plan.md
 taskplan.md
 .agents/
 *.zip
+ReleaseCheck/
 
 # IDE
 .vs
