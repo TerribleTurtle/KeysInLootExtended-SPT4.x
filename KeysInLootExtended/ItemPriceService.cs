@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
@@ -54,7 +55,7 @@ public class ItemPriceService
         AdjustPricesInternal(
             tables.Templates.Prices,
             tables.Templates.Handbook.Items, 
-            _injectedKeysService, 
+            _injectedKeysService.InjectedKeyIds, 
             config.KeyFleaPricesMultiplier, 
             config.KeyTraderPricesMultiplier);
 
@@ -67,29 +68,26 @@ public class ItemPriceService
     /// </summary>
     /// <param name="fleaPrices">The dictionary of Flea Market prices from the database.</param>
     /// <param name="handbookItems">The list of trader items from the Handbook.</param>
-    /// <param name="injectedKeys">The pre-populated service containing valid injected keys.</param>
+    /// <param name="injectedKeyIds">The HashSet containing valid injected keys.</param>
     /// <param name="fleaMultiplier">The user-configured scale (e.g., 1.0 = 100%, 0.4 = 40%).</param>
     /// <param name="traderMultiplier">The user-configured scale (e.g., 1.0 = 100%, 0.4 = 40%).</param>
     /// <example>
     /// <code>
-    /// ItemPriceService.AdjustPricesInternal(fleaDb, handbookDb, keysSvc, 0.4, 0.4);
+    /// ItemPriceService.AdjustPricesInternal(fleaDb, handbookDb, keysSet, 0.4, 0.4);
     /// </code>
     /// </example>
     public static void AdjustPricesInternal(
         Dictionary<MongoId, double> fleaPrices,
         List<HandbookItem> handbookItems, 
-        InjectedKeysService injectedKeys, 
+        HashSet<MongoId> injectedKeyIds, 
         double fleaMultiplier, 
         double traderMultiplier)
     {
         // Sanitize multipliers: Prevent negative multipliers, and fallback to 1.0 if NaN or Infinity is somehow passed.
-        double safeFleaMultiplier = Math.Max(0.0, fleaMultiplier);
-        if (double.IsNaN(safeFleaMultiplier) || double.IsInfinity(safeFleaMultiplier)) safeFleaMultiplier = 1.0;
+        double safeFleaMultiplier = SanitizeMultiplier(fleaMultiplier);
+        double safeTraderMultiplier = SanitizeMultiplier(traderMultiplier);
 
-        double safeTraderMultiplier = Math.Max(0.0, traderMultiplier);
-        if (double.IsNaN(safeTraderMultiplier) || double.IsInfinity(safeTraderMultiplier)) safeTraderMultiplier = 1.0;
-
-        foreach (var mongoId in injectedKeys.InjectedKeyIds)
+        foreach (var mongoId in injectedKeyIds)
         {
             // 1. Flea Market Prices (O(1) Dictionary Lookup)
             if (fleaPrices.TryGetValue(mongoId, out var currentFleaPrice))
@@ -104,7 +102,7 @@ public class ItemPriceService
         // The Handbook acts as the global base price for all traders, avoiding expensive O(N*M) assort iterations.
         foreach (var handbookEntry in handbookItems)
         {
-            if (injectedKeys.InjectedKeyIds.Contains(handbookEntry.Id))
+            if (injectedKeyIds.Contains(handbookEntry.Id))
             {
                 if (handbookEntry.Price.HasValue)
                 {
@@ -112,5 +110,12 @@ public class ItemPriceService
                 }
             }
         }
+    }
+
+    private static double SanitizeMultiplier(double m)
+    {
+        double safeM = Math.Max(0.0, m);
+        if (double.IsNaN(safeM) || double.IsInfinity(safeM)) safeM = 1.0;
+        return safeM;
     }
 }

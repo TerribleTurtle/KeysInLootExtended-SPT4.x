@@ -44,6 +44,91 @@ public class KeysInLootConfigLoader
         Config = LoadCoreConfig();
     }
 
+    private class ProfileDefinition
+    {
+        public Action<KeysInLootCoreConfig> ApplyCoreConfig { get; init; } = _ => { };
+        public double CommonScale { get; init; } = 1.0;
+        public double RareScale { get; init; } = 1.0;
+        public double SuperRareScale { get; init; } = 1.0;
+    }
+
+    private static readonly Dictionary<string, ProfileDefinition> ProfileDefinitions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "balanced", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 100, SuperRare = 40 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
+                c.OverrideLootDistribution = true;
+                c.KeyFleaPricesMultiplier = 0.4;
+                c.KeyTraderPricesMultiplier = 0.4;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            }
+        }},
+        { "bountiful", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 400, Common = 400, Rare = 200, SuperRare = 80 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 120, Common = 120, Rare = 60, SuperRare = 30 };
+                c.OverrideLootDistribution = true;
+                c.KeyFleaPricesMultiplier = 0.2;
+                c.KeyTraderPricesMultiplier = 0.2;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            },
+            CommonScale = 2.0, RareScale = 2.0, SuperRareScale = 2.0
+        }},
+        { "refined", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 170, SuperRare = 110 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 18, Common = 18, Rare = 51, SuperRare = 41 };
+                c.OverrideLootDistribution = true;
+                c.KeyFleaPricesMultiplier = 0.25;
+                c.KeyTraderPricesMultiplier = 0.25;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            },
+            CommonScale = 0.3, RareScale = 1.7, SuperRareScale = 2.75
+        }},
+        { "hardcore scarcity", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 15, Common = 15, Rare = 8, SuperRare = 4 };
+                c.OverrideLootDistribution = false;
+                c.KeyFleaPricesMultiplier = 1.0;
+                c.KeyTraderPricesMultiplier = 1.0;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            },
+            CommonScale = 0.3, RareScale = 0.3, SuperRareScale = 0.3
+        }},
+        { "the mod classic", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 500, Common = 500, Rare = 500, SuperRare = 500 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 200, SuperRare = 200 };
+                c.OverrideLootDistribution = true;
+                c.KeyFleaPricesMultiplier = 0.15;
+                c.KeyTraderPricesMultiplier = 0.15;
+                c.CellsH = 3;
+                c.CellsV = 3;
+                c.EnableLocationsConfig = false;
+            }
+        }},
+        { "the loot piñata", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
+                c.OverrideLootDistribution = true;
+                c.KeyFleaPricesMultiplier = 1.0;
+                c.KeyTraderPricesMultiplier = 1.0;
+                c.CellsH = 5;
+                c.CellsV = 5;
+            },
+            CommonScale = 0.05, RareScale = 50.0, SuperRareScale = 250.0
+        }},
+        { "disabled", new ProfileDefinition() },
+        { "custom", new ProfileDefinition() }
+    };
+
     /// <summary>
     /// Loads the core config.jsonc file and applies the selected ActiveProfile overrides.
     /// </summary>
@@ -66,71 +151,15 @@ public class KeysInLootConfigLoader
             throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize config.jsonc to KeysInLootCoreConfig.");
         }
 
-        // Apply profile overrides
-        switch (config.ActiveProfile.ToLowerInvariant())
+        // Apply profile overrides safely handling null profiles
+        if (ProfileDefinitions.TryGetValue(config.ActiveProfile ?? string.Empty, out var profileDef))
         {
-            case "balanced":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 100, SuperRare = 40 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
-                config.OverrideLootDistribution = true;
-                config.KeyFleaPricesMultiplier = 0.4;
-                config.KeyTraderPricesMultiplier = 0.4;
-                config.CellsH = 3;
-                config.CellsV = 3;
-                break;
-            case "bountiful":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 400, Common = 400, Rare = 200, SuperRare = 80 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 120, Common = 120, Rare = 60, SuperRare = 30 };
-                config.OverrideLootDistribution = true;
-                config.KeyFleaPricesMultiplier = 0.2;
-                config.KeyTraderPricesMultiplier = 0.2;
-                config.CellsH = 3;
-                config.CellsV = 3;
-                break;
-            case "refined":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 170, SuperRare = 110 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 18, Common = 18, Rare = 51, SuperRare = 41 };
-                config.OverrideLootDistribution = true;
-                config.KeyFleaPricesMultiplier = 0.25;
-                config.KeyTraderPricesMultiplier = 0.25;
-                config.CellsH = 3;
-                config.CellsV = 3;
-                break;
-            case "hardcore scarcity":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 15, Common = 15, Rare = 8, SuperRare = 4 };
-                config.OverrideLootDistribution = false;
-                config.KeyFleaPricesMultiplier = 1.0;
-                config.KeyTraderPricesMultiplier = 1.0;
-                config.CellsH = 3;
-                config.CellsV = 3;
-                break;
-            case "the mod classic":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 500, Common = 500, Rare = 500, SuperRare = 500 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 200, SuperRare = 200 };
-                config.OverrideLootDistribution = true;
-                config.KeyFleaPricesMultiplier = 0.15;
-                config.KeyTraderPricesMultiplier = 0.15;
-                config.CellsH = 3;
-                config.CellsV = 3;
-                config.EnableLocationsConfig = false;
-                break;
-            case "the loot piñata":
-                config.KeyWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
-                config.KeycardWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
-                config.OverrideLootDistribution = true;
-                config.KeyFleaPricesMultiplier = 1.0;
-                config.KeyTraderPricesMultiplier = 1.0;
-                config.CellsH = 5;
-                config.CellsV = 5;
-                break;
-            case "disabled":
-            case "custom":
-                break;
-            default:
-                _logger.Warning($"[KeysInLootExtended] WARNING: Unknown profile '{config.ActiveProfile}' selected. Defaulting to 'Custom' settings.");
-                config.ActiveProfile = "Custom";
-                break;
+            profileDef.ApplyCoreConfig(config);
+        }
+        else
+        {
+            _logger.Warning($"[KeysInLootExtended] WARNING: Unknown profile '{config.ActiveProfile}' selected. Defaulting to 'Custom' settings.");
+            config.ActiveProfile = "Custom";
         }
 
         return config;
@@ -162,41 +191,14 @@ public class KeysInLootConfigLoader
 
     private void ScaleLocationConfig(KeysInLootLocationConfig locConfig, string profile)
     {
-        // By default, if the profile isn't actively adjusting map ratios, we use a 1.0 multiplier (no change).
-        double commonScale = 1.0;
-        double rareScale = 1.0;
-        double superRareScale = 1.0;
-
-        switch (profile.ToLowerInvariant())
+        if (!ProfileDefinitions.TryGetValue(profile ?? string.Empty, out var profileDef))
         {
-            case "bountiful":
-                // Bountiful flatly doubles all key drops across the board without filtering trash.
-                commonScale = 2.0; rareScale = 2.0; superRareScale = 2.0;
-                break;
-            case "refined":
-                // Refined severely drops common trash keys, but redistributes that lost probability mass
-                // up into the Rare and SuperRare brackets to maintain the overall total key drop frequency.
-                commonScale = 0.3; rareScale = 1.7; superRareScale = 2.75;
-                break;
-            case "hardcore scarcity":
-                // Hardcore globally suppresses all keys to a fraction of their vanilla map configurations.
-                commonScale = 0.3; rareScale = 0.3; superRareScale = 0.3;
-                break;
-            case "the loot piñata":
-                // Loot Piñata almost entirely purges common keys and artificially forces incredibly high
-                // spawn weights for Rare/SuperRare keys to simulate a broken economy.
-                commonScale = 0.05; rareScale = 50.0; superRareScale = 250.0;
-                break;
-            case "balanced":
-            case "the mod classic":
-            case "custom":
-            default:
-                return;
+            return;
         }
 
-        ScaleContainer(locConfig.JacketContainer, commonScale, rareScale, superRareScale);
-        ScaleContainer(locConfig.DuffleBagContainer, commonScale, rareScale, superRareScale);
-        ScaleContainer(locConfig.DeadScavContainer, commonScale, rareScale, superRareScale);
+        ScaleContainer(locConfig.JacketContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
+        ScaleContainer(locConfig.DuffleBagContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
+        ScaleContainer(locConfig.DeadScavContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
     }
 
     private void ScaleContainer(KeysInLootContainerConfig? container, double commonScale, double rareScale, double superRareScale)

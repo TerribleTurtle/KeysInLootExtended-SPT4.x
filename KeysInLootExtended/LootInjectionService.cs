@@ -66,21 +66,29 @@ public class LootInjectionService
         const string KEY_BASECLASS = "543be5e94bdc2df1348b4568";
         const string KEYCARD_BASECLASS = "5c164d2286f774194c5e69fa";
 
-        var keys = new List<TemplateItem>();
-        var keycards = new List<TemplateItem>();
+        var keys = new List<(TemplateItem Item, MongoId Id)>();
+        var keycards = new List<(TemplateItem Item, MongoId Id)>();
         
         foreach (var item in allItems)
         {
             if (_itemHelper.IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
             {
-                keycards.Add(item);
-                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); } 
+                try 
+                { 
+                    var id = new MongoId(item.Id);
+                    keycards.Add((item, id));
+                    _injectedKeysService.InjectedKeyIds.Add(id); 
+                } 
                 catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping keycard {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
             }
             else if (_itemHelper.IsOfBaseclass(item.Id, KEY_BASECLASS))
             {
-                keys.Add(item);
-                try { _injectedKeysService.InjectedKeyIds.Add(new MongoId(item.Id)); } 
+                try 
+                { 
+                    var id = new MongoId(item.Id);
+                    keys.Add((item, id));
+                    _injectedKeysService.InjectedKeyIds.Add(id); 
+                } 
                 catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping key {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
             }
         }
@@ -129,6 +137,10 @@ public class LootInjectionService
             .Cast<dynamic>()
             .ToList();
 
+        var jacketContainerId = new MongoId("578f8778245977358849a9b5");
+        var duffleContainerId = new MongoId("578f87a3245977356274f2cb");
+        var deadScavContainerId = new MongoId("5909e4b686f7747f5b744fa4");
+
         foreach (var location in validLocations)
         {
             if (location == null) continue;
@@ -169,34 +181,22 @@ public class LootInjectionService
                 }
             }
 
-            // Jacket - Standard SPT global static loot template ID
-            var jacketId = new MongoId("578f8778245977358849a9b5");
-            if (staticLootDict.ContainsKey(jacketId))
+            var targets = new (MongoId Id, KeysInLootRarityConfig KeyWeight, KeysInLootRarityConfig KeycardWeight, ItemCountDistribution[]? Counts)[]
             {
-                var jacket = staticLootDict[jacketId];
-                ModifyContainer(jacket, keys, jacketKeyWeight, keycards, jacketKeycardWeight);
-                if (jacketCounts != null) jacket.ItemCountDistribution = jacketCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-                modifiedContainers++;
-            }
+                (jacketContainerId, jacketKeyWeight, jacketKeycardWeight, jacketCounts),
+                (duffleContainerId, duffleKeyWeight, duffleKeycardWeight, duffleCounts),
+                (deadScavContainerId, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
+            };
 
-            // Duffle Bag - Standard SPT global static loot template ID
-            var duffleId = new MongoId("578f87a3245977356274f2cb");
-            if (staticLootDict.ContainsKey(duffleId))
+            foreach (var target in targets)
             {
-                var duffle = staticLootDict[duffleId];
-                ModifyContainer(duffle, keys, duffleKeyWeight, keycards, duffleKeycardWeight);
-                if (duffleCounts != null) duffle.ItemCountDistribution = duffleCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-                modifiedContainers++;
-            }
-
-            // Dead Scav - Standard SPT global static loot template ID
-            var deadScavId = new MongoId("5909e4b686f7747f5b744fa4");
-            if (staticLootDict.ContainsKey(deadScavId))
-            {
-                var deadScav = staticLootDict[deadScavId];
-                ModifyContainer(deadScav, keys, deadScavKeyWeight, keycards, deadScavKeycardWeight);
-                if (deadScavCounts != null) deadScav.ItemCountDistribution = deadScavCounts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-                modifiedContainers++;
+                if (staticLootDict.ContainsKey(target.Id))
+                {
+                    var container = staticLootDict[target.Id];
+                    ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
+                    if (target.Counts != null) container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+                    modifiedContainers++;
+                }
             }
         }
 
@@ -212,7 +212,7 @@ public class LootInjectionService
     /// <param name="keyWeights">The targeted spawn weights for standard keys.</param>
     /// <param name="keycards">The list of keycard items to inject.</param>
     /// <param name="keycardWeights">The targeted spawn weights for keycards.</param>
-    private void ModifyContainer(StaticLootDetails container, List<TemplateItem> keys, KeysInLootRarityConfig keyWeights, List<TemplateItem> keycards, KeysInLootRarityConfig keycardWeights)
+    private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id)> keys, KeysInLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id)> keycards, KeysInLootRarityConfig keycardWeights)
     {
         var existingItems = container.ItemDistribution?.ToList() ?? new List<ItemDistribution>();
         var distDict = new Dictionary<MongoId, List<ItemDistribution>>();
@@ -223,10 +223,13 @@ public class LootInjectionService
             distDict[entry.Tpl].Add(entry);
         }
 
-        void ProcessItems(List<TemplateItem> items, KeysInLootRarityConfig weights)
+        void ProcessItems(List<(TemplateItem Item, MongoId Id)> items, KeysInLootRarityConfig weights)
         {
-            foreach (var item in items)
+            foreach (var tuple in items)
             {
+                var item = tuple.Item;
+                var itemMongoId = tuple.Id;
+
                 int targetWeight = 0;
                 // In SPT, a null rarity typically maps to the "Very Common" tier, internally referred to as "Not_exist"
                 string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
@@ -237,14 +240,6 @@ public class LootInjectionService
                     case "Common": targetWeight = weights.Common; break;
                     case "Rare": targetWeight = weights.Rare; break;
                     case "Superrare": targetWeight = weights.SuperRare; break;
-                }
-
-                MongoId itemMongoId;
-                try { itemMongoId = new MongoId(item.Id); } 
-                catch (FormatException ex) 
-                { 
-                    _logger.Warning($"[KeysInLootExtended] Skipping item {item.Id} in container loop due to invalid MongoId format: {ex.Message}");
-                    continue; 
                 }
 
                 if (targetWeight <= 0) 

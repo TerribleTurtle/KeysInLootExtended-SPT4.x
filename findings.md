@@ -10,6 +10,7 @@
 *   **JSON Caching (Performance):** Map config parsing loops through every map during startup. Allocating `JsonSerializerOptions` on every loop iteration spikes allocations. **[valid_from: 2026-07-15]** It must be globally cached in a `static readonly` field.
 *   **String Normalization:** Profile switches (`config.ActiveProfile`) must always use `.ToLowerInvariant()` to prevent silent configuration failures if the user alters casing.
 *   **Null-Coalescing Safety:** User-provided JSONC files may contain malformed or explicit `null` overrides (e.g. `"jacketContainer": null`). To prevent raw C# `NullReferenceException`s during object instantiation (where a serializer overrides `new()` defaults with `null`), use the null-coalescing operator `??` to gracefully fall back to global config weights.
+*   **[2026-07-15] Switch Statements vs Dictionary Maps:** When scaling up large hardcoded configuration parameters (such as `switch (ActiveProfile)`), converting them into an O(1) `Dictionary<string, ProfileDefinition>` dramatically improves readability and maintenance. **Crucially**, `Dictionary.TryGetValue` throws `ArgumentNullException` on a null key (unlike a switch). Always protect dynamic user inputs using null-coalescing operators `TryGetValue(config.ActiveProfile ?? string.Empty, ...)`.
 *   **Fail-Loudly Principles:** Misconfigurations or broken type checks must explicitly log and fail loudly instead of being swallowed.
 
 ## Core Loot Engine & Memory Optimizations
@@ -30,6 +31,7 @@
 
 ## Item Template & Database Manipulation
 *   **Memory Optimizations (GC Pressure):** Looping over lists inside generic enumerations forces C# to allocate a closure Lambda per execution, heavily impacting GC during server boot. **Always convert lists to pre-computed `HashSet<T>` and execute O(1) memory-safe `Contains` operations.**
+*   **[2026-07-15] Try-Catch Allocations inside Hot Loops:** Generating `new MongoId(...)` inside deep mapping loops alongside `try-catch` structures causes tremendous GC allocation spikes when strings fail parsing or when simply allocated en masse. Strings to be converted to `MongoId` must be parsed exactly *once* and stored outside of the core injection loops.
 *   **Economy Adjustments:** Flea Prices accessed via `Templates.Prices`. Trader Assorts via `Traders[traderId].Assort`. Adjustments MUST use O(1) hash sets of injected keys to limit blast radius.
 *   **[2026-07-15] Economy Pivot (Handbook over Assorts):** Instead of executing expensive O(N*M) iterations over every Trader's individual Assort list as originally planned, Trader Base Prices were pivoted to iterate over `tables.Templates.Handbook.Items` instead. The Handbook acts as the global base price index for all traders, making this a significant architectural optimization.
 *   **MongoId Parsing Crashes:** Items added by other mods might contain invalid `MongoId` formats, causing server crashes when iterating arrays. The C# port must wrap `new MongoId(item.Id)` in a try-catch block for `FormatException` to skip malformed items and prevent server halts.
