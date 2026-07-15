@@ -59,10 +59,10 @@ public class KeysInLootLocationConfig
 public class KeysInLootContainerConfig
 {
     [JsonPropertyName("key")]
-    public KeysInLootRarityConfig Key { get; set; } = new();
+    public KeysInLootRarityConfig? Key { get; set; } = null;
 
     [JsonPropertyName("keycard")]
-    public KeysInLootRarityConfig Keycard { get; set; } = new();
+    public KeysInLootRarityConfig? Keycard { get; set; } = null;
 }
 
 public class KeysInLootRarityConfig

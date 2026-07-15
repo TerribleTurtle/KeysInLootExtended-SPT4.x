@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Utils;
-using MongoDB.Bson;
+using SPTarkov.Server.Core.Models.Common;
 
 namespace KeysInLootExtended;
 
