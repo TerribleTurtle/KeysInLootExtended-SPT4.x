@@ -13,3 +13,5 @@ task_plan.md
 # IDE
 .vs
 .vscode
+bin/
+obj/

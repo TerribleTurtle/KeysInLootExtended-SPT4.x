@@ -232,7 +232,8 @@
 	// -----------------------------------------------------------------------------
 	// LOCATION-BASED (PER-MAP) CONFIGURATION
 	// -----------------------------------------------------------------------------
-	// Set this to true if you want to override the global weights and use the specific per-map 
-	// config files found in the 'locations' folder instead.
-    "enableLocationsConfig" : false
+	    // Set this to true to enable modifying individual map settings
+    // A folder named locations is provided with this mod
+    // Read the read me to understand this completely
+    "enableLocationsConfig": true,
 }
