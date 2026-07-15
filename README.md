@@ -1,12 +1,18 @@
-# TerribleTurtle - Keys In Loot Extended
+# TerribleTurtle - Keys In Loot Extended (2.0.0)
 [GitHub Repository](https://github.com/TerribleTurtle/KeysInLootExtended)
 
 > **Based on the original "Keys In Loot" mod by MusicManiac**
 
 This mod allows every single key in Escape from Tarkov to spawn inside standard loot containers (like Jackets and Duffle Bags) instead of being locked exclusively behind bosses and specific map spawns.
 
-## Features
+## 🚀 2.0.0 Architectural Overhaul
+KeysInLootExtended has been completely rewritten from the ground up as a **native C# (.NET 9) Server Mod** for maximum performance and reliability in SPT 4.0+.
 
+- **O(1) Memory Optimizations:** Replaced slow legacy array iterations with highly optimized `HashSet<T>` lookups. This dramatically reduces Garbage Collection (GC) pressure and server boot times.
+- **Dynamic Modded Map Support:** The mod now uses C# Reflection to dynamically discover and support custom maps injected into the SPT database—no more hardcoded map lists!
+- **Fail-Loudly Error Handling:** Strict type-checking, `MongoId` parsing protection, and robust null-coalescing. Misconfigured JSON variables or missing item IDs will immediately halt and print explicit, actionable error messages to the server console instead of silently swallowing errors or crashing the loot engine.
+
+## Features
 - **Dynamic Loot Adjustment:** Automatically hooks into SPT's database to find all current keys and keycards (including new ones added in recent updates).
 - **Customizable Spawn Weights:** Increases the chance of keys spawning in Jackets, Duffle Bags, and on Dead Scavs based on their rarity (Common, Rare, Superrare, etc.).
 - **Container Overrides:** Modifies the internal probability distributions so that containers are much more likely to spawn multiple items, rather than being empty. 
