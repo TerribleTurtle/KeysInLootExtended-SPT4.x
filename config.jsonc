@@ -142,30 +142,30 @@
 
 	
 	"overrideLootDistributionJackets": [
-		{ "count": 5, "relativeProbability": 100 },
-		{ "count": 4, "relativeProbability": 200 },
-		{ "count": 3, "relativeProbability": 700 },
-		{ "count": 2, "relativeProbability": 4000 },
-		{ "count": 1, "relativeProbability": 4500 },
-		{ "count": 0, "relativeProbability": 500 }
+		{ "count": 5, "relativeProbability": 200 },
+		{ "count": 4, "relativeProbability": 800 },
+		{ "count": 3, "relativeProbability": 3500 },
+		{ "count": 2, "relativeProbability": 4300 },
+		{ "count": 1, "relativeProbability": 1000 },
+		{ "count": 0, "relativeProbability": 200 }
 	],
 
 	"overrideLootDistributionDuffleBags": [
-		{ "count": 5, "relativeProbability": 100 },
-		{ "count": 4, "relativeProbability": 200 },
-		{ "count": 3, "relativeProbability": 700 },
-		{ "count": 2, "relativeProbability": 4000 },
-		{ "count": 1, "relativeProbability": 4500 },
-		{ "count": 0, "relativeProbability": 500 }
+		{ "count": 5, "relativeProbability": 200 },
+		{ "count": 4, "relativeProbability": 800 },
+		{ "count": 3, "relativeProbability": 3500 },
+		{ "count": 2, "relativeProbability": 4300 },
+		{ "count": 1, "relativeProbability": 1000 },
+		{ "count": 0, "relativeProbability": 200 }
 	],
 
 	"overrideLootDistributionDeadScavs": [
-		{ "count": 5, "relativeProbability": 100 },
-		{ "count": 4, "relativeProbability": 200 },
-		{ "count": 3, "relativeProbability": 700 },
-		{ "count": 2, "relativeProbability": 4000 },
-		{ "count": 1, "relativeProbability": 4500 },
-		{ "count": 0, "relativeProbability": 500 }
+		{ "count": 5, "relativeProbability": 200 },
+		{ "count": 4, "relativeProbability": 800 },
+		{ "count": 3, "relativeProbability": 3500 },
+		{ "count": 2, "relativeProbability": 4300 },
+		{ "count": 1, "relativeProbability": 1000 },
+		{ "count": 0, "relativeProbability": 200 }
 	],
 
 	// Override jacket container size. Vanilla default is 2x2.

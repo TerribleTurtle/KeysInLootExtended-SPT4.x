@@ -327,10 +327,7 @@ public class KeysInLootConfigLoader
     {
         if (rarity == null) return;
         
-        // NotExist is intentionally not scaled up by commonScale so that profile modifiers don't accidentally
-        // double the chance of empty container slots when they meant to increase key drops.
-        // We use Math.Max(1, ...) to ensure that low-weight vanilla keys aren't mathematically rounded down 
-        // to 0 and completely purged from the drop pool by fractional scalars (e.g. 0.05).
+        rarity.NotExist = rarity.NotExist > 0 ? Math.Max(1, (int)Math.Round(rarity.NotExist * commonScale)) : 0;
         rarity.Common = rarity.Common > 0 ? Math.Max(1, (int)Math.Round(rarity.Common * commonScale)) : 0;
         rarity.Rare = rarity.Rare > 0 ? Math.Max(1, (int)Math.Round(rarity.Rare * rareScale)) : 0;
         rarity.SuperRare = rarity.SuperRare > 0 ? Math.Max(1, (int)Math.Round(rarity.SuperRare * superRareScale)) : 0;
