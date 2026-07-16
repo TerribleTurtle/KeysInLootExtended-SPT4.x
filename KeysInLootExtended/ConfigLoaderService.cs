@@ -142,6 +142,7 @@ public class KeysInLootConfigLoader
         { "the musicmaniac classic", new ProfileDefinition {
             ApplyCoreConfig = c => {
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 500, Common = 500, Rare = 500, SuperRare = 500 };
+                // Fixed original mod bug: The original mod accidentally set 'NotExist' to 500, but the intent was 50 for all keycards.
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 50, Common = 50, Rare = 50, SuperRare = 50 };
                 c.OverrideLootDistribution = true;
                 c.KeyFleaPricesMultiplier = 0.75;
