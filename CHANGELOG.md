@@ -4,6 +4,8 @@
 
 Welcome to the 2.0.0 release of **KeysInLootExtended**! 
 
+🟢 **[FULLY SPT 4.x COMPATIBLE]** This mod has been completely rebuilt from the ground up to support the modern SPT 4.x ecosystem. 
+
 In standard Escape from Tarkov, many keys and keycards are locked exclusively behind specific bosses or rare map spawns. This mod changes that by allowing *every single key* in the game to spawn naturally inside standard loot containers (Jackets, Duffle Bags, and Dead Scavs).
 
 ### Features
@@ -19,4 +21,4 @@ In standard Escape from Tarkov, many keys and keycards are locked exclusively be
 2. Download `KeysInLootExtended-2.0.0.zip` below.
 3. Extract the zip file directly into your SPT `user/mods/` directory.
 
-*A huge thank you to MusicManiac, the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept! This mod has been fully rebuilt and updated from the ground up for modern SPT 4.x.*
+*A huge thank you to [MusicManiac](https://github.com/MusicManiac/KeysInLoot), the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept!*
