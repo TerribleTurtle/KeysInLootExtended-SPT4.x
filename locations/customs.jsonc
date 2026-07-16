@@ -13,7 +13,7 @@
         // Dorm room key 114 relative to average probability: 84 / 385 = 0.218
         // Example: Jacket (rare) (Dorm room key 114) relative probability: 84 -> 0.15% spawn chance
         "key": {
-            "notExist": 0,
+            "notExist": 168,
             "common": 168,
             "rare": 84,
             "superRare": 42
@@ -31,7 +31,7 @@
         // 0.218 (dorm 114) * 777 = 169.5
         // Example: SPT 3.11.3 - Duffle Bag (Missam forklift key) relative probability: 272 -> 0.12% spawn chance
         "key": {
-            "notExist": 0,
+            "notExist": 340,
             "common": 340,
             "rare": 170,
             "superRare": 85
@@ -49,7 +49,7 @@
         // 0.218 (dorm 114) * 118 = 25.7
         // Example: SPT 3.11.3 - Dead Scav (GreenBat lithium battery) relative probability: 485 -> 0.13% spawn chance
         "key": {
-            "notExist": 0,
+            "notExist": 52,
             "common": 52,
             "rare": 26,
             "superRare": 13

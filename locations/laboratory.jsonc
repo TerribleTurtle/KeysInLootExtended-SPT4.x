@@ -13,7 +13,7 @@
         // Dorm room key 114 relative to average probability: 64 / 277.3 = 0.231
         // Example: Jacket (rare) (Dorm room key 114) relative probability: 64 -> 0.16% spawn chance
         "key": {
-            "notExist": 0,
+            "notExist": 128,
             "common": 128,
             "rare": 64,
             "superRare": 32
@@ -30,7 +30,7 @@
         // Average relative probability: 120214 / 287  = 418.6
         // Base (dorm 114): 0.231  * 418.6 = 96.8
         "key": {
-            "notExist": 0,
+            "notExist": 192,
             "common": 192,
             "rare": 96,
             "superRare": 48
