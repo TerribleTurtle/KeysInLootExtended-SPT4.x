@@ -31,22 +31,44 @@
 	// You can easily change the entire vibe of the mod by selecting a profile below.
 	// Profiles act as a dynamic multiplier on top of the finely-tuned map locations!
 	// 
-	// --- Expected Outcomes per Container (Based on Simulation) ---
-	// 🟢 "Balanced"          | ~15% chance for a key | ~3,900 expected rouble value
-	// 🔵 "Bountiful"         | ~26% chance for a key | ~3,400 expected rouble value
-	// 🟣 "Refined"           |  ~9% chance for a key | ~3,740 expected rouble value
-	// 🔴 "Hardcore Scarcity" |  ~5% chance for a key | ~2,600 expected rouble value
-	// ❌ "Disabled"          |  ~6% chance for a key | N/A (High-tier keys cannot spawn in containers)
-	// -------------------------------------------------------------
+	// The active profile dictates not just how often you find keys, but the intended "feel" of your progression.
+	//
+	// 1 - 🟢 "Balanced" (The Working Adult)
+	//     - The Feel: Quantity and Consistency. You find keys frequently to keep the dopamine flowing, though many will be common.
+	//     - Market: Because keys drop 2x more than vanilla, market prices are crashed (0.4x) to simulate supply/demand and prevent economy breakage.
+	//     - 100 Jackets: ~15 keys (9 Common, 5 Rare, 1 SuperRare).
 	// 
-	// 1 - 🟢 "Balanced"              : (Default. Roughly 1 key every 7 containers. Prices are 40%)
-	// 2 - 🔵 "Bountiful"             : (Double the keys of Balanced. Prices dropped to 20%)
-	// 3 - 🟣 "Refined"               : (Massively reduces common keys, buffs rare keys to maintain overall key frequency. Prices are 25%)
-	// 4 - 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 20 containers. Vanilla key prices)
-	// 5 - 🟡 "The MusicManiac Classic" : (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 75%)
-	// 6 - 🟠 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket. Vanilla key prices)
-	// 7 - ⚪ "Custom"                : (Uses the manual variable settings defined below)
-	// 8 - ❌ "Disabled"              : (Completely bypasses the mod and leaves game 100% vanilla)
+	// 2 - 🔵 "Bountiful" (The Looter Shooter)
+	//     - The Feel: Loot explosions. Every jacket is stuffed. You find keys constantly.
+	//     - Market: Keys drop 4x more than vanilla. Market prices are heavily crashed (0.2x).
+	//     - 100 Jackets: ~30 keys (18 Common, 9 Rare, 3 SuperRare).
+	//
+	// 3 - 🟣 "Refined" (The Anti-Trash)
+	//     - The Feel: Quality over Quantity. You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger.
+	//     - Market: Keys are slightly more common than vanilla, but extremely high quality. Prices are kept at 1.0x (Vanilla).
+	//     - 100 Jackets: ~10 keys (1 Common, 8 Rare, 1 SuperRare).
+	//
+	// 4 - 🔴 "Hardcore Scarcity" (The Masochist)
+	//     - The Feel: Brutal scarcity. You will open 20 jackets and find nothing. When you find a key, you gasp.
+	//     - Market: Keys are rarer than vanilla. Prices are kept at 1.0x (Vanilla).
+	//     - 100 Jackets: ~5 keys (3 Common, 2 Rare, 0.2 SuperRare).
+	//
+	// 5 - 🟡 "The MusicManiac Classic" (The Original Mod)
+	//     - Bypasses location-specific logic. Adds massive flat weights to all containers everywhere. Very chaotic. Prices crashed (0.75x).
+	//     - 100 Jackets: ~96 keys (Wildly unpredictable quality).
+	//
+	// 6 - 🟠 "The Loot Piñata" (Cheat Profile)
+	//     - Pure chaos. 25 items per container, practically 100% chance for a key, mostly SuperRare. Prices 1.0x.
+	//     - 100 Jackets: ~300+ keys. 
+	//
+	// 7 - ⚪ "Custom"
+	//     - Uses the manual variable settings defined below.
+	//
+	// 8 - ❌ "Disabled" (The Purist / Vanilla)
+	//     - Bypasses the mod completely. Pure 100% vanilla Tarkov.
+	//     - 100 Jackets: ~8 keys (7 Common, 1 Rare, 0 SuperRare).
+	//
+	// -------------------------------------------------------------
 	
 	"activeProfile": "1",
 
@@ -103,15 +125,15 @@
 	The "count" is the TOTAL number of items (keys, meds, junk, etc.) that will spawn in the container.
 	The "relativeProbability" is the chance of that count being chosen, calculated against the sum of all probabilities.
 	
-	Example:
-	[ { "count": 2, "relativeProbability": 800 },
-	  { "count": 1, "relativeProbability": 150 },
-	  { "count": 0, "relativeProbability": 50 } ]
+	Example (The defaults below sum to exactly 10,000 for easy percentages):
+	[ { "count": 2, "relativeProbability": 4000 },
+	  { "count": 1, "relativeProbability": 4500 },
+	  { "count": 0, "relativeProbability": 1500 } ]
 	  
-	In this example, the total sum is 1000. 
-	- 800/1000 (80%) chance to spawn exactly 2 items.
-	- 150/1000 (15%) chance to spawn exactly 1 item.
-	- 50/1000 (5%) chance to spawn 0 items (empty container).
+	In this example, the total sum is 10000. 
+	- 4000/10000 (40%) chance to spawn exactly 2 items.
+	- 4500/10000 (45%) chance to spawn exactly 1 item.
+	- 1500/10000 (15%) chance to spawn 0 items (empty container).
 	
 	Limits & Warnings:
 	- DO NOT use decimals! Decimals will immediately crash the server on map load.
@@ -120,120 +142,30 @@
 
 	
 	"overrideLootDistributionJackets": [
-		{
-			"count": 8,
-			"relativeProbability": 10
-		},
-		{
-			"count": 7,
-			"relativeProbability": 50
-		},
-		{
-			"count": 6,
-			"relativeProbability": 200
-		},
-		{
-			"count": 5,
-			"relativeProbability": 400
-		},
-		{
-			"count": 4,
-			"relativeProbability": 1600
-		},
-		{
-			"count": 3,
-			"relativeProbability": 3200
-		},
-		{
-			"count": 2,
-			"relativeProbability": 12800
-		},
-		{
-			"count": 1,
-			"relativeProbability": 8400
-		},
-		{
-			"count": 0,
-			"relativeProbability": 200
-		}
+		{ "count": 5, "relativeProbability": 100 },
+		{ "count": 4, "relativeProbability": 200 },
+		{ "count": 3, "relativeProbability": 700 },
+		{ "count": 2, "relativeProbability": 4000 },
+		{ "count": 1, "relativeProbability": 4500 },
+		{ "count": 0, "relativeProbability": 500 }
 	],
 
 	"overrideLootDistributionDuffleBags": [
-		{
-			"count": 8,
-			"relativeProbability": 10
-		},
-		{
-			"count": 7,
-			"relativeProbability": 50
-		},
-		{
-			"count": 6,
-			"relativeProbability": 200
-		},
-		{
-			"count": 5,
-			"relativeProbability": 400
-		},
-		{
-			"count": 4,
-			"relativeProbability": 800
-		},
-		{
-			"count": 3,
-			"relativeProbability": 1600
-		},
-		{
-			"count": 2,
-			"relativeProbability": 3200
-		},
-		{
-			"count": 1,
-			"relativeProbability": 4800
-		},
-		{
-			"count": 0,
-			"relativeProbability": 200
-		}
+		{ "count": 5, "relativeProbability": 100 },
+		{ "count": 4, "relativeProbability": 200 },
+		{ "count": 3, "relativeProbability": 700 },
+		{ "count": 2, "relativeProbability": 4000 },
+		{ "count": 1, "relativeProbability": 4500 },
+		{ "count": 0, "relativeProbability": 500 }
 	],
 
 	"overrideLootDistributionDeadScavs": [
-		{
-			"count": 8,
-			"relativeProbability": 10
-		},
-		{
-			"count": 7,
-			"relativeProbability": 50
-		},
-		{
-			"count": 6,
-			"relativeProbability": 200
-		},
-		{
-			"count": 5,
-			"relativeProbability": 400
-		},
-		{
-			"count": 4,
-			"relativeProbability": 800
-		},
-		{
-			"count": 3,
-			"relativeProbability": 3200
-		},
-		{
-			"count": 2,
-			"relativeProbability": 3200
-		},
-		{
-			"count": 1,
-			"relativeProbability": 3200
-		},
-		{
-			"count": 0,
-			"relativeProbability": 200
-		}
+		{ "count": 5, "relativeProbability": 100 },
+		{ "count": 4, "relativeProbability": 200 },
+		{ "count": 3, "relativeProbability": 700 },
+		{ "count": 2, "relativeProbability": 4000 },
+		{ "count": 1, "relativeProbability": 4500 },
+		{ "count": 0, "relativeProbability": 500 }
 	],
 
 	// Override jacket container size. Vanilla default is 2x2.
