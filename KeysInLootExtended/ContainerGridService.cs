@@ -98,6 +98,12 @@ public class ContainerGridService
                 
                 grid.Properties.CellsH = targetCellsH;
                 grid.Properties.CellsV = targetCellsV;
+                
+                // CRITICAL FIX: Tarkov's item template grids define a hard cap on how many items can physically
+                // be spawned inside them (`MaxCount`). For example, Dead Scavs have a vanilla MaxCount of 5.
+                // If we resize the grid to 5x5 (25 slots) without raising MaxCount, the Loot Generator will
+                // successfully roll 25 items from staticLoot.json but physically discard 20 of them.
+                grid.Properties.MaxCount = targetCellsH * targetCellsV;
             }
         }
     }

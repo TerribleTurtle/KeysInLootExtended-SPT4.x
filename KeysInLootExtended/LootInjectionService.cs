@@ -69,9 +69,27 @@ public class LootInjectionService
         var keys = new List<(TemplateItem Item, MongoId Id)>();
         var keycards = new List<(TemplateItem Item, MongoId Id)>();
         
+        bool IsOfBaseclass(string itemId, string targetBaseclass)
+        {
+            string currentId = itemId;
+            while (!string.IsNullOrEmpty(currentId))
+            {
+                if (currentId == targetBaseclass) return true;
+                if (db.Templates.Items.TryGetValue(currentId, out var itemTemplate))
+                {
+                    currentId = itemTemplate.Parent;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return false;
+        }
+
         foreach (var item in allItems)
         {
-            if (_itemHelper.IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
+            if (IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
             {
                 try 
                 { 
@@ -81,7 +99,7 @@ public class LootInjectionService
                 } 
                 catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping keycard {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
             }
-            else if (_itemHelper.IsOfBaseclass(item.Id, KEY_BASECLASS))
+            else if (IsOfBaseclass(item.Id, KEY_BASECLASS))
             {
                 try 
                 { 
@@ -151,8 +169,7 @@ public class LootInjectionService
             try { baseObj = location.Base; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { continue; }
             if (baseObj == null) continue;
 
-            var staticLootDict = location.StaticLoot?.Value;
-            if (staticLootDict == null)
+            if (location.StaticLoot == null)
                 continue;
 
             KeysInLootRarityConfig jacketKeyWeight = config.KeyWeight;
@@ -188,16 +205,24 @@ public class LootInjectionService
                 (deadScavContainerId, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
             };
 
-            foreach (var target in targets)
+            Func<Dictionary<MongoId, StaticLootDetails>?, Dictionary<MongoId, StaticLootDetails>?> transformer = dict => 
             {
-                if (staticLootDict.ContainsKey(target.Id))
+                if (dict == null) return dict;
+                foreach (var target in targets)
                 {
-                    var container = staticLootDict[target.Id];
-                    ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
-                    if (target.Counts != null) container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-                    modifiedContainers++;
+                    if (dict.ContainsKey(target.Id))
+                    {
+                        var container = dict[target.Id];
+                        ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
+                        if (target.Counts != null) 
+                            container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+                    }
                 }
-            }
+                return dict;
+            };
+
+            location.StaticLoot.AddTransformer(transformer);
+            modifiedContainers += 3;
         }
 
         _logger.Success($"[KeysInLootExtended] Successfully injected keys into {modifiedContainers} static containers across valid maps.");

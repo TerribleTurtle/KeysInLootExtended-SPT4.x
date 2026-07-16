@@ -59,6 +59,19 @@ public class KeysInLootConfigLoader
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 100, SuperRare = 40 };
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
                 c.OverrideLootDistribution = true;
+                
+                var standardCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 8400 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 600 }
+                };
+                
+                c.OverrideLootDistributionJackets = standardCounts;
+                c.OverrideLootDistributionDuffleBags = standardCounts;
+                // Leave Dead Scavs as default for balanced
+                c.OverrideLootDistributionDeadScavs = null;
+                
                 c.KeyFleaPricesMultiplier = 0.4;
                 c.KeyTraderPricesMultiplier = 0.4;
                 c.CellsH = 3;
@@ -70,6 +83,19 @@ public class KeysInLootConfigLoader
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 400, Common = 400, Rare = 200, SuperRare = 80 };
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 120, Common = 120, Rare = 60, SuperRare = 30 };
                 c.OverrideLootDistribution = true;
+                
+                var bountifulCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 4000 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 4000 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 }
+                };
+                
+                c.OverrideLootDistributionJackets = bountifulCounts;
+                c.OverrideLootDistributionDuffleBags = bountifulCounts;
+                c.OverrideLootDistributionDeadScavs = bountifulCounts;
+                
                 c.KeyFleaPricesMultiplier = 0.2;
                 c.KeyTraderPricesMultiplier = 0.2;
                 c.CellsH = 3;
@@ -82,6 +108,18 @@ public class KeysInLootConfigLoader
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 170, SuperRare = 110 };
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 18, Common = 18, Rare = 51, SuperRare = 41 };
                 c.OverrideLootDistribution = true;
+                
+                // Refined uses the standard balanced array
+                var standardCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 8400 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 600 }
+                };
+                c.OverrideLootDistributionJackets = standardCounts;
+                c.OverrideLootDistributionDuffleBags = standardCounts;
+                c.OverrideLootDistributionDeadScavs = null;
+                
                 c.KeyFleaPricesMultiplier = 0.25;
                 c.KeyTraderPricesMultiplier = 0.25;
                 c.CellsH = 3;
@@ -113,11 +151,25 @@ public class KeysInLootConfigLoader
                 c.EnableLocationsConfig = false;
             }
         }},
-        { "the loot piñata", new ProfileDefinition {
+        { "the loot pinata", new ProfileDefinition {
             ApplyCoreConfig = c => {
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
                 c.OverrideLootDistribution = true;
+                c.EnableLocationsConfig = false;
+                
+                var pinataCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 25, RelativeProbability = 100 },
+                    new ItemCountDistributionConfig { Count = 20, RelativeProbability = 300 },
+                    new ItemCountDistributionConfig { Count = 15, RelativeProbability = 500 },
+                    new ItemCountDistributionConfig { Count = 10, RelativeProbability = 100 }
+                };
+                
+                c.OverrideLootDistributionJackets = pinataCounts;
+                c.OverrideLootDistributionDuffleBags = pinataCounts;
+                c.OverrideLootDistributionDeadScavs = pinataCounts;
+
                 c.KeyFleaPricesMultiplier = 1.0;
                 c.KeyTraderPricesMultiplier = 1.0;
                 c.CellsH = 5;
@@ -152,6 +204,16 @@ public class KeysInLootConfigLoader
         }
 
         string profileKey = config.ActiveProfile?.Trim().ToLowerInvariant() ?? string.Empty;
+        
+        if (profileKey.Contains("balanced") || profileKey.Contains("(1)")) profileKey = "1";
+        else if (profileKey.Contains("bountiful") || profileKey.Contains("(2)")) profileKey = "2";
+        else if (profileKey.Contains("refined") || profileKey.Contains("(3)")) profileKey = "3";
+        else if (profileKey.Contains("hardcore scarcity") || profileKey.Contains("(4)")) profileKey = "4";
+        else if (profileKey.Contains("the mod classic") || profileKey.Contains("(5)")) profileKey = "5";
+        else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(6)")) profileKey = "6";
+        else if (profileKey.Contains("custom") || profileKey.Contains("(7)")) profileKey = "7";
+        else if (profileKey.Contains("disabled") || profileKey.Contains("(8)")) profileKey = "8";
+
         profileKey = profileKey switch
         {
             "1" => "balanced",
@@ -159,7 +221,7 @@ public class KeysInLootConfigLoader
             "3" => "refined",
             "4" => "hardcore scarcity",
             "5" => "the mod classic",
-            "6" => "the loot piñata",
+            "6" => "the loot pinata",
             "7" => "custom",
             "8" => "disabled",
             _ => profileKey

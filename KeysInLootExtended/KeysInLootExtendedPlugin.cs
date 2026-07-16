@@ -17,7 +17,7 @@ public record ModMetadata : AbstractModMetadata
     public override string ModGuid { get; init; } = "DJ-KeysInLootExtended";
     public override string Name { get; init; } = "KeysInLootExtended";
     public override string Author { get; init; } = "TerribleTurtle";
-    public override SemanticVersioning.Version Version { get; init; } = new("2.0.0");
+    public override SemanticVersioning.Version Version { get; init; } = new("2.0.4");
     public override SemanticVersioning.Range SptVersion { get; init; } = new("~4.0.13");
     
     public override List<string>? Incompatibilities { get; init; }

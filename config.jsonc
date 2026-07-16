@@ -51,7 +51,7 @@
 	"activeProfile": "1",
 
 	// =============================================================================
-	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "Custom")
+	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "7" or "Custom")
 	// =============================================================================
 
 	// Global weights for keys based on their natural rarity
