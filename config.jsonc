@@ -112,6 +112,14 @@
 	"keyTraderPricesMultiplier": 0.4,
 
 	// -----------------------------------------------------------------------------
+	// FENCE ECONOMY
+	// -----------------------------------------------------------------------------
+	// Because simulated PMCs will find these valuable keys more often, they will 
+	// flood Fence's inventory. Set this to true to permanently block these keys 
+	// from Fence's assort.
+	"banKeysFromFence": false,
+
+	// -----------------------------------------------------------------------------
 	// CONTAINER DENSITY (Total Items Per Container)
 	// -----------------------------------------------------------------------------
 	// Set to true to override the game's default loot density (how many items spawn in a container).

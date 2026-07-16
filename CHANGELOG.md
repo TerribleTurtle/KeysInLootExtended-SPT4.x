@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.0.1]
+* **Hotfix:** Restored the missing `banKeysFromFence` setting to the default `config.jsonc` file.
+
 ## [2.0.0]
 
 Welcome to the 2.0.0 release of **KeysInLootExtended**! 
