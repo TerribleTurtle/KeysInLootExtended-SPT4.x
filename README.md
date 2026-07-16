@@ -19,15 +19,27 @@ To keep the game balanced and prevent the economy from breaking, the mod introdu
 
 The easiest way to customize your experience is by selecting an `activeProfile` in the `config.jsonc` file. The mod includes several tailored profiles so you can choose the exact vibe you want:
 
-| Profile | Description | Key Spawn Chance | Avg. Key Value |
+| Profile | Description | Keys per 100 Jackets | Market Price |
 |---|---|---|---|
-| 1 - 🟢 **Balanced** | **The Default.** Feels like vanilla Tarkov, but you actually find keys. | ~15% (1 in 7 boxes) | ~3,900 ₽ |
-| 2 - 🔵 **Bountiful** | **Loot Explosion.** Keys are found constantly. Sell prices are heavily slashed to keep the economy intact. | ~26% (1 in 4 boxes) | ~3,400 ₽ |
-| 3 - 🟣 **Refined** | **Quality over Quantity.** Fewer junk keys and a higher chance for rare keys. Highly balanced economy. | ~9% (1 in 11 boxes) | ~3,740 ₽ |
-| 4 - 🔴 **Hardcore Scarcity** | **The Grind.** Keys spawn slightly less often than vanilla, but the loot pool includes ALL rare keys. Vanilla sell prices are restored. | ~5% (1 in 20 boxes) | ~2,600 ₽ |
-| 8 - ❌ **Disabled** | **Disabled.** Only common junk keys spawn. High-tier keys NEVER spawn in standard containers. | ~6% (1 in 16 boxes) | N/A |
+| 1 - 🟢 **Balanced (The Working Adult)** | **Quantity & Consistency.** Finds keys frequently to keep the dopamine flowing, though many will be common. The market crashes to simulate supply/demand. | **~15 keys** (9 Common, 5 Rare, 1 SuperRare) | **0.4x** (Crashed) |
+| 2 - 🔵 **Bountiful (The Looter Shooter)** | **Loot Explosion.** Every jacket is stuffed. You find keys constantly. To compensate, market prices are completely crashed. | **~30 keys** (18 Common, 9 Rare, 3 SuperRare) | **0.2x** (Crashed) |
+| 3 - 🟣 **Refined (The Anti-Trash)** | **Quality over Quantity.** You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger. | **~10 keys** (1 Common, 8 Rare, 1 SuperRare) | **1.0x** (Vanilla) |
+| 4 - 🔴 **Hardcore Scarcity (The Masochist)** | **The Grind.** Brutal scarcity. You open 20 jackets and find nothing. When you find a key, you gasp. You earn the full vanilla sell price. | **~5 keys** (3 Common, 2 Rare, 0.2 SuperRare) | **1.0x** (Vanilla) |
+| 8 - ❌ **Disabled (The Purist / Vanilla)** | **100% Vanilla Tarkov.** High-tier keys almost NEVER spawn in standard containers. Mostly junk. | **~8 keys** (7 Common, 1 Rare, 0 SuperRare) | **1.0x** (Vanilla) |
 
-> *Note: Additional profiles like `The MusicManiac Classic` and `The Loot Piñata` are also included for more chaotic or specialized runs.*
+> *Note: Additional cheat/testing profiles like `The MusicManiac Classic` and `The Loot Piñata` are also included for more chaotic runs.*
+
+### 📊 Item Density Curves
+
+The profiles also enforce specific item count distributions (how many items drop per container in total, not just keys):
+*   🟢 **1. Balanced (Default):** Averages 2.5 items per container. Shifts the peak to 2-3 items (43% for 2, 35% for 3).
+*   🔵 **2. Bountiful:** Averages 3.5 items. Heavily favors 3-4 items (38% for 3, 40% for 4) for a much denser looting experience.
+*   🟣 **3. Refined:** Vanilla Plus. Averages 1.5 items. Highly favors 1-2 items (45% for 1, 40% for 2) to reduce empty containers.
+*   🔴 **4. Hardcore Scarcity:** Brutally reduced curve. Highly favors 0 or 1 items (50% for 0, 40% for 1) to make finding loot a true grind.
+*   🟡 **5. The MusicManiac Classic:** Enforces a custom probability curve that evenly and heavily favors 2-4 items (30% chance for each), emulating the original mod's behavior.
+*   🟠 **6. The Loot Piñata:** Pure chaos. Forces 10-25 items per container.
+*   ⚪ **7. Custom:** Reverts to whatever raw probability arrays you manually define inside your `config.jsonc` file.
+*   ❌ **8. Disabled:** 100% vanilla Tarkov container densities.
 
 ---
 

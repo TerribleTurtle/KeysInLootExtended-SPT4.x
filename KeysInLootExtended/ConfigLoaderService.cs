@@ -60,15 +60,18 @@ public class KeysInLootConfigLoader
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
                 c.OverrideLootDistribution = true;
                 
-                var standardCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                var balancedCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
                 {
-                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
-                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 8400 },
-                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 600 }
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 200 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 800 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 3500 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 4300 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 200 }
                 };
                 
-                c.OverrideLootDistributionJackets = standardCounts;
-                c.OverrideLootDistributionDuffleBags = standardCounts;
+                c.OverrideLootDistributionJackets = balancedCounts;
+                c.OverrideLootDistributionDuffleBags = balancedCounts;
                 // Leave Dead Scavs as default for balanced
                 c.OverrideLootDistributionDeadScavs = null;
                 
@@ -76,7 +79,8 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 0.4;
                 c.CellsH = 3;
                 c.CellsV = 3;
-            }
+            },
+            CommonScale = 0.15, RareScale = 0.15, SuperRareScale = 0.15
         }},
         { "bountiful", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -88,8 +92,10 @@ public class KeysInLootConfigLoader
                 {
                     new ItemCountDistributionConfig { Count = 5, RelativeProbability = 1000 },
                     new ItemCountDistributionConfig { Count = 4, RelativeProbability = 4000 },
-                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 4000 },
-                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 }
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 3800 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 150 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 50 }
                 };
                 
                 c.OverrideLootDistributionJackets = bountifulCounts;
@@ -101,7 +107,7 @@ public class KeysInLootConfigLoader
                 c.CellsH = 3;
                 c.CellsV = 3;
             },
-            CommonScale = 2.0, RareScale = 2.0, SuperRareScale = 2.0
+            CommonScale = 0.25, RareScale = 0.25, SuperRareScale = 0.25
         }},
         { "refined", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -109,35 +115,52 @@ public class KeysInLootConfigLoader
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 18, Common = 18, Rare = 51, SuperRare = 41 };
                 c.OverrideLootDistribution = true;
                 
-                // Refined uses the standard balanced array
-                var standardCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                var refinedCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
                 {
-                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
-                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 8400 },
-                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 600 }
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 100 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 200 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 700 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 4000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 4500 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 500 }
                 };
-                c.OverrideLootDistributionJackets = standardCounts;
-                c.OverrideLootDistributionDuffleBags = standardCounts;
+                c.OverrideLootDistributionJackets = refinedCounts;
+                c.OverrideLootDistributionDuffleBags = refinedCounts;
                 c.OverrideLootDistributionDeadScavs = null;
                 
-                c.KeyFleaPricesMultiplier = 0.25;
-                c.KeyTraderPricesMultiplier = 0.25;
-                c.CellsH = 3;
-                c.CellsV = 3;
-            },
-            CommonScale = 0.3, RareScale = 1.7, SuperRareScale = 2.75
-        }},
-        { "hardcore scarcity", new ProfileDefinition {
-            ApplyCoreConfig = c => {
-                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
-                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 15, Common = 15, Rare = 8, SuperRare = 4 };
-                c.OverrideLootDistribution = false;
                 c.KeyFleaPricesMultiplier = 1.0;
                 c.KeyTraderPricesMultiplier = 1.0;
                 c.CellsH = 3;
                 c.CellsV = 3;
             },
-            CommonScale = 0.3, RareScale = 0.3, SuperRareScale = 0.3
+            CommonScale = 0.02, RareScale = 0.35, SuperRareScale = 0.20
+        }},
+        { "hardcore scarcity", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 15 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 15, Common = 15, Rare = 8, SuperRare = 4 };
+                c.OverrideLootDistribution = true;
+                
+                var hardcoreCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 10 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 40 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 100 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 850 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 4000 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 5000 }
+                };
+                
+                c.OverrideLootDistributionJackets = hardcoreCounts;
+                c.OverrideLootDistributionDuffleBags = hardcoreCounts;
+                c.OverrideLootDistributionDeadScavs = hardcoreCounts;
+                
+                c.KeyFleaPricesMultiplier = 1.0;
+                c.KeyTraderPricesMultiplier = 1.0;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            },
+            CommonScale = 0.20, RareScale = 0.20, SuperRareScale = 0.20
         }},
         { "the musicmaniac classic", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -145,6 +168,21 @@ public class KeysInLootConfigLoader
                 // Fixed original mod bug: The original mod accidentally set 'NotExist' to 500, but the intent was 50 for all keycards.
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 50, Common = 50, Rare = 50, SuperRare = 50 };
                 c.OverrideLootDistribution = true;
+                
+                var classicCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 500 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 3000 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 3000 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 3000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 400 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 100 }
+                };
+                
+                c.OverrideLootDistributionJackets = classicCounts;
+                c.OverrideLootDistributionDuffleBags = classicCounts;
+                c.OverrideLootDistributionDeadScavs = classicCounts;
+                
                 c.KeyFleaPricesMultiplier = 0.75;
                 c.KeyTraderPricesMultiplier = 0.75;
                 c.CellsH = 3;
