@@ -19,4 +19,4 @@ In standard Escape from Tarkov, many keys and keycards are locked exclusively be
 2. Download `KeysInLootExtended-2.0.0.zip` below.
 3. Extract the zip file directly into your SPT `user/mods/` directory.
 
-*A huge thank you to MusicManiac, the creator of the original "Keys In Loot" mod, for pioneering the foundational concept!*
+*A huge thank you to MusicManiac, the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept! This mod has been fully rebuilt and updated from the ground up for modern SPT 4.x.*
