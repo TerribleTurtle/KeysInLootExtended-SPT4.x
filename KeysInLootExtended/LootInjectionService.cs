@@ -205,6 +205,19 @@ public class LootInjectionService
                 (deadScavContainerId, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
             };
 
+            // -----------------------------------------------------------------------------------------
+            // SPT 4.0 ARCHITECTURE NOTE: The LazyLoad<T> Caching Paradigm
+            // -----------------------------------------------------------------------------------------
+            // In previous SPT versions, reading `.Value` generated a cached dictionary in memory,
+            // which mods could mutate directly. In SPT 4.0, LazyLoad<T> was rewritten to remove caching.
+            // Accessing `.Value` now parses the JSON file from disk every single time.
+            // If we mutate the result of `.Value` directly, our changes are immediately discarded, 
+            // and the server will load a pristine Vanilla copy when a raid starts.
+            //
+            // To fix this, we must use `.AddTransformer()`. This registers our closure into the 
+            // deserialization pipeline. Whenever the server requests the static loot, our transformer 
+            // natively intercepts and injects our custom keys and loot distributions on the fly.
+            // -----------------------------------------------------------------------------------------
             Func<Dictionary<MongoId, StaticLootDetails>?, Dictionary<MongoId, StaticLootDetails>?> transformer = dict => 
             {
                 if (dict == null) return dict;
@@ -214,6 +227,10 @@ public class LootInjectionService
                     {
                         var container = dict[target.Id];
                         ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
+                        
+                        // We must instantiate a new array of ItemCountDistribution here rather than assigning
+                        // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
+                        // references that we don't want to inadvertently cross-contaminate.
                         if (target.Counts != null) 
                             container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
                     }
