@@ -55,11 +55,11 @@
 	//
 	// 5 - 🟡 "The MusicManiac Classic" (The Original Mod)
 	//     - Bypasses location-specific logic. Adds massive flat weights to all containers everywhere. Very chaotic. Prices crashed (0.75x).
-	//     - 100 Jackets: ~96 keys (Wildly unpredictable quality).
+	//     - 100 Jackets: ~200 keys (Wildly unpredictable quality).
 	//
 	// 6 - 🟠 "The Loot Piñata" (Cheat Profile)
-	//     - Pure chaos. 25 items per container, practically 100% chance for a key, mostly SuperRare. Prices 1.0x.
-	//     - 100 Jackets: ~300+ keys. 
+	//     - Pure chaos. 10-25 items per container, practically 100% chance for a key, mostly SuperRare. Prices 1.0x.
+	//     - 100 Jackets: ~1,600 keys. 
 	//
 	// 7 - ⚪ "Custom"
 	//     - Uses the manual variable settings defined below.

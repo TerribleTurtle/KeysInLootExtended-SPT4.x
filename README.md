@@ -25,9 +25,11 @@ The easiest way to customize your experience is by selecting an `activeProfile` 
 | 2 - 🔵 **Bountiful (The Looter Shooter)** | **Loot Explosion.** Every jacket is stuffed. You find keys constantly. To compensate, market prices are completely crashed. | **~30 keys** (18 Common, 9 Rare, 3 SuperRare) | **0.2x** (Crashed) |
 | 3 - 🟣 **Refined (The Anti-Trash)** | **Quality over Quantity.** You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger. | **~10 keys** (1 Common, 8 Rare, 1 SuperRare) | **1.0x** (Vanilla) |
 | 4 - 🔴 **Hardcore Scarcity (The Masochist)** | **The Grind.** Brutal scarcity. You open 20 jackets and find nothing. When you find a key, you gasp. You earn the full vanilla sell price. | **~5 keys** (3 Common, 2 Rare, 0.2 SuperRare) | **1.0x** (Vanilla) |
+| 5 - 🟡 **The MusicManiac Classic** | **The Original Mod.** Ignores map locations. Spams keys everywhere blindly. | **~200 keys** | **0.75x** (Crashed) |
+| 6 - 🟠 **The Loot Piñata** | **Cheat Profile.** Complete chaos. Stuffs every container with 10-25 items, almost all of them ultra-rare keys. | **~1,600 keys** | **1.0x** (Vanilla) |
 | 8 - ❌ **Disabled (The Purist / Vanilla)** | **100% Vanilla Tarkov.** High-tier keys almost NEVER spawn in standard containers. Mostly junk. | **~8 keys** (7 Common, 1 Rare, 0 SuperRare) | **1.0x** (Vanilla) |
 
-> *Note: Additional cheat/testing profiles like `The MusicManiac Classic` and `The Loot Piñata` are also included for more chaotic runs.*
+> *Note: Profile 7 is reserved for "Custom" settings via `config.jsonc`.*
 
 ### 📊 Item Density Curves
 
