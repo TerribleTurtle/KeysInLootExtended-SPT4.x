@@ -43,7 +43,7 @@ public class CultureInvariantDoubleConverter : JsonConverter<double>
 public class KeysInLootCoreConfig
 {
     /// <summary>
-    /// Selects the overarching spawn and economy profile. Valid values include "Balanced", "Bountiful", "Refined", "Hardcore Scarcity", "The Mod Classic", "The Loot Piñata", "Disabled", and "Custom".
+    /// Selects the overarching spawn and economy profile. Valid values include "Balanced", "Bountiful", "Refined", "Hardcore Scarcity", "The MusicManiac Classic", "The Loot Piñata", "Disabled", and "Custom".
     /// </summary>
     [JsonPropertyName("activeProfile")]
     public string ActiveProfile { get; set; } = "Balanced";
