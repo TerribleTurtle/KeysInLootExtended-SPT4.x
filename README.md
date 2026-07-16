@@ -1,6 +1,8 @@
-# TerribleTurtle - Keys In Loot Extended (2.0.0)
+# TerribleTurtle - Keys In Loot Extended (SPT 4.x Compatible)
 
-> **A heartfelt thanks to MusicManiac, the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept and mechanics that made this extended version possible. This mod has been fully rebuilt from the ground up for modern SPT 4.x.**
+> 🟢 **[FULLY SPT 4.x COMPATIBLE]** This mod has been completely rebuilt from the ground up for the modern SPT 4.x ecosystem.
+> 
+> *A heartfelt thanks to [MusicManiac](https://github.com/MusicManiac/KeysInLoot), the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept and mechanics that made this extended version possible.*
 
 ## Overview
 
