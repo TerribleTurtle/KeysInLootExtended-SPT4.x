@@ -139,7 +139,7 @@ public class KeysInLootConfigLoader
             },
             CommonScale = 0.3, RareScale = 0.3, SuperRareScale = 0.3
         }},
-        { "the mod classic", new ProfileDefinition {
+        { "the musicmaniac classic", new ProfileDefinition {
             ApplyCoreConfig = c => {
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 500, Common = 500, Rare = 500, SuperRare = 500 };
                 c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 200, SuperRare = 200 };
@@ -209,7 +209,7 @@ public class KeysInLootConfigLoader
         else if (profileKey.Contains("bountiful") || profileKey.Contains("(2)")) profileKey = "2";
         else if (profileKey.Contains("refined") || profileKey.Contains("(3)")) profileKey = "3";
         else if (profileKey.Contains("hardcore scarcity") || profileKey.Contains("(4)")) profileKey = "4";
-        else if (profileKey.Contains("the mod classic") || profileKey.Contains("(5)")) profileKey = "5";
+        else if (profileKey.Contains("the musicmaniac classic") || profileKey.Contains("the mod classic") || profileKey.Contains("(5)")) profileKey = "5";
         else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(6)")) profileKey = "6";
         else if (profileKey.Contains("custom") || profileKey.Contains("(7)")) profileKey = "7";
         else if (profileKey.Contains("disabled") || profileKey.Contains("(8)")) profileKey = "8";
@@ -220,7 +220,7 @@ public class KeysInLootConfigLoader
             "2" => "bountiful",
             "3" => "refined",
             "4" => "hardcore scarcity",
-            "5" => "the mod classic",
+            "5" => "the musicmaniac classic",
             "6" => "the loot pinata",
             "7" => "custom",
             "8" => "disabled",

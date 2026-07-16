@@ -27,7 +27,7 @@ The easiest way to customize your experience is by selecting an `activeProfile` 
 | 4 - 🔴 **Hardcore Scarcity** | **The Grind.** Keys spawn slightly less often than vanilla, but the loot pool includes ALL rare keys. Vanilla sell prices are restored. | ~5% (1 in 20 boxes) | ~2,600 ₽ |
 | 8 - ❌ **Disabled** | **Disabled.** Only common junk keys spawn. High-tier keys NEVER spawn in standard containers. | ~6% (1 in 16 boxes) | N/A |
 
-> *Note: Additional profiles like `The Mod Classic` and `The Loot Piñata` are also included for more chaotic or specialized runs.*
+> *Note: Additional profiles like `The MusicManiac Classic` and `The Loot Piñata` are also included for more chaotic or specialized runs.*
 
 ---
 
