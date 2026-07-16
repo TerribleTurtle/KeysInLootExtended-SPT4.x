@@ -19,3 +19,13 @@ ReleaseCheck/
 .vscode
 bin/
 obj/
+
+# Junk
+/*.cs
+temp*/
+temp/
+SptCoreProject/
+reflect.csproj
+project.txt
+temp.txt
+test_*.ps1

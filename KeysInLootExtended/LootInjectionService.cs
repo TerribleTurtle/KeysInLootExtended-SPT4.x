@@ -7,6 +7,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Services;
 
 namespace KeysInLootExtended;
 
@@ -22,6 +23,7 @@ public class LootInjectionService
     private readonly KeysInLootConfigLoader _configLoader;
     private readonly ItemHelper _itemHelper;
     private readonly InjectedKeysService _injectedKeysService;
+    private readonly ItemFilterService _itemFilterService;
 
     /// <summary>
     /// Initializes the LootInjectionService.
@@ -31,18 +33,21 @@ public class LootInjectionService
     /// <param name="configLoader">The global configuration loader service.</param>
     /// <param name="itemHelper">Helper for checking item baseclasses.</param>
     /// <param name="injectedKeysService">Shared service that stores the MongoIds of all valid keys and keycards discovered during initialization.</param>
+    /// <param name="itemFilterService">SPT service for checking global item blacklists.</param>
     public LootInjectionService(
         ISptLogger<LootInjectionService> logger,
         DatabaseServer databaseServer,
         KeysInLootConfigLoader configLoader,
         ItemHelper itemHelper,
-        InjectedKeysService injectedKeysService)
+        InjectedKeysService injectedKeysService,
+        ItemFilterService itemFilterService)
     {
         _logger = logger;
         _databaseServer = databaseServer;
         _configLoader = configLoader;
         _itemHelper = itemHelper;
         _injectedKeysService = injectedKeysService;
+        _itemFilterService = itemFilterService;
     }
 
     /// <summary>
@@ -89,6 +94,20 @@ public class LootInjectionService
 
         foreach (var item in allItems)
         {
+            // Filter out developer keys, test items, and quest-specific keys to prevent them from leaking into the game economy (e.g. Fence assort)
+            if (item.Properties?.QuestItem == true) continue;
+            
+            try
+            {
+                var id = new MongoId(item.Id);
+                if (_itemFilterService.IsItemBlacklisted(id) || _itemFilterService.IsLootableItemBlacklisted(id))
+                    continue;
+            }
+            catch (FormatException)
+            {
+                // Let the baseclass check handle the format exception logging below
+            }
+
             if (IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
             {
                 try 

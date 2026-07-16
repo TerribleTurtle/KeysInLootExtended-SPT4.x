@@ -57,6 +57,9 @@ public class KeysInLootCoreConfig
     [JsonPropertyName("keyTraderPricesMultiplier")]
     public double KeyTraderPricesMultiplier { get; set; } = 0.4;
 
+    [JsonPropertyName("banKeysFromFence")]
+    public bool BanKeysFromFence { get; set; } = false;
+
     [JsonPropertyName("keyFleaPricesMultiplier")]
     public double KeyFleaPricesMultiplier { get; set; } = 0.4;
 

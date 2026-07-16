@@ -7,6 +7,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Server;
 using SPTarkov.Server.Core.Servers;
 using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Models.Spt.Config;
 
 namespace KeysInLootExtended;
 
@@ -20,6 +21,7 @@ public class ItemPriceService
     private readonly DatabaseServer _databaseServer;
     private readonly KeysInLootConfigLoader _configLoader;
     private readonly InjectedKeysService _injectedKeysService;
+    private readonly ConfigServer _configServer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ItemPriceService"/> class.
@@ -32,12 +34,14 @@ public class ItemPriceService
         ISptLogger<ItemPriceService> logger,
         DatabaseServer databaseServer,
         KeysInLootConfigLoader configLoader,
-        InjectedKeysService injectedKeysService)
+        InjectedKeysService injectedKeysService,
+        ConfigServer configServer)
     {
         _logger = logger;
         _databaseServer = databaseServer;
         _configLoader = configLoader;
         _injectedKeysService = injectedKeysService;
+        _configServer = configServer;
     }
 
     /// <summary>
@@ -61,6 +65,19 @@ public class ItemPriceService
 
         _logger.Success($"[KeysInLootExtended] Flea prices adjusted by a {config.KeyFleaPricesMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
         _logger.Success($"[KeysInLootExtended] Trader prices adjusted by a {config.KeyTraderPricesMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
+
+        if (config.BanKeysFromFence)
+        {
+            var traderConfig = _configServer.GetConfig<TraderConfig>();
+            if (traderConfig?.Fence?.Blacklist != null)
+            {
+                foreach (var mongoId in _injectedKeysService.InjectedKeyIds)
+                {
+                    traderConfig.Fence.Blacklist.Add(mongoId);
+                }
+                _logger.Success($"[KeysInLootExtended] Successfully banned {_injectedKeysService.InjectedKeyIds.Count} keys from Fence's assort inventory.");
+            }
+        }
     }
 
     /// <summary>

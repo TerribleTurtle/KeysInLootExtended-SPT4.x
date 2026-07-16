@@ -61,6 +61,13 @@ If `enableLocationsConfig` is set to `true`, the mod will read configuration fil
 
 ---
 
+## 🛒 The Fence Economy
+Because this mod injects highly valuable keys into common containers, simulated PMCs in SPT will find these keys much more frequently. As a side effect, they will sell them to Fence. You will see significantly more rare keys available in Fence's shop than in the vanilla game, and they will be priced according to your active economy profile.
+
+If you prefer to find keys exclusively in-raid and want to prevent them from showing up in Fence's inventory entirely, you can set `"banKeysFromFence": true` in your `config.jsonc`.
+
+---
+
 ## 👨‍💻 For Developers & Advanced Users
 
 If you are a developer looking to build the mod from source, or an advanced user interested in the underlying mathematical weights, integer limits, and the new C# architecture, please refer to the [TECHNICAL_README.md](TECHNICAL_README.md) file included in this repository.
