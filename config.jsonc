@@ -43,7 +43,7 @@
 	// 2 - 🔵 "Bountiful"             : (Double the keys of Balanced. Prices dropped to 20%)
 	// 3 - 🟣 "Refined"               : (Massively reduces common keys, buffs rare keys to maintain overall key frequency. Prices are 25%)
 	// 4 - 🔴 "Hardcore Scarcity"     : (Grind for keys. Roughly 1 key every 20 containers. Vanilla key prices)
-	// 5 - 🟡 "The MusicManiac Classic" : (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 15%)
+	// 5 - 🟡 "The MusicManiac Classic" : (Ignores map tuning. Flattens rarity, averages 1 key per jacket. Prices dropped to 75%)
 	// 6 - 🟠 "The Loot Piñata"       : (Absolute chaos. 2-8 ultra-rare keys per jacket. Vanilla key prices)
 	// 7 - ⚪ "Custom"                : (Uses the manual variable settings defined below)
 	// 8 - ❌ "Disabled"              : (Completely bypasses the mod and leaves game 100% vanilla)

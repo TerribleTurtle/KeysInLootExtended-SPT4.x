@@ -142,10 +142,10 @@ public class KeysInLootConfigLoader
         { "the musicmaniac classic", new ProfileDefinition {
             ApplyCoreConfig = c => {
                 c.KeyWeight = new KeysInLootRarityConfig { NotExist = 500, Common = 500, Rare = 500, SuperRare = 500 };
-                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 200, SuperRare = 200 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 50, Common = 50, Rare = 50, SuperRare = 50 };
                 c.OverrideLootDistribution = true;
-                c.KeyFleaPricesMultiplier = 0.15;
-                c.KeyTraderPricesMultiplier = 0.15;
+                c.KeyFleaPricesMultiplier = 0.75;
+                c.KeyTraderPricesMultiplier = 0.75;
                 c.CellsH = 3;
                 c.CellsV = 3;
                 c.EnableLocationsConfig = false;
