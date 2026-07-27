@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.1.2]
+## [2.1.3]
 
 ### Features & Balancing
 * **New Preset: "Generous" (The Best of Both Worlds)**: Added a new `Generous` profile at position 3, providing a hybrid of Bountiful's volume and Refined's quality skew.
