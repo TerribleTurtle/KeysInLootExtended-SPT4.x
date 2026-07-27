@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.2]
+
+### Features
+* **New Preset: "Generous" (The Best of Both Worlds)**: Added a new `Generous` profile at position 3, providing a hybrid of Bountiful's volume and Refined's quality skew.
+* **Profile Renumbering**: All numeric profiles have been shifted to accommodate the new Generous profile. (Balanced=1, Bountiful=2, Generous=3, Refined=4, Hardcore=5, MusicManiac=6, Piñata=7, Custom=8, Disabled=9).
+
+### Bug Fixes
+* **Location Scaling Fix**: Fixed a silent bug where `config.ActiveProfile` wasn't being reassigned after normalization. This caused all users on numeric profiles (e.g., `"1"`) to have their map-specific location scaling silently skipped, resulting in raw unscaled weights instead of the profile's intended math.
+* **Disabled Profile Fix**: Fixed a casing regression where the `Disabled` profile check failed, causing the mod to run using Custom values instead of properly disabling itself.
+* **Overflow Normalization Fix**: Fixed the container safe-ceiling normalization logic to explicitly preserve `0`-weight items, preventing disabled vanilla items from being accidentally revived into the loot pool.
+* **Custom Profile Null Safety**: Added fallback safety for the `Custom` profile to prevent a server crash (`NullReferenceException`) when a user explicitly set properties like `keyWeight` to `null` in `config.jsonc`.
 ## [2.0.1]
 * **Hotfix:** Restored the missing `banKeysFromFence` setting to the default `config.jsonc` file.
 

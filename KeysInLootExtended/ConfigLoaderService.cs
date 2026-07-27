@@ -47,9 +47,7 @@ public class KeysInLootConfigLoader
     private class ProfileDefinition
     {
         public Action<KeysInLootCoreConfig> ApplyCoreConfig { get; init; } = _ => { };
-        public double CommonScale { get; init; } = 1.0;
-        public double RareScale { get; init; } = 1.0;
-        public double SuperRareScale { get; init; } = 1.0;
+        public double LocationScale { get; init; } = 1.0;
     }
 
     private static readonly Dictionary<string, ProfileDefinition> ProfileDefinitions = new(StringComparer.OrdinalIgnoreCase)
@@ -79,8 +77,7 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 0.4;
                 c.CellsH = 3;
                 c.CellsV = 3;
-            },
-            CommonScale = 0.15, RareScale = 0.15, SuperRareScale = 0.15
+            }
         }},
         { "bountiful", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -106,8 +103,7 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 0.2;
                 c.CellsH = 3;
                 c.CellsV = 3;
-            },
-            CommonScale = 0.25, RareScale = 0.25, SuperRareScale = 0.25
+            }
         }},
         { "refined", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -132,8 +128,7 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 1.0;
                 c.CellsH = 3;
                 c.CellsV = 3;
-            },
-            CommonScale = 0.02, RareScale = 0.35, SuperRareScale = 0.20
+            }
         }},
         { "hardcore scarcity", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -159,8 +154,7 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 1.0;
                 c.CellsH = 3;
                 c.CellsV = 3;
-            },
-            CommonScale = 0.20, RareScale = 0.20, SuperRareScale = 0.20
+            }
         }},
         { "the musicmaniac classic", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -188,7 +182,8 @@ public class KeysInLootConfigLoader
                 c.CellsH = 3;
                 c.CellsV = 3;
                 c.EnableLocationsConfig = false;
-            }
+            },
+            LocationScale = 1.0
         }},
         { "the loot pinata", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -213,8 +208,7 @@ public class KeysInLootConfigLoader
                 c.KeyTraderPricesMultiplier = 1.0;
                 c.CellsH = 5;
                 c.CellsV = 5;
-            },
-            CommonScale = 0.05, RareScale = 50.0, SuperRareScale = 250.0
+            }
         }},
         { "disabled", new ProfileDefinition() },
         { "custom", new ProfileDefinition() }
@@ -269,6 +263,7 @@ public class KeysInLootConfigLoader
         // Apply profile overrides safely handling null profiles
         if (ProfileDefinitions.TryGetValue(profileKey, out var profileDef))
         {
+            config.ActiveProfile = profileKey;
             profileDef.ApplyCoreConfig(config);
         }
         else
@@ -311,25 +306,29 @@ public class KeysInLootConfigLoader
             return;
         }
 
-        ScaleContainer(locConfig.JacketContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
-        ScaleContainer(locConfig.DuffleBagContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
-        ScaleContainer(locConfig.DeadScavContainer, profileDef.CommonScale, profileDef.RareScale, profileDef.SuperRareScale);
+        double scale = profileDef.LocationScale;
+        if (Math.Abs(scale - 1.0) < 0.001) return; // No scaling needed for 1.0x
+
+        ScaleContainer(locConfig.JacketContainer, scale);
+        ScaleContainer(locConfig.DuffleBagContainer, scale);
+        ScaleContainer(locConfig.DeadScavContainer, scale);
     }
 
-    private void ScaleContainer(KeysInLootContainerConfig? container, double commonScale, double rareScale, double superRareScale)
+    private void ScaleContainer(KeysInLootContainerConfig? container, double scale)
     {
         if (container == null) return;
-        ScaleRarity(container.Key, commonScale, rareScale, superRareScale);
-        ScaleRarity(container.Keycard, commonScale, rareScale, superRareScale);
+        ScaleRarity(container.Key, scale);
+        ScaleRarity(container.Keycard, scale);
     }
 
-    private void ScaleRarity(KeysInLootRarityConfig? rarity, double commonScale, double rareScale, double superRareScale)
+    private void ScaleRarity(KeysInLootRarityConfig? rarity, double scale)
     {
         if (rarity == null) return;
         
-        rarity.NotExist = rarity.NotExist > 0 ? Math.Max(1, (int)Math.Round(rarity.NotExist * commonScale)) : 0;
-        rarity.Common = rarity.Common > 0 ? Math.Max(1, (int)Math.Round(rarity.Common * commonScale)) : 0;
-        rarity.Rare = rarity.Rare > 0 ? Math.Max(1, (int)Math.Round(rarity.Rare * rareScale)) : 0;
-        rarity.SuperRare = rarity.SuperRare > 0 ? Math.Max(1, (int)Math.Round(rarity.SuperRare * superRareScale)) : 0;
+        rarity.NotExist = rarity.NotExist > 0 ? Math.Max(1, (int)Math.Round(rarity.NotExist * scale)) : 0;
+        rarity.Common = rarity.Common > 0 ? Math.Max(1, (int)Math.Round(rarity.Common * scale)) : 0;
+        rarity.Rare = rarity.Rare > 0 ? Math.Max(1, (int)Math.Round(rarity.Rare * scale)) : 0;
+        rarity.SuperRare = rarity.SuperRare > 0 ? Math.Max(1, (int)Math.Round(rarity.SuperRare * scale)) : 0;
     }
 }
+

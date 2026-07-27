@@ -57,7 +57,7 @@ public class LootInjectionService
     public void InjectKeysIntoLocations()
     {
         var config = _configLoader.Config;
-        if (config.ActiveProfile == "Disabled")
+        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
         {
             _logger.Warning("[KeysInLootExtended] Mod is Disabled. Skipping loot injection.");
             return;
@@ -265,6 +265,50 @@ public class LootInjectionService
 
     }
 
+    private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>
+    {
+        // Common: Early game keys, quest keys, or very low-value loot rooms
+        { "5671446a4bdc2d97058b4569", "Common" }, // Pistol case key
+        { "57518f7724597720a31c09ab", "Common" }, // Key 3
+        { "57518fd424597720c85dbaaa", "Common" }, // Key 5
+        { "5751916f24597720a27126df", "Common" }, // Key 2
+        { "57a349b2245977762b199ec7", "Common" }, // Pumping station front door key
+        { "590de4a286f77423d9312a32", "Common" }, // Folding car key
+        { "590de52486f774226a0c24c2", "Common" }, // Machinery key
+        { "593858c486f774253a24cb52", "Common" }, // Pumping station back door key
+        { "593962ca86f774068014d9af", "Common" }, // Unknown key
+        { "6391fcf5744e45201147080f", "Common" }, // Primorsky Ave apartment key
+        { "6398fd8ad3de3849057f5128", "Common" }, // Backup hideout key
+        { "658199a0490414548c0fa83b", "Common" }, // Horse restaurant toilet key
+
+        // Rare: Mid-to-high value safe keys, good loot rooms, and standard Streets/Labyrinth keys
+        { "61a6446f4b5f8b70f451b166", "Rare" }, // Cold storage room key
+        { "63a397d3af870e651d58e65b", "Rare" }, // Car dealership closed section key
+        { "63a39ddda3a2b32b5f6e007a", "Rare" }, // Apartment locked room safe key
+        { "63a39e0f64283b5e9c56b282", "Rare" }, // ?ity key
+        { "63a39e5b234195315d4020bf", "Rare" }, // Housing office second floor safe key
+        { "63a39e6acd6db0635c1975fe", "Rare" }, // Housing office first floor safe key
+        { "63a71f1a0aa9fb29da61c537", "Rare" }, // ?ity key
+        { "63a71f3b0aa9fb29da61c539", "Rare" }, // ?ity key
+        { "64ce572331dd890873175115", "Rare" }, // Aspect company office key
+        { "6582dc63cafcd9485374dbc5", "Rare" }, // Unity Credit Bank archive room key
+        { "66265d7be65f224b2e17c6aa", "Rare" }, // USEC cottage room key
+        { "679baace4e9ca6b3d80586b2", "Rare" }, // Observation room key
+        { "679baae891966fe40408f14c", "Rare" }, // Torture room key
+        { "679bac1d61f588ae2b062a26", "Rare" }, // Labyrinth key
+
+        // Superrare: Extremely high value boss stashes, high tier access keycards (Labrys, colored cards), Arena boss keys
+        { "5751961824597720a31c09ac", "Superrare" }, // (off)Black Keycard
+        { "5d08d21286f774736e7c94c3", "Superrare" }, // Shturman's stash key
+        { "5efde6b4f5448336730dbd61", "Superrare" }, // Keycard with a blue marking
+        { "664d3db6db5dea2bad286955", "Superrare" }, // Shatun's hideout key
+        { "664d3dd590294949fe2d81b7", "Superrare" }, // Grumpy's hideout key
+        { "664d3ddfdda2e85aca370d75", "Superrare" }, // Voron's hideout key
+        { "664d3de85f2355673b09aed5", "Superrare" }, // Leon's hideout key
+        { "66acd6702b17692df20144c0", "Superrare" }, // TerraGroup storage room keycard
+        { "679b9819a2f2dd4da9023512", "Superrare" }  // Labrys access keycard
+    };
+
     /// <summary>
     /// Internal routine to apply keys and keycards to a single container's loot distribution.
     /// </summary>
@@ -295,6 +339,11 @@ public class LootInjectionService
                 // In SPT, a null rarity typically maps to the "Very Common" tier, internally referred to as "Not_exist"
                 string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
 
+                if (ExplicitRarityMap.TryGetValue(itemMongoId.ToString(), out var explicitRarity))
+                {
+                    rarity = explicitRarity;
+                }
+
                 switch (rarity)
                 {
                     case "Not_exist": targetWeight = weights.NotExist; break;
@@ -313,13 +362,7 @@ public class LootInjectionService
                     var updatedList = new List<ItemDistribution>();
                     foreach (var entry in existingEntries)
                     {
-                        var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = entry.RelativeProbability };
-                        // We use the maximum between the existing weight and the new target weight.
-                        // This prevents accidentally nerfing keys that already have a naturally high vanilla spawn rate.
-                        if (newEntry.RelativeProbability < targetWeight)
-                        {
-                            newEntry.RelativeProbability = targetWeight;
-                        }
+                        var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = targetWeight };
                         updatedList.Add(newEntry);
                     }
                     distDict[itemMongoId] = updatedList;
@@ -353,7 +396,8 @@ public class LootInjectionService
                 var updatedList = new List<ItemDistribution>();
                 foreach (var entry in distDict[key])
                 {
-                    var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = Math.Max(1, (int)((entry.RelativeProbability ?? 0) * scale)) };
+                    var rawWeight = entry.RelativeProbability ?? 0;
+                    var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = rawWeight > 0 ? Math.Max(1, (int)(rawWeight * scale)) : 0 };
                     updatedList.Add(newEntry);
                 }
                 distDict[key] = updatedList;

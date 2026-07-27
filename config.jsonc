@@ -43,28 +43,33 @@
 	//     - Market: Keys drop 4x more than vanilla. Market prices are heavily crashed (0.2x).
 	//     - 100 Jackets: ~30 keys (18 Common, 9 Rare, 3 SuperRare).
 	//
-	// 3 - 🟣 "Refined" (The Anti-Trash)
+	// 3 - 🟢 "Generous" (The Best of Both Worlds)
+	//     - The Feel: Frequent keys that lean heavily toward quality. A mix of Bountiful's volume and Refined's anti-trash filter.
+	//     - Market: Keys drop ~2.5x more than vanilla, but skew rare. Market prices moderately crashed (0.5x).
+	//     - 100 Jackets: ~20 keys (4 Common, 12 Rare, 4 SuperRare).
+	//
+	// 4 - 🟣 "Refined" (The Anti-Trash)
 	//     - The Feel: Quality over Quantity. You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger.
 	//     - Market: Keys are slightly more common than vanilla, but extremely high quality. Prices are kept at 1.0x (Vanilla).
 	//     - 100 Jackets: ~10 keys (1 Common, 8 Rare, 1 SuperRare).
 	//
-	// 4 - 🔴 "Hardcore Scarcity" (The Masochist)
+	// 5 - 🔴 "Hardcore Scarcity" (The Masochist)
 	//     - The Feel: Brutal scarcity. You will open 20 jackets and find nothing. When you find a key, you gasp.
 	//     - Market: Keys are rarer than vanilla. Prices are kept at 1.0x (Vanilla).
 	//     - 100 Jackets: ~5 keys (3 Common, 2 Rare, 0.2 SuperRare).
 	//
-	// 5 - 🟡 "The MusicManiac Classic" (The Original Mod)
+	// 6 - 🟡 "The MusicManiac Classic" (The Original Mod)
 	//     - Bypasses location-specific logic. Adds massive flat weights to all containers everywhere. Very chaotic. Prices crashed (0.75x).
 	//     - 100 Jackets: ~200 keys (Wildly unpredictable quality).
 	//
-	// 6 - 🟠 "The Loot Piñata" (Cheat Profile)
+	// 7 - 🟠 "The Loot Piñata" (Cheat Profile)
 	//     - Pure chaos. 10-25 items per container, practically 100% chance for a key, mostly SuperRare. Prices 1.0x.
 	//     - 100 Jackets: ~1,600 keys. 
 	//
-	// 7 - ⚪ "Custom"
+	// 8 - ⚪ "Custom"
 	//     - Uses the manual variable settings defined below.
 	//
-	// 8 - ❌ "Disabled" (The Purist / Vanilla)
+	// 9 - ❌ "Disabled" (The Purist / Vanilla)
 	//     - Bypasses the mod completely. Pure 100% vanilla Tarkov.
 	//     - 100 Jackets: ~8 keys (7 Common, 1 Rare, 0 SuperRare).
 	//
@@ -73,7 +78,7 @@
 	"activeProfile": "1",
 
 	// =============================================================================
-	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "7" or "Custom")
+	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "8" or "Custom")
 	// =============================================================================
 
 	// Global weights for keys based on their natural rarity

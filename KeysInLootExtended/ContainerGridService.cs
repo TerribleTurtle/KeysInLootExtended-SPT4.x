@@ -55,7 +55,7 @@ public class ContainerGridService
     public void AdjustGridSizes()
     {
         var config = _configLoader.Config;
-        if (config.ActiveProfile == "Disabled")
+        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
             return;
 
         int clampedH = Math.Clamp(config.CellsH, 1, 14);
