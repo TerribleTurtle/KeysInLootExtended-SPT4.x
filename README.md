@@ -79,6 +79,56 @@ If `enableLocationsConfig` is set to `true`, the mod will read configuration fil
 
 ---
 
+## 🔑 Uncategorized Key Mappings
+
+In vanilla Escape from Tarkov, a handful of keys and keycards lack an explicit rarity tag (internally labeled as `Not_exist`). If left unhandled, these items would default to spawning frequently, meaning extremely high-tier boss stashes would spawn as often as early-game dorm keys. 
+
+To preserve the economy and lore, **Keys In Loot Extended** explicitly intercepts and maps these 35 unclassified items to strict logical tiers. This ensures that Boss keys remain incredibly rare regardless of your active profile.
+
+<details>
+<summary>Click here to view the exact mappings</summary>
+
+### Common
+*Keys required for early quests, unlocking static rooms, or with negligible market value.*
+- Pistol case key
+- Key 2, Key 3, Key 5
+- Pumping station front & back door keys
+- Folding car key
+- Machinery key *(Quest)*
+- Unknown key *(Quest)*
+- Primorsky Ave apartment key
+- Backup hideout key
+- Horse restaurant toilet key
+- (off)Black Keycard *(Offline Developer Dummy Item)*
+
+### Rare
+*Mid-to-high value safe keys, good loot rooms, and standard Streets/Labyrinth keys.*
+- Cold storage room key
+- Apartment locked room safe key
+- Housing office first & second floor safe keys
+- Aspect company office key
+- Unity Credit Bank archive room key
+- USEC cottage room key
+- Observation room key
+- Torture room key
+- Labyrinth key
+- Various ?ity keys
+
+### Superrare
+*Extremely high value boss stashes, high tier access keycards (Labrys), LexOs, and Arena boss hideouts.*
+- Shturman's stash key *(Boss Stash)*
+- Keycard with a blue marking *(Sanitar's Office)*
+- Car dealership closed section key *(Kaban's LexOs Sanctum)*
+- TerraGroup storage room keycard *(Cultist Drop)*
+- Labrys access keycard *(High-tier Labyrinth)*
+- Shatun's hideout key *(Arena Boss)*
+- Grumpy's hideout key *(Arena Boss)*
+- Voron's hideout key *(Arena Boss)*
+- Leon's hideout key *(Arena Boss)*
+</details>
+
+---
+
 ## 🛒 The Fence Economy
 Because this mod injects highly valuable keys into common containers, simulated PMCs in SPT will find these keys much more frequently. As a side effect, they will sell them to Fence. You will see significantly more rare keys available in Fence's shop than in the vanilla game, and they will be priced according to your active economy profile.
 

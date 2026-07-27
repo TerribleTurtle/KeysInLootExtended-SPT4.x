@@ -2,15 +2,24 @@
 
 ## [2.1.2]
 
-### Features
+### Features & Balancing
 * **New Preset: "Generous" (The Best of Both Worlds)**: Added a new `Generous` profile at position 3, providing a hybrid of Bountiful's volume and Refined's quality skew.
 * **Profile Renumbering**: All numeric profiles have been shifted to accommodate the new Generous profile. (Balanced=1, Bountiful=2, Generous=3, Refined=4, Hardcore=5, MusicManiac=6, Piñata=7, Custom=8, Disabled=9).
+* **True Boss Key Rarity (`Not_exist` Mapping)**: Many boss keys (like Shturman's Stash, TerraGroup Storage, and Colored Keycards) are internally flagged as "Not_exist" in the vanilla database. Previously, this meant they defaulted to a 50/50 fallback spawn rate, making them spawn as frequently as standard dorm keys. They have now been mapped to their true logical rarity pools (`Rare`, `Superrare`), fixing the balance.
+* **Dynamic Ratio Location Scaling**: Map-specific location configs (like Bigmap) now scale dynamically! Instead of a flat multiplier (like `2.0x`), the mod calculates the exact ratio of your chosen profile against the default "Balanced" baseline. This means if you use a profile like "Refined" that skews heavily toward Rare keys, that exact skew is mathematically applied to the map's native loot density, preserving map uniqueness while perfectly inheriting your custom rarity balance.
 
 ### Bug Fixes
-* **Location Scaling Fix**: Fixed a silent bug where `config.ActiveProfile` wasn't being reassigned after normalization. This caused all users on numeric profiles (e.g., `"1"`) to have their map-specific location scaling silently skipped, resulting in raw unscaled weights instead of the profile's intended math.
+* **The "Never-Nerf" Fix**: Removed a bug in the injection engine (`Math.Max`) that prevented profiles from reducing key weights below vanilla rates. "Hardcore Scarcity" and "Refined" can now correctly reduce the spawn rates of common trash keys.
+* **Location Scaling Fix (ActiveProfile Desync)**: Fixed a silent bug where `config.ActiveProfile` wasn't being reassigned after numeric normalization. This caused all users on numeric shorthand profiles (e.g., `"1"`) to have their map-specific location scaling silently skipped.
 * **Disabled Profile Fix**: Fixed a casing regression where the `Disabled` profile check failed, causing the mod to run using Custom values instead of properly disabling itself.
 * **Overflow Normalization Fix**: Fixed the container safe-ceiling normalization logic to explicitly preserve `0`-weight items, preventing disabled vanilla items from being accidentally revived into the loot pool.
-* **Custom Profile Null Safety**: Added fallback safety for the `Custom` profile to prevent a server crash (`NullReferenceException`) when a user explicitly set properties like `keyWeight` to `null` in `config.jsonc`.
+* **Vanilla Duplicate Multiplication**: Fixed a bug where keys that had multiple identical entries in the vanilla map table would receive exponential weight multipliers.
+* **The Case-Sensitive Switch Exploit**: C# `switch` statements are case-sensitive by default. Fixed a bug where anomalous casing from base game updates (e.g. `"rare"`) would accidentally fall through to the `Not_exist` pool and receive 0 spawn weight. The hot loop now correctly sanitizes strings using `.ToLowerInvariant()`.
+* **Infinite Loop Hazard**: Found and patched a severe crash hazard where poorly written custom maps with circular `Parent` item inheritance would throw the mod into a permanent `while` loop on startup, permanently freezing the SPT server.
+* **Dynamic Map Crash Hazard**: Wrapped several dynamic JSON evaluations (e.g., `location.StaticLoot`) in `try/catch` blocks. Previously, if a custom map omitted these fields, it would instantly crash the mod with an unhandled `RuntimeBinderException`.
+* **Unknown Profile Fallback Leak**: Re-ordered the custom null-safety checks in `ConfigLoaderService`. Previously, a typo in the config file (e.g., `"balaced"`) would correctly trigger the fallback to `"Custom"`, but incorrectly bypass the null array initializations, causing a silent internal failure.
+* **Custom Profile Null Safety**: Added fallback safety (`??=`) for the `Custom` profile to prevent a server crash (`NullReferenceException`) when a user explicitly set properties like `keyWeight` to `null` in `config.jsonc`.
+* **Zero-Division & Truncation Safety**: Added robust math clamping to the new Dynamic Ratio engine to prevent integer division truncation and fatal zero-division errors.
 ## [2.0.1]
 * **Hotfix:** Restored the missing `banKeysFromFence` setting to the default `config.jsonc` file.
 
