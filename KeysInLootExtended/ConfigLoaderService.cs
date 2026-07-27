@@ -240,23 +240,25 @@ public class KeysInLootConfigLoader
         
         if (profileKey.Contains("balanced") || profileKey.Contains("(1)")) profileKey = "1";
         else if (profileKey.Contains("bountiful") || profileKey.Contains("(2)")) profileKey = "2";
-        else if (profileKey.Contains("refined") || profileKey.Contains("(3)")) profileKey = "3";
-        else if (profileKey.Contains("hardcore scarcity") || profileKey.Contains("(4)")) profileKey = "4";
-        else if (profileKey.Contains("the musicmaniac classic") || profileKey.Contains("the mod classic") || profileKey.Contains("(5)")) profileKey = "5";
-        else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(6)")) profileKey = "6";
-        else if (profileKey.Contains("custom") || profileKey.Contains("(7)")) profileKey = "7";
-        else if (profileKey.Contains("disabled") || profileKey.Contains("(8)")) profileKey = "8";
+        else if (profileKey.Contains("generous") || profileKey.Contains("(3)")) profileKey = "3";
+        else if (profileKey.Contains("refined") || profileKey.Contains("(4)")) profileKey = "4";
+        else if (profileKey.Contains("hardcore scarcity") || profileKey.Contains("(5)")) profileKey = "5";
+        else if (profileKey.Contains("the musicmaniac classic") || profileKey.Contains("the mod classic") || profileKey.Contains("(6)")) profileKey = "6";
+        else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(7)")) profileKey = "7";
+        else if (profileKey.Contains("custom") || profileKey.Contains("(8)")) profileKey = "8";
+        else if (profileKey.Contains("disabled") || profileKey.Contains("(9)")) profileKey = "9";
 
         profileKey = profileKey switch
         {
             "1" => "balanced",
             "2" => "bountiful",
-            "3" => "refined",
-            "4" => "hardcore scarcity",
-            "5" => "the musicmaniac classic",
-            "6" => "the loot pinata",
-            "7" => "custom",
-            "8" => "disabled",
+            "3" => "generous",
+            "4" => "refined",
+            "5" => "hardcore scarcity",
+            "6" => "the musicmaniac classic",
+            "7" => "the loot pinata",
+            "8" => "custom",
+            "9" => "disabled",
             _ => profileKey
         };
 
@@ -271,6 +273,12 @@ public class KeysInLootConfigLoader
             _logger.Warning($"[KeysInLootExtended] WARNING: Unknown profile '{config.ActiveProfile}' selected. Defaulting to 'Custom' settings.");
             config.ActiveProfile = "Custom";
         }
+
+        config.KeyWeight ??= new();
+        config.KeycardWeight ??= new();
+        config.OverrideLootDistributionJackets ??= new();
+        config.OverrideLootDistributionDuffleBags ??= new();
+        config.OverrideLootDistributionDeadScavs ??= new();
 
         return config;
     }
