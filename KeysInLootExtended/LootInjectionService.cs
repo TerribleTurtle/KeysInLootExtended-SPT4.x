@@ -71,14 +71,18 @@ public class LootInjectionService
         const string KEY_BASECLASS = "543be5e94bdc2df1348b4568";
         const string KEYCARD_BASECLASS = "5c164d2286f774194c5e69fa";
 
-        var keys = new List<(TemplateItem Item, MongoId Id)>();
-        var keycards = new List<(TemplateItem Item, MongoId Id)>();
+        var keys = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
+        var keycards = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
         
         bool IsOfBaseclass(string itemId, string targetBaseclass)
         {
             string currentId = itemId;
+            var visited = new HashSet<string>();
+
             while (!string.IsNullOrEmpty(currentId))
             {
+                if (!visited.Add(currentId)) break; // Prevent infinite loops from poorly made circular mod templates
+                
                 if (currentId == targetBaseclass) return true;
                 if (db.Templates.Items.TryGetValue(currentId, out var itemTemplate))
                 {
@@ -113,7 +117,9 @@ public class LootInjectionService
                 try 
                 { 
                     var id = new MongoId(item.Id);
-                    keycards.Add((item, id));
+                    string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
+                    if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
+                    keycards.Add((item, id, rarity));
                     _injectedKeysService.InjectedKeyIds.Add(id); 
                 } 
                 catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping keycard {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
@@ -123,7 +129,9 @@ public class LootInjectionService
                 try 
                 { 
                     var id = new MongoId(item.Id);
-                    keys.Add((item, id));
+                    string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
+                    if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
+                    keys.Add((item, id, rarity));
                     _injectedKeysService.InjectedKeyIds.Add(id); 
                 } 
                 catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping key {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
@@ -265,9 +273,9 @@ public class LootInjectionService
 
     }
 
-    private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>
+    private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
-        // Common: Early game keys, quest keys, or very low-value loot rooms
+        // Common: Early game keys, quest keys, or very low-value loot rooms, disabled dev items
         { "5671446a4bdc2d97058b4569", "Common" }, // Pistol case key
         { "57518f7724597720a31c09ab", "Common" }, // Key 3
         { "57518fd424597720c85dbaaa", "Common" }, // Key 5
@@ -280,10 +288,10 @@ public class LootInjectionService
         { "6391fcf5744e45201147080f", "Common" }, // Primorsky Ave apartment key
         { "6398fd8ad3de3849057f5128", "Common" }, // Backup hideout key
         { "658199a0490414548c0fa83b", "Common" }, // Horse restaurant toilet key
+        { "5751961824597720a31c09ac", "Common" }, // (off)Black Keycard
 
         // Rare: Mid-to-high value safe keys, good loot rooms, and standard Streets/Labyrinth keys
         { "61a6446f4b5f8b70f451b166", "Rare" }, // Cold storage room key
-        { "63a397d3af870e651d58e65b", "Rare" }, // Car dealership closed section key
         { "63a39ddda3a2b32b5f6e007a", "Rare" }, // Apartment locked room safe key
         { "63a39e0f64283b5e9c56b282", "Rare" }, // ?ity key
         { "63a39e5b234195315d4020bf", "Rare" }, // Housing office second floor safe key
@@ -297,8 +305,8 @@ public class LootInjectionService
         { "679baae891966fe40408f14c", "Rare" }, // Torture room key
         { "679bac1d61f588ae2b062a26", "Rare" }, // Labyrinth key
 
-        // Superrare: Extremely high value boss stashes, high tier access keycards (Labrys, colored cards), Arena boss keys
-        { "5751961824597720a31c09ac", "Superrare" }, // (off)Black Keycard
+        // Superrare: Extremely high value boss stashes, high tier access keycards, Arena boss keys, LexOs
+        { "63a397d3af870e651d58e65b", "Superrare" }, // Car dealership closed section key
         { "5d08d21286f774736e7c94c3", "Superrare" }, // Shturman's stash key
         { "5efde6b4f5448336730dbd61", "Superrare" }, // Keycard with a blue marking
         { "664d3db6db5dea2bad286955", "Superrare" }, // Shatun's hideout key
@@ -317,7 +325,7 @@ public class LootInjectionService
     /// <param name="keyWeights">The targeted spawn weights for standard keys.</param>
     /// <param name="keycards">The list of keycard items to inject.</param>
     /// <param name="keycardWeights">The targeted spawn weights for keycards.</param>
-    private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id)> keys, KeysInLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id)> keycards, KeysInLootRarityConfig keycardWeights)
+    private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keys, KeysInLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keycards, KeysInLootRarityConfig keycardWeights)
     {
         var existingItems = container.ItemDistribution?.ToList() ?? new List<ItemDistribution>();
         var distDict = new Dictionary<MongoId, List<ItemDistribution>>();
@@ -328,7 +336,7 @@ public class LootInjectionService
             distDict[entry.Tpl].Add(entry);
         }
 
-        void ProcessItems(List<(TemplateItem Item, MongoId Id)> items, KeysInLootRarityConfig weights)
+        void ProcessItems(List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> items, KeysInLootRarityConfig weights)
         {
             foreach (var tuple in items)
             {
@@ -336,35 +344,35 @@ public class LootInjectionService
                 var itemMongoId = tuple.Id;
 
                 int targetWeight = 0;
-                // In SPT, a null rarity typically maps to the "Very Common" tier, internally referred to as "Not_exist"
-                string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
 
-                if (ExplicitRarityMap.TryGetValue(itemMongoId.ToString(), out var explicitRarity))
+                switch (tuple.ResolvedRarity.ToLowerInvariant())
                 {
-                    rarity = explicitRarity;
-                }
-
-                switch (rarity)
-                {
-                    case "Not_exist": targetWeight = weights.NotExist; break;
-                    case "Common": targetWeight = weights.Common; break;
-                    case "Rare": targetWeight = weights.Rare; break;
-                    case "Superrare": targetWeight = weights.SuperRare; break;
+                    case "not_exist": targetWeight = weights.NotExist; break;
+                    case "common": targetWeight = weights.Common; break;
+                    case "rare": targetWeight = weights.Rare; break;
+                    case "superrare": targetWeight = weights.SuperRare; break;
+                    default: targetWeight = weights.NotExist; break;
                 }
 
                 if (targetWeight <= 0) 
                 {
+                    // If target weight is 0 (banned), ensure we remove any existing vanilla entries from the pool
+                    // rather than skipping it and letting the vanilla weight leak through.
+                    if (distDict.ContainsKey(itemMongoId))
+                    {
+                        distDict.Remove(itemMongoId);
+                    }
                     continue;
                 }
 
                 if (distDict.TryGetValue(itemMongoId, out var existingEntries))
                 {
-                    var updatedList = new List<ItemDistribution>();
-                    foreach (var entry in existingEntries)
+                    // To prevent exponential multiplying of duplicate vanilla entries, we clear duplicates
+                    // and just add one normalized entry with our intended weight.
+                    var updatedList = new List<ItemDistribution>
                     {
-                        var newEntry = new ItemDistribution { Tpl = entry.Tpl, RelativeProbability = targetWeight };
-                        updatedList.Add(newEntry);
-                    }
+                        new ItemDistribution { Tpl = existingEntries.First().Tpl, RelativeProbability = targetWeight }
+                    };
                     distDict[itemMongoId] = updatedList;
                 }
                 else

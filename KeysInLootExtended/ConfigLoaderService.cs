@@ -47,7 +47,6 @@ public class KeysInLootConfigLoader
     private class ProfileDefinition
     {
         public Action<KeysInLootCoreConfig> ApplyCoreConfig { get; init; } = _ => { };
-        public double LocationScale { get; init; } = 1.0;
     }
 
     private static readonly Dictionary<string, ProfileDefinition> ProfileDefinitions = new(StringComparer.OrdinalIgnoreCase)
@@ -101,6 +100,32 @@ public class KeysInLootConfigLoader
                 
                 c.KeyFleaPricesMultiplier = 0.2;
                 c.KeyTraderPricesMultiplier = 0.2;
+                c.CellsH = 3;
+                c.CellsV = 3;
+            }
+        }},
+        { "generous", new ProfileDefinition {
+            ApplyCoreConfig = c => {
+                c.KeyWeight = new KeysInLootRarityConfig { NotExist = 120, Common = 120, Rare = 350, SuperRare = 200 };
+                c.KeycardWeight = new KeysInLootRarityConfig { NotExist = 30, Common = 30, Rare = 100, SuperRare = 60 };
+                c.OverrideLootDistribution = true;
+                
+                var bountifulCounts = new System.Collections.Generic.List<ItemCountDistributionConfig>
+                {
+                    new ItemCountDistributionConfig { Count = 5, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 4, RelativeProbability = 4000 },
+                    new ItemCountDistributionConfig { Count = 3, RelativeProbability = 3800 },
+                    new ItemCountDistributionConfig { Count = 2, RelativeProbability = 1000 },
+                    new ItemCountDistributionConfig { Count = 1, RelativeProbability = 150 },
+                    new ItemCountDistributionConfig { Count = 0, RelativeProbability = 50 }
+                };
+                
+                c.OverrideLootDistributionJackets = bountifulCounts;
+                c.OverrideLootDistributionDuffleBags = bountifulCounts;
+                c.OverrideLootDistributionDeadScavs = bountifulCounts;
+                
+                c.KeyFleaPricesMultiplier = 0.5;
+                c.KeyTraderPricesMultiplier = 0.5;
                 c.CellsH = 3;
                 c.CellsV = 3;
             }
@@ -183,7 +208,6 @@ public class KeysInLootConfigLoader
                 c.CellsV = 3;
                 c.EnableLocationsConfig = false;
             },
-            LocationScale = 1.0
         }},
         { "the loot pinata", new ProfileDefinition {
             ApplyCoreConfig = c => {
@@ -262,23 +286,27 @@ public class KeysInLootConfigLoader
             _ => profileKey
         };
 
-        // Apply profile overrides safely handling null profiles
-        if (ProfileDefinitions.TryGetValue(profileKey, out var profileDef))
-        {
-            config.ActiveProfile = profileKey;
-            profileDef.ApplyCoreConfig(config);
-        }
-        else
+        if (!ProfileDefinitions.ContainsKey(profileKey))
         {
             _logger.Warning($"[KeysInLootExtended] WARNING: Unknown profile '{config.ActiveProfile}' selected. Defaulting to 'Custom' settings.");
-            config.ActiveProfile = "Custom";
+            profileKey = "custom";
         }
 
-        config.KeyWeight ??= new();
-        config.KeycardWeight ??= new();
-        config.OverrideLootDistributionJackets ??= new();
-        config.OverrideLootDistributionDuffleBags ??= new();
-        config.OverrideLootDistributionDeadScavs ??= new();
+        // Apply profile overrides safely handling null profiles
+        if (profileKey == "custom")
+        {
+            config.KeyWeight ??= new();
+            config.KeycardWeight ??= new();
+            if (config.OverrideLootDistribution)
+            {
+                config.OverrideLootDistributionJackets ??= new();
+                config.OverrideLootDistributionDuffleBags ??= new();
+                config.OverrideLootDistributionDeadScavs ??= new();
+            }
+        }
+
+        config.ActiveProfile = profileKey;
+        ProfileDefinitions[profileKey].ApplyCoreConfig?.Invoke(config);
 
         return config;
     }
@@ -303,40 +331,46 @@ public class KeysInLootConfigLoader
         var locConfig = JsonSerializer.Deserialize<KeysInLootLocationConfig>(configText, _jsonSettings) 
             ?? throw new InvalidDataException($"[KeysInLootExtended] Failed to deserialize location config {locationName}.jsonc.");
 
-        ScaleLocationConfig(locConfig, Config.ActiveProfile);
+        ScaleLocationConfig(locConfig);
         return locConfig;
     }
 
-    private void ScaleLocationConfig(KeysInLootLocationConfig locConfig, string profile)
+    private void ScaleLocationConfig(KeysInLootLocationConfig locConfig)
     {
-        if (!ProfileDefinitions.TryGetValue(profile ?? string.Empty, out var profileDef))
-        {
-            return;
-        }
+        if (Config?.KeyWeight == null) return;
 
-        double scale = profileDef.LocationScale;
-        if (Math.Abs(scale - 1.0) < 0.001) return; // No scaling needed for 1.0x
+        double commonRatio = (double)Config.KeyWeight.Common / Math.Max(1, 200);
+        double rareRatio = (double)Config.KeyWeight.Rare / Math.Max(1, 100);
+        double superRareRatio = (double)Config.KeyWeight.SuperRare / Math.Max(1, 40);
+        double notExistRatio = (double)Config.KeyWeight.NotExist / Math.Max(1, 60);
 
-        ScaleContainer(locConfig.JacketContainer, scale);
-        ScaleContainer(locConfig.DuffleBagContainer, scale);
-        ScaleContainer(locConfig.DeadScavContainer, scale);
+        ScaleContainer(locConfig.JacketContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
+        ScaleContainer(locConfig.DuffleBagContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
+        ScaleContainer(locConfig.DeadScavContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
     }
 
-    private void ScaleContainer(KeysInLootContainerConfig? container, double scale)
+    private void ScaleContainer(KeysInLootContainerConfig? container, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
     {
         if (container == null) return;
-        ScaleRarity(container.Key, scale);
-        ScaleRarity(container.Keycard, scale);
+        ScaleRarity(container.Key, commonRatio, rareRatio, superRareRatio, notExistRatio);
+        ScaleRarity(container.Keycard, commonRatio, rareRatio, superRareRatio, notExistRatio);
     }
 
-    private void ScaleRarity(KeysInLootRarityConfig? rarity, double scale)
+    private void ScaleRarity(KeysInLootRarityConfig? rarity, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
     {
         if (rarity == null) return;
         
-        rarity.NotExist = rarity.NotExist > 0 ? Math.Max(1, (int)Math.Round(rarity.NotExist * scale)) : 0;
-        rarity.Common = rarity.Common > 0 ? Math.Max(1, (int)Math.Round(rarity.Common * scale)) : 0;
-        rarity.Rare = rarity.Rare > 0 ? Math.Max(1, (int)Math.Round(rarity.Rare * scale)) : 0;
-        rarity.SuperRare = rarity.SuperRare > 0 ? Math.Max(1, (int)Math.Round(rarity.SuperRare * scale)) : 0;
+        if (rarity.NotExist > 0)
+            rarity.NotExist = Math.Max(1, (int)Math.Round(rarity.NotExist * notExistRatio));
+            
+        if (rarity.Common > 0)
+            rarity.Common = Math.Max(1, (int)Math.Round(rarity.Common * commonRatio));
+            
+        if (rarity.Rare > 0)
+            rarity.Rare = Math.Max(1, (int)Math.Round(rarity.Rare * rareRatio));
+            
+        if (rarity.SuperRare > 0)
+            rarity.SuperRare = Math.Max(1, (int)Math.Round(rarity.SuperRare * superRareRatio));
     }
 }
 
