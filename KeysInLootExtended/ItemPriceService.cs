@@ -51,7 +51,7 @@ public class ItemPriceService
     public void AdjustPrices()
     {
         var config = _configLoader.Config;
-        if (config.ActiveProfile == "Disabled")
+        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
             return;
 
         var tables = _databaseServer.GetTables();
