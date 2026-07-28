@@ -157,7 +157,8 @@ public class LootInjectionService
             {"Sandbox_high", "ground_zero_high"},
             {"Shoreline", "shoreline"},
             {"TarkovStreets", "streets_of_tarkov"},
-            {"Woods", "woods"}
+            {"Woods", "woods"},
+            {"Labyrinth", "labyrinth"}
         };
 
         // Precompute count distribution arrays to prevent repeated allocations inside the loop
