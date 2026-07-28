@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.1.4]
+
+### Bug Fixes
+* **Labyrinth Location Config**: Added the missing `Labyrinth` entry to the internal location ID mapping. The hand-tuned `labyrinth.jsonc` config was silently ignored on case-sensitive filesystems (Linux). Note: Labyrinth does not have vanilla Jackets, Duffles, or Dead Scavs, so this only affects modded Labyrinth setups.
+* **NotExist Location Scaling Denominator**: Fixed the `ScaleLocationConfig` dynamic ratio calculation using `60` instead of `200` as the Balanced baseline for `NotExist` weights. This caused remaining unmapped `Not_exist` keys to have their location-scaled weights inflated by 3.33×.
+
+### Documentation
+* **Corrected Profile Estimates**: Re-calculated all "keys per 100 jackets" estimates using the real SPT 4.0.13 vanilla database (226 keys: 55 Common, 81 Rare, 89 Superrare). Previous estimates were based on outdated SPT 3.11.3 assumptions and significantly underestimated most profiles.
+
 ## [2.1.3]
 
 ### Features & Balancing

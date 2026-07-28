@@ -21,14 +21,14 @@ The easiest way to customize your experience is by selecting an `activeProfile` 
 
 | Profile | Description | Keys per 100 Jackets | Market Price |
 |---|---|---|---|
-| 1 - 🟢 **Balanced (The Working Adult)** | **Quantity & Consistency.** Finds keys frequently to keep the dopamine flowing, though many will be common. The market crashes to simulate supply/demand. | **~15 keys** (9 Common, 5 Rare, 1 SuperRare) | **0.4x** (Crashed) |
-| 2 - 🔵 **Bountiful (The Looter Shooter)** | **Loot Explosion.** Every jacket is stuffed. You find keys constantly. To compensate, market prices are completely crashed. | **~30 keys** (18 Common, 9 Rare, 3 SuperRare) | **0.2x** (Crashed) |
-| 3 - 🟢 **Generous (The Best of Both Worlds)** | **Frequent keys that lean heavily toward quality.** A mix of Bountiful's volume and Refined's anti-trash filter. | **~20 keys** (4 Common, 12 Rare, 4 SuperRare) | **0.5x** (Crashed) |
-| 4 - 🟣 **Refined (The Anti-Trash)** | **Quality over Quantity.** You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger. | **~10 keys** (1 Common, 8 Rare, 1 SuperRare) | **1.0x** (Vanilla) |
-| 5 - 🔴 **Hardcore Scarcity (The Masochist)** | **The Grind.** Brutal scarcity. You open 20 jackets and find nothing. When you find a key, you gasp. You earn the full vanilla sell price. | **~5 keys** (3 Common, 2 Rare, 0.2 SuperRare) | **1.0x** (Vanilla) |
+| 1 - 🟢 **Balanced (The Working Adult)** | **Quantity & Consistency.** Finds keys frequently to keep the dopamine flowing, though many will be common. The market crashes to simulate supply/demand. | **~25 keys** (12 Common, 8 Rare, 5 SuperRare) | **0.4x** (Crashed) |
+| 2 - 🔵 **Bountiful (The Looter Shooter)** | **Loot Explosion.** Every jacket is stuffed. You find keys constantly. To compensate, market prices are completely crashed. | **~65 keys** (30 Common, 22 Rare, 12 SuperRare) | **0.2x** (Crashed) |
+| 3 - 🟢 **Generous (The Best of Both Worlds)** | **Frequent keys that lean heavily toward quality.** A mix of Bountiful's volume and Refined's anti-trash filter. | **~75 keys** (9 Common, 37 Rare, 29 SuperRare) | **0.5x** (Crashed) |
+| 4 - 🟣 **Refined (The Anti-Trash)** | **Quality over Quantity.** You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger. | **~20 keys** (2 Common, 9 Rare, 8 SuperRare) | **1.0x** (Vanilla) |
+| 5 - 🔴 **Hardcore Scarcity (The Masochist)** | **The Grind.** Brutal scarcity. You open 20 jackets and find nothing. When you find a key, you gasp. You earn the full vanilla sell price. | **~2 keys** (1 Common, 0.7 Rare, 0.5 SuperRare) | **1.0x** (Vanilla) |
 | 6 - 🟡 **The MusicManiac Classic** | **The Original Mod.** Ignores map locations. Spams keys everywhere blindly. | **~200 keys** | **0.75x** (Crashed) |
 | 7 - 🟠 **The Loot Piñata** | **Cheat Profile.** Complete chaos. Stuffs every container with 10-25 items, almost all of them ultra-rare keys. | **~1,600 keys** | **1.0x** (Vanilla) |
-| 9 - ❌ **Disabled (The Purist / Vanilla)** | **100% Vanilla Tarkov.** High-tier keys almost NEVER spawn in standard containers. Mostly junk. | **~8 keys** (7 Common, 1 Rare, 0 SuperRare) | **1.0x** (Vanilla) |
+| 9 - ❌ **Disabled (The Purist / Vanilla)** | **100% Vanilla Tarkov.** High-tier keys almost NEVER spawn in standard containers. Mostly junk. | **~7 keys** (mostly Common, near-zero Rare/SuperRare) | **1.0x** (Vanilla) |
 
 > *Note: Profile 8 is reserved for "Custom" settings via `config.jsonc`.*
 
@@ -43,7 +43,7 @@ The profiles also enforce specific item count distributions (how many items drop
 *   🟡 **6. The MusicManiac Classic:** Enforces a custom probability curve that evenly and heavily favors 2-4 items (30% chance for each), emulating the original mod's behavior.
 *   🟠 **7. The Loot Piñata:** Pure chaos. Forces 10-25 items per container.
 *   ⚪ **8. Custom:** Reverts to whatever raw probability arrays you manually define inside your `config.jsonc` file.
-*   ❌ **9. Disabled:** 100% vanilla Tarkov container densities.
+*   ❌ **9. Disabled:** 100% vanilla Tarkov container densities (averages 1.0 item per container).
 
 ---
 

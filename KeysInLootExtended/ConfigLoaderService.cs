@@ -342,7 +342,7 @@ public class KeysInLootConfigLoader
         double commonRatio = (double)Config.KeyWeight.Common / Math.Max(1, 200);
         double rareRatio = (double)Config.KeyWeight.Rare / Math.Max(1, 100);
         double superRareRatio = (double)Config.KeyWeight.SuperRare / Math.Max(1, 40);
-        double notExistRatio = (double)Config.KeyWeight.NotExist / Math.Max(1, 60);
+        double notExistRatio = (double)Config.KeyWeight.NotExist / Math.Max(1, 200);
 
         ScaleContainer(locConfig.JacketContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
         ScaleContainer(locConfig.DuffleBagContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
