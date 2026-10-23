@@ -49,9 +49,11 @@ The profiles also enforce specific item count distributions (how many items drop
 
 ## 📦 Installation
 
-1. Download the latest release `.zip` file.
-2. Extract the contents directly into your SPT installation directory, specifically into the `user/mods/` folder.
-   - The final path should look like: `SPT/user/mods/KeysInLootExtended/`
+1. Download the release `.zip` file matching your server version from [GitHub Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases):
+   - **SP-Tushonka / SPT 4.1.x (`.NET 10`):** Download `KeysInLootExtended-2.2.0.zip` (or newer).
+   - **SPT 4.0.x (`.NET 9`):** Download `KeysInLootExtended-2.1.4.zip`.
+2. Extract the contents directly into your SPT root directory so that the mod files land inside `user/mods/`:
+   - Final folder structure: `<SPT_Root>/user/mods/KeysInLootExtended/`
 
 ---
 

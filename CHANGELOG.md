@@ -7,6 +7,7 @@
 * **4.1 Mod Metadata & Async Lifecycle**: Migrated `ModMetadata` to the new `IModMetadata` interface (`~4.1.0`) and updated `KeysInLootExtendedPlugin` to `IOnLoad.OnLoadAsync(CancellationToken)` at `OnLoadOrder.Routers + 2` (`400002`), ensuring key price adjustments and Fence blacklisting run before `HandbookCallbacks`, `TraderCallbacks`, and `RagfairCallbacks` initialize startup caches.
 * **Direct Table & Config Dependency Injection**: Migrated `LootInjectionService`, `ItemPriceService`, and `ContainerGridService` from the removed 4.0 `DatabaseServer` and `ConfigServer` wrappers to direct 4.1 constructor injection of `TemplateTable`, `LocationTable`, and `TraderConfig`.
 * **Strongly-Typed Map Discovery**: Replaced dynamic reflection over `db.Locations` with `LocationTable.GetDictionary()`, eliminating runtime binder overhead while preserving dynamic map discovery and `LazyLoad<T>` static loot transformers.
+* **End-to-End Integration Tests & Automated CI/CD**: Added headless 4.1.6 end-to-end tests verifying `LazyLoad<T>` static loot injection, all 13 `locations/*.jsonc` configs, Fence blacklisting, and assembly version sync, alongside an automated GitHub Actions CI/CD release pipeline.
 
 ## [2.1.4]
 

@@ -67,13 +67,13 @@ public class KeysInLootCoreConfig
     public bool OverrideLootDistribution { get; set; } = true;
 
     [JsonPropertyName("overrideLootDistributionJackets")]
-    public List<ItemCountDistributionConfig> OverrideLootDistributionJackets { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionJackets { get; set; } = new();
 
     [JsonPropertyName("overrideLootDistributionDuffleBags")]
-    public List<ItemCountDistributionConfig> OverrideLootDistributionDuffleBags { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionDuffleBags { get; set; } = new();
 
     [JsonPropertyName("overrideLootDistributionDeadScavs")]
-    public List<ItemCountDistributionConfig> OverrideLootDistributionDeadScavs { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionDeadScavs { get; set; } = new();
 
     [JsonPropertyName("cellsH")]
     public int CellsH { get; set; } = 3;

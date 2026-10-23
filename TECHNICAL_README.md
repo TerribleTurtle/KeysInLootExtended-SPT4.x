@@ -46,10 +46,19 @@ This means a super rare Red Keycard and a common Dorms 206 key will both have ex
 2. **No Decimals Allowed:** Do not use decimal numbers (e.g., `0.5`) in the `overrideLootDistribution` configurations. The game engine expects strict integers, and using decimals will immediately crash the server when you attempt to load a map.
 3. **Grid Max Size:** The mod clamps `cellsH` and `cellsV` to a maximum of 14x14. Values higher than this have been known to cause the Escape from Tarkov client UI to fail to render the container grid.
 
-## 🛠️ Building from Source
+## 🛠️ Building, Testing & Releasing
 
-If you wish to compile the mod yourself for development or debugging:
+If you wish to compile or test the mod from source:
 1. Ensure you have the **.NET 10 SDK** installed.
-2. Open a terminal in the repository root and run: `dotnet build KeysInLootExtended/KeysInLootExtended.csproj -c Release`
-3. The compiled DLLs will be automatically placed in the correct `dist/SPT/user/mods/KeysInLootExtended/` folder structure.
-4. Alternatively, you can run the provided `.\release.ps1` script to automatically build and package the mod into a ready-to-use `.zip` archive.
+2. **Build (`Release`):**
+   ```powershell
+   dotnet build KeysInLootExtended/KeysInLootExtended.csproj -c Release
+   ```
+   The compiled mod and configuration files are automatically placed in `dist/SPT/user/mods/KeysInLootExtended/`.
+3. **Run Unit & End-to-End Integration Tests:**
+   ```powershell
+   dotnet test KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj -c Release
+   ```
+4. **Automated Releases (`CI & Auto-Release`):**
+   - Pushing to `main` automatically runs the `.NET 10` build and test suite in GitHub Actions (`.github/workflows/ci-release.yml`).
+   - Whenever `<Version>` in `KeysInLootExtended/KeysInLootExtended.csproj` (and `ModMetadata.Version` in `KeysInLootExtendedPlugin.cs`) is bumped to a new version not yet published on GitHub Releases, the workflow automatically executes `.\release.ps1` to package `KeysInLootExtended-<Version>.zip`, extract the matching `## [<Version>]` notes from `CHANGELOG.md`, and publish the GitHub Release.
