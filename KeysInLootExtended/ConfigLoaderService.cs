@@ -1,11 +1,13 @@
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("KeysInLootExtended.Tests")]
+
+namespace KeysInLootExtended;
+
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
-
-namespace KeysInLootExtended;
 
 /// <summary>
 /// Singleton service responsible for loading, parsing, and caching the mod's configuration files (config.jsonc and locations/*.jsonc).
@@ -238,6 +240,35 @@ public class KeysInLootConfigLoader
         { "custom", new ProfileDefinition() }
     };
 
+    internal static string NormalizeProfileKey(string? rawProfile)
+    {
+        string profileKey = rawProfile?.Trim().ToLowerInvariant() ?? string.Empty;
+        
+        if (profileKey.Contains("balanced") || profileKey.Contains("(1)")) profileKey = "1";
+        else if (profileKey.Contains("bountiful") || profileKey.Contains("(2)")) profileKey = "2";
+        else if (profileKey.Contains("generous") || profileKey.Contains("(3)")) profileKey = "3";
+        else if (profileKey.Contains("refined") || profileKey.Contains("(4)")) profileKey = "4";
+        else if (profileKey.Contains("hardcore") || profileKey.Contains("(5)")) profileKey = "5";
+        else if (profileKey.Contains("musicmaniac") || profileKey.Contains("classic") || profileKey.Contains("(6)")) profileKey = "6";
+        else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(7)")) profileKey = "7";
+        else if (profileKey.Contains("custom") || profileKey.Contains("(8)")) profileKey = "8";
+        else if (profileKey.Contains("disabled") || profileKey.Contains("(9)")) profileKey = "9";
+
+        return profileKey switch
+        {
+            "1" => "balanced",
+            "2" => "bountiful",
+            "3" => "generous",
+            "4" => "refined",
+            "5" => "hardcore scarcity",
+            "6" => "the musicmaniac classic",
+            "7" => "the loot pinata",
+            "8" => "custom",
+            "9" => "disabled",
+            _ => profileKey
+        };
+    }
+
     /// <summary>
     /// Loads the core config.jsonc file and applies the selected ActiveProfile overrides.
     /// </summary>
@@ -260,31 +291,7 @@ public class KeysInLootConfigLoader
             throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize config.jsonc to KeysInLootCoreConfig.");
         }
 
-        string profileKey = config.ActiveProfile?.Trim().ToLowerInvariant() ?? string.Empty;
-        
-        if (profileKey.Contains("balanced") || profileKey.Contains("(1)")) profileKey = "1";
-        else if (profileKey.Contains("bountiful") || profileKey.Contains("(2)")) profileKey = "2";
-        else if (profileKey.Contains("generous") || profileKey.Contains("(3)")) profileKey = "3";
-        else if (profileKey.Contains("refined") || profileKey.Contains("(4)")) profileKey = "4";
-        else if (profileKey.Contains("hardcore scarcity") || profileKey.Contains("(5)")) profileKey = "5";
-        else if (profileKey.Contains("the musicmaniac classic") || profileKey.Contains("the mod classic") || profileKey.Contains("(6)")) profileKey = "6";
-        else if (profileKey.Contains("piñata") || profileKey.Contains("pinata") || profileKey.Contains("piata") || profileKey.Contains("(7)")) profileKey = "7";
-        else if (profileKey.Contains("custom") || profileKey.Contains("(8)")) profileKey = "8";
-        else if (profileKey.Contains("disabled") || profileKey.Contains("(9)")) profileKey = "9";
-
-        profileKey = profileKey switch
-        {
-            "1" => "balanced",
-            "2" => "bountiful",
-            "3" => "generous",
-            "4" => "refined",
-            "5" => "hardcore scarcity",
-            "6" => "the musicmaniac classic",
-            "7" => "the loot pinata",
-            "8" => "custom",
-            "9" => "disabled",
-            _ => profileKey
-        };
+        string profileKey = NormalizeProfileKey(config.ActiveProfile);
 
         if (!ProfileDefinitions.ContainsKey(profileKey))
         {
@@ -297,12 +304,6 @@ public class KeysInLootConfigLoader
         {
             config.KeyWeight ??= new();
             config.KeycardWeight ??= new();
-            if (config.OverrideLootDistribution)
-            {
-                config.OverrideLootDistributionJackets ??= new();
-                config.OverrideLootDistributionDuffleBags ??= new();
-                config.OverrideLootDistributionDeadScavs ??= new();
-            }
         }
 
         config.ActiveProfile = profileKey;
@@ -335,42 +336,49 @@ public class KeysInLootConfigLoader
         return locConfig;
     }
 
-    private void ScaleLocationConfig(KeysInLootLocationConfig locConfig)
+    internal void ScaleLocationConfig(KeysInLootLocationConfig locConfig)
     {
         if (Config?.KeyWeight == null) return;
 
-        double commonRatio = (double)Config.KeyWeight.Common / Math.Max(1, 200);
-        double rareRatio = (double)Config.KeyWeight.Rare / Math.Max(1, 100);
-        double superRareRatio = (double)Config.KeyWeight.SuperRare / Math.Max(1, 40);
-        double notExistRatio = (double)Config.KeyWeight.NotExist / Math.Max(1, 200);
+        double keyCommonRatio = (double)Config.KeyWeight.Common / Math.Max(1, 200);
+        double keyRareRatio = (double)Config.KeyWeight.Rare / Math.Max(1, 100);
+        double keySuperRareRatio = (double)Config.KeyWeight.SuperRare / Math.Max(1, 40);
+        double keyNotExistRatio = (double)Config.KeyWeight.NotExist / Math.Max(1, 200);
 
-        ScaleContainer(locConfig.JacketContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
-        ScaleContainer(locConfig.DuffleBagContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
-        ScaleContainer(locConfig.DeadScavContainer, commonRatio, rareRatio, superRareRatio, notExistRatio);
+        double keycardCommonRatio = Config.KeycardWeight != null ? (double)Config.KeycardWeight.Common / Math.Max(1, 60) : 1.0;
+        double keycardRareRatio = Config.KeycardWeight != null ? (double)Config.KeycardWeight.Rare / Math.Max(1, 30) : 1.0;
+        double keycardSuperRareRatio = Config.KeycardWeight != null ? (double)Config.KeycardWeight.SuperRare / Math.Max(1, 15) : 1.0;
+        double keycardNotExistRatio = Config.KeycardWeight != null ? (double)Config.KeycardWeight.NotExist / Math.Max(1, 60) : 1.0;
+
+        ScaleContainer(locConfig.JacketContainer, keyCommonRatio, keyRareRatio, keySuperRareRatio, keyNotExistRatio, keycardCommonRatio, keycardRareRatio, keycardSuperRareRatio, keycardNotExistRatio);
+        ScaleContainer(locConfig.DuffleBagContainer, keyCommonRatio, keyRareRatio, keySuperRareRatio, keyNotExistRatio, keycardCommonRatio, keycardRareRatio, keycardSuperRareRatio, keycardNotExistRatio);
+        ScaleContainer(locConfig.DeadScavContainer, keyCommonRatio, keyRareRatio, keySuperRareRatio, keyNotExistRatio, keycardCommonRatio, keycardRareRatio, keycardSuperRareRatio, keycardNotExistRatio);
     }
 
-    private void ScaleContainer(KeysInLootContainerConfig? container, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
+    internal static void ScaleContainer(
+        KeysInLootContainerConfig? container,
+        double keyCommonRatio, double keyRareRatio, double keySuperRareRatio, double keyNotExistRatio,
+        double keycardCommonRatio, double keycardRareRatio, double keycardSuperRareRatio, double keycardNotExistRatio)
     {
         if (container == null) return;
-        ScaleRarity(container.Key, commonRatio, rareRatio, superRareRatio, notExistRatio);
-        ScaleRarity(container.Keycard, commonRatio, rareRatio, superRareRatio, notExistRatio);
+        ScaleRarity(container.Key, keyCommonRatio, keyRareRatio, keySuperRareRatio, keyNotExistRatio);
+        ScaleRarity(container.Keycard, keycardCommonRatio, keycardRareRatio, keycardSuperRareRatio, keycardNotExistRatio);
     }
 
-    private void ScaleRarity(KeysInLootRarityConfig? rarity, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
+    internal static void ScaleRarity(KeysInLootRarityConfig? rarity, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
     {
         if (rarity == null) return;
-        
-        if (rarity.NotExist > 0)
-            rarity.NotExist = Math.Max(1, (int)Math.Round(rarity.NotExist * notExistRatio));
-            
-        if (rarity.Common > 0)
-            rarity.Common = Math.Max(1, (int)Math.Round(rarity.Common * commonRatio));
-            
-        if (rarity.Rare > 0)
-            rarity.Rare = Math.Max(1, (int)Math.Round(rarity.Rare * rareRatio));
-            
-        if (rarity.SuperRare > 0)
-            rarity.SuperRare = Math.Max(1, (int)Math.Round(rarity.SuperRare * superRareRatio));
+
+        static int ScaleField(int currentWeight, double ratio)
+        {
+            if (currentWeight <= 0) return 0;
+            if (ratio <= 0) return 0;
+            return (int)Math.Clamp(Math.Round(currentWeight * ratio), 1.0, int.MaxValue);
+        }
+
+        rarity.NotExist = ScaleField(rarity.NotExist, notExistRatio);
+        rarity.Common = ScaleField(rarity.Common, commonRatio);
+        rarity.Rare = ScaleField(rarity.Rare, rareRatio);
+        rarity.SuperRare = ScaleField(rarity.SuperRare, superRareRatio);
     }
 }
-

@@ -44,7 +44,7 @@ This means a super rare Red Keycard and a common Dorms 206 key will both have ex
 
 1. **Integer Overflow (`int.MaxValue / 2`):** Because the SPT game engine adds up all the weights in a container to calculate the total pool size, it is bound by standard 32-bit integer limits. If the total sum of all weights in a container exceeds `2,147,483,647`, it triggers an integer overflow. `KeysInLootExtended` has a built-in safety clamp that detects if a container's weight is approaching `int.MaxValue / 2` and scales it down automatically to prevent crashes.
 2. **No Decimals Allowed:** Do not use decimal numbers (e.g., `0.5`) in the `overrideLootDistribution` configurations. The game engine expects strict integers, and using decimals will immediately crash the server when you attempt to load a map.
-3. **Grid Max Size:** The mod clamps `cellsH` and `cellsV` to a maximum of 14x14. Values higher than this have been known to cause the Escape from Tarkov client UI to fail to render the container grid.
+3. **Grid Max Size & Non-Shrinking Expansion:** When `overrideLootDistribution` is enabled, the mod clamps `cellsH` and `cellsV` to a maximum of 14x14 (values higher than this cause the Escape from Tarkov client UI to fail to render the grid) and expands dimensions using `Math.Max(existing, target)` so smaller containers (like 2x2 Jackets) grow without shrinking larger vanilla containers (like 3x4 Duffle Bags).
 
 ## 🛠️ Building, Testing & Releasing
 

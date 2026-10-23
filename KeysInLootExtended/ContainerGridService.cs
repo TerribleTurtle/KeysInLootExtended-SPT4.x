@@ -57,6 +57,9 @@ public class ContainerGridService
         if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
             return;
 
+        if (!config.OverrideLootDistribution)
+            return;
+
         int clampedH = Math.Clamp(config.CellsH, 1, 14);
         int clampedV = Math.Clamp(config.CellsV, 1, 14);
 
@@ -76,6 +79,9 @@ public class ContainerGridService
     /// <exception cref="InvalidOperationException">Thrown when a target container is missing required Properties or Grids.</exception>
     public static void AdjustGridSizesInternal(Dictionary<MongoId, TemplateItem> items, int targetCellsH, int targetCellsV)
     {
+        int clampedH = Math.Clamp(targetCellsH, 1, 14);
+        int clampedV = Math.Clamp(targetCellsV, 1, 14);
+
         foreach (var containerId in TargetContainerIds)
         {
             if (items.TryGetValue(containerId, out var templateItem))
@@ -95,14 +101,16 @@ public class ContainerGridService
                     throw new InvalidOperationException($"[KeysInLootExtended] Critical Error: Grid or Grid.Properties is null for TemplateItem {containerId}.");
                 }
                 
-                grid.Properties.CellsH = targetCellsH;
-                grid.Properties.CellsV = targetCellsV;
+                int newH = Math.Max(grid.Properties.CellsH ?? 0, clampedH);
+                int newV = Math.Max(grid.Properties.CellsV ?? 0, clampedV);
+                grid.Properties.CellsH = newH;
+                grid.Properties.CellsV = newV;
                 
                 // CRITICAL FIX: Tarkov's item template grids define a hard cap on how many items can physically
                 // be spawned inside them (`MaxCount`). For example, Dead Scavs have a vanilla MaxCount of 5.
                 // If we resize the grid to 5x5 (25 slots) without raising MaxCount, the Loot Generator will
                 // successfully roll 25 items from staticLoot.json but physically discard 20 of them.
-                grid.Properties.MaxCount = targetCellsH * targetCellsV;
+                grid.Properties.MaxCount = newH * newV;
             }
         }
     }

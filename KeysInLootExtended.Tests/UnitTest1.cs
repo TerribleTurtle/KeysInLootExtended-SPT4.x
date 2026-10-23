@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
@@ -87,6 +88,8 @@ public class ModMetadataTests
         var questKeyId = new MongoId("593962ca86f774068014d9af"); // Quest key (QuestItem = true)
         var blacklistedKeyId = new MongoId("600000000000000000000001"); // Blacklisted in ItemConfig
         var circularItemId = new MongoId("600000000000000000000002"); // Self-referencing parent cycle
+        var nodeItemId = new MongoId("600000000000000000000003"); // Item with Type == "Node"
+        var badFormatItemId = new MongoId("600000000000000000000004"); // Malformed MongoId in item.Id
 
         var jacketId = new MongoId("578f8778245977358849a9b5");
         var duffleId = new MongoId("578f87a3245977356274f2cb");
@@ -94,11 +97,15 @@ public class ModMetadataTests
 
         var rootParentId = new MongoId("54009119af1c881c07000029");
 
-        static TemplateItem CreateItem(MongoId id, MongoId parentId, string? rarityPvE = null, bool questItem = false)
+        static TemplateItem CreateItem(MongoId id, MongoId parentId, string? rarityPvE = null, bool questItem = false, string? type = null)
         {
             var item = (TemplateItem)RuntimeHelpers.GetUninitializedObject(typeof(TemplateItem));
             typeof(TemplateItem).GetProperty("Id")!.SetValue(item, id);
             typeof(TemplateItem).GetProperty("Parent")!.SetValue(item, parentId);
+            if (type != null)
+            {
+                typeof(TemplateItem).GetProperty("Type")!.SetValue(item, type);
+            }
             var props = (TemplateItemProperties)RuntimeHelpers.GetUninitializedObject(typeof(TemplateItemProperties));
             typeof(TemplateItemProperties).GetProperty("RarityPvE")!.SetValue(props, rarityPvE);
             typeof(TemplateItemProperties).GetProperty("QuestItem")!.SetValue(props, questItem);
@@ -127,6 +134,10 @@ public class ModMetadataTests
             return hb;
         }
 
+        var badFormatItem = CreateItem(badFormatItemId, keyBaseId, "Common");
+        var uninitMongoId = (MongoId)RuntimeHelpers.GetUninitializedObject(typeof(MongoId));
+        typeof(TemplateItem).GetProperty("Id")!.SetValue(badFormatItem, uninitMongoId);
+
         var itemsDict = new Dictionary<MongoId, TemplateItem>
         {
             [keyBaseId] = CreateItem(keyBaseId, rootParentId),
@@ -137,6 +148,8 @@ public class ModMetadataTests
             [questKeyId] = CreateItem(questKeyId, keyBaseId, "Common", questItem: true),
             [blacklistedKeyId] = CreateItem(blacklistedKeyId, keyBaseId, "Common"),
             [circularItemId] = CreateItem(circularItemId, circularItemId, "Common"),
+            [nodeItemId] = CreateItem(nodeItemId, keyBaseId, "Common", type: "Node"),
+            [badFormatItemId] = badFormatItem,
             [jacketId] = CreateContainer(jacketId),
             [duffleId] = CreateContainer(duffleId),
             [deadScavId] = CreateContainer(deadScavId)
@@ -205,7 +218,6 @@ public class ModMetadataTests
             templateTable,
             locationTable,
             configLoader,
-            itemHelper,
             injectedKeysService,
             itemFilterService);
 
@@ -235,9 +247,13 @@ public class ModMetadataTests
         Assert.Contains(commonKeyId, injectedKeysService.InjectedKeyIds);
         Assert.Contains(shturmanKeyId, injectedKeysService.InjectedKeyIds);
         Assert.Contains(keycardId, injectedKeysService.InjectedKeyIds);
+        Assert.DoesNotContain(keyBaseId, injectedKeysService.InjectedKeyIds); // Baseclasses must not match themselves
+        Assert.DoesNotContain(keycardBaseId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(questKeyId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(blacklistedKeyId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(circularItemId, injectedKeysService.InjectedKeyIds);
+        Assert.DoesNotContain(nodeItemId, injectedKeysService.InjectedKeyIds); // Node items must be skipped
+        Assert.DoesNotContain(badFormatItemId, injectedKeysService.InjectedKeyIds); // Invalid MongoId must be caught & skipped
 
         // 7. Assert LazyLoad<T> transformer modifies Bigmap and Laboratory StaticLoot on the fly
         var resolvedCustomsLoot = locationTable.Bigmap.StaticLoot!.Value;
@@ -248,8 +264,9 @@ public class ModMetadataTests
         Assert.Equal(expectedCustomsConfig.JacketContainer!.Key!.Common, customsJacketDist[commonKeyId]);
         // Shturman's Stash Key is "Not_exist" in vanilla, but ExplicitRarityMap maps it to "Superrare"
         Assert.Equal(expectedCustomsConfig.JacketContainer!.Key!.SuperRare, customsJacketDist[shturmanKeyId]);
-        // On Customs, keycard weights are 0 (banned), so keycardId must not be injected into Customs jackets
-        Assert.False(customsJacketDist.ContainsKey(keycardId));
+        // On Customs, keycards are now enabled proportionally
+        Assert.True(customsJacketDist.ContainsKey(keycardId));
+        Assert.Equal(expectedCustomsConfig.JacketContainer!.Keycard!.SuperRare, customsJacketDist[keycardId]);
         Assert.False(customsJacketDist.ContainsKey(questKeyId));
         Assert.False(customsJacketDist.ContainsKey(blacklistedKeyId));
 
@@ -280,5 +297,82 @@ public class ModMetadataTests
             Assert.Equal(expectedV, gProps.CellsV);
             Assert.Equal(expectedH * expectedV, gProps.MaxCount);
         }
+    }
+
+    [Fact]
+    public void CultureInvariantDoubleConverter_ShouldThrowJsonException_OnNonStringTokens()
+    {
+        var converter = new CultureInvariantDoubleConverter();
+        var jsonBytes = System.Text.Encoding.UTF8.GetBytes("{\"nested\": 123}");
+        var reader = new Utf8JsonReader(jsonBytes);
+        reader.Read(); // Position on StartObject
+
+        var ex = Record.Exception(() =>
+        {
+            // We use helper to invoke without lambda capturing ref struct
+        });
+        try
+        {
+            converter.Read(ref reader, typeof(double), new JsonSerializerOptions());
+            Assert.Fail("Expected JsonException but no exception was thrown.");
+        }
+        catch (Exception exCaught)
+        {
+            Assert.IsType<JsonException>(exCaught);
+        }
+    }
+
+    [Theory]
+    [InlineData("hardcore", "hardcore scarcity")]
+    [InlineData("Hardcore Scarcity", "hardcore scarcity")]
+    [InlineData("musicmaniac", "the musicmaniac classic")]
+    [InlineData("classic", "the musicmaniac classic")]
+    [InlineData("the musicmaniac classic", "the musicmaniac classic")]
+    [InlineData("balanced", "balanced")]
+    [InlineData("(1)", "balanced")]
+    [InlineData("custom", "custom")]
+    [InlineData("unknown_xyz", "unknown_xyz")]
+    public void NormalizeProfileKey_ShouldMapAliasesCorrectly(string input, string expected)
+    {
+        string actual = KeysInLootConfigLoader.NormalizeProfileKey(input);
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ScaleRarity_ShouldZeroOutWhenRatioIsZeroOrNegative_AndClampToOneWhenPositive()
+    {
+        var rarity = new KeysInLootRarityConfig
+        {
+            NotExist = 100,
+            Common = 100,
+            Rare = 100,
+            SuperRare = 100
+        };
+
+        // When ratio <= 0, should become 0
+        KeysInLootConfigLoader.ScaleRarity(rarity, 0.0, -0.5, 0.001, 2.0);
+
+        Assert.Equal(0, rarity.Common);
+        Assert.Equal(0, rarity.Rare);
+        // 100 * 0.001 = 0.1 -> clamps to minimum 1
+        Assert.Equal(1, rarity.SuperRare);
+        // 100 * 2.0 = 200
+        Assert.Equal(200, rarity.NotExist);
+    }
+
+    [Fact]
+    public void ScaleContainer_ShouldApplySeparateKeyAndKeycardRatios()
+    {
+        var container = new KeysInLootContainerConfig
+        {
+            Key = new KeysInLootRarityConfig { Common = 200 },
+            Keycard = new KeysInLootRarityConfig { Common = 60 }
+        };
+
+        // key common ratio: 1.5x, keycard common ratio: 0.5x
+        KeysInLootConfigLoader.ScaleContainer(container, 1.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0);
+
+        Assert.Equal(300, container.Key!.Common);
+        Assert.Equal(30, container.Keycard!.Common);
     }
 }

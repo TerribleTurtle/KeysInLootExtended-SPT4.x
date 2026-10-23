@@ -47,6 +47,8 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: windows-latest
+    env:
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -97,8 +99,6 @@ jobs:
       - name: VirusTotal Scan
         if: steps.package.outputs.published == 'true' && env.VT_API_KEY != ''
         uses: crazy-max/ghaction-virustotal@v4
-        env:
-          VT_API_KEY: ${{ secrets.VT_API_KEY }}
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

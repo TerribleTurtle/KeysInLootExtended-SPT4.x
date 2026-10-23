@@ -26,9 +26,10 @@ public class CultureInvariantDoubleConverter : JsonConverter<double>
                     return result;
                 }
             }
+            throw new JsonException($"Unable to convert \"{stringValue}\" to double.");
         }
 
-        throw new JsonException($"Unable to convert \"{reader.GetString()}\" to double.");
+        throw new JsonException($"Unable to convert token type {reader.TokenType} to double.");
     }
 
     public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options)
@@ -67,13 +68,13 @@ public class KeysInLootCoreConfig
     public bool OverrideLootDistribution { get; set; } = true;
 
     [JsonPropertyName("overrideLootDistributionJackets")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionJackets { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionJackets { get; set; } = null;
 
     [JsonPropertyName("overrideLootDistributionDuffleBags")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionDuffleBags { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionDuffleBags { get; set; } = null;
 
     [JsonPropertyName("overrideLootDistributionDeadScavs")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionDeadScavs { get; set; } = new();
+    public List<ItemCountDistributionConfig>? OverrideLootDistributionDeadScavs { get; set; } = null;
 
     [JsonPropertyName("cellsH")]
     public int CellsH { get; set; } = 3;

@@ -19,10 +19,10 @@
             "superRare": 107
         },
         "keycard": {
-            "notExist": 0,
-            "common": 0,
-            "rare": 0,
-            "superRare": 0
+            "notExist": 128,
+            "common": 128,
+            "rare": 64,
+            "superRare": 40
         }
     },
     "duffleBagContainer": {
@@ -36,10 +36,10 @@
             "superRare": 104
         },
         "keycard": {
-            "notExist": 0,
-            "common": 0,
-            "rare": 0,
-            "superRare": 0
+            "notExist": 125,
+            "common": 125,
+            "rare": 62,
+            "superRare": 39
         }
     },
     "deadScavContainer": {
@@ -53,10 +53,10 @@
             "superRare": 17
         },
         "keycard": {
-            "notExist": 0,
-            "common": 0,
-            "rare": 0,
-            "superRare": 0
+            "notExist": 20,
+            "common": 20,
+            "rare": 10,
+            "superRare": 6
         }
     }
 }

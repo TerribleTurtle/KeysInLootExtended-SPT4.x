@@ -107,7 +107,10 @@ public class ItemPriceService
             if (fleaPrices.TryGetValue(mongoId, out var currentFleaPrice))
             {
                 // We use Math.Round to ensure clean integer values in the game UI, preventing float rounding errors.
-                fleaPrices[mongoId] = Math.Round(currentFleaPrice * safeFleaMultiplier);
+                double rounded = Math.Round(currentFleaPrice * safeFleaMultiplier);
+                fleaPrices[mongoId] = (safeFleaMultiplier > 0 && currentFleaPrice > 0)
+                    ? Math.Max(1.0, rounded)
+                    : rounded;
             }
         }
 
@@ -120,7 +123,11 @@ public class ItemPriceService
             {
                 if (handbookEntry.Price.HasValue)
                 {
-                    handbookEntry.Price = Math.Round(handbookEntry.Price.Value * safeTraderMultiplier);
+                    double currentPrice = handbookEntry.Price.Value;
+                    double rounded = Math.Round(currentPrice * safeTraderMultiplier);
+                    handbookEntry.Price = (safeTraderMultiplier > 0 && currentPrice > 0)
+                        ? Math.Max(1.0, rounded)
+                        : rounded;
                 }
             }
         }
@@ -128,8 +135,7 @@ public class ItemPriceService
 
     private static double SanitizeMultiplier(double m)
     {
-        double safeM = Math.Max(0.0, m);
-        if (double.IsNaN(safeM) || double.IsInfinity(safeM)) safeM = 1.0;
-        return safeM;
+        if (double.IsNaN(m) || double.IsInfinity(m)) return 1.0;
+        return Math.Max(0.0, m);
     }
 }

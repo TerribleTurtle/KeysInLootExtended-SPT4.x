@@ -7,7 +7,16 @@
 * **4.1 Mod Metadata & Async Lifecycle**: Migrated `ModMetadata` to the new `IModMetadata` interface (`~4.1.0`) and updated `KeysInLootExtendedPlugin` to `IOnLoad.OnLoadAsync(CancellationToken)` at `OnLoadOrder.Routers + 2` (`400002`), ensuring key price adjustments and Fence blacklisting run before `HandbookCallbacks`, `TraderCallbacks`, and `RagfairCallbacks` initialize startup caches.
 * **Direct Table & Config Dependency Injection**: Migrated `LootInjectionService`, `ItemPriceService`, and `ContainerGridService` from the removed 4.0 `DatabaseServer` and `ConfigServer` wrappers to direct 4.1 constructor injection of `TemplateTable`, `LocationTable`, and `TraderConfig`.
 * **Strongly-Typed Map Discovery**: Replaced dynamic reflection over `db.Locations` with `LocationTable.GetDictionary()`, eliminating runtime binder overhead while preserving dynamic map discovery and `LazyLoad<T>` static loot transformers.
-* **End-to-End Integration Tests & Automated CI/CD**: Added headless 4.1.6 end-to-end tests verifying `LazyLoad<T>` static loot injection, all 13 `locations/*.jsonc` configs, Fence blacklisting, and assembly version sync, alongside an automated GitHub Actions CI/CD release pipeline.
+* **End-to-End Integration Tests & Automated CI/CD**: Added 23 headless 4.1.6 unit and end-to-end tests verifying `LazyLoad<T>` static loot injection, all 9 profiles, all 13 `locations/*.jsonc` configs, Fence blacklisting, and assembly version sync, alongside an automated GitHub Actions CI/CD release pipeline.
+
+### Bug Fixes & Hardening
+* **Release Archive Structure Fix**: Fixed `release.ps1` so the generated `.zip` packages `user/mods/KeysInLootExtended/` directly at the archive root for clean drag-and-drop extraction into the SPT directory.
+* **Abstract Baseclass Node Exclusion**: Filtered out abstract EFT template category nodes (`item.Type == "Node"` such as `Key`, `Keycard`, and `KeyMechanical`) and self-matching baseclass IDs so abstract category nodes are never injected into static container pools.
+* **Map Keycard Calibration & Independent Ratio Scaling**: Calibrated `"keycard"` weights across all 13 `locations/*.jsonc` files to the `Balanced` 30% / 37.5% keycard-to-key ratio and updated `ScaleLocationConfig` to scale container keycards against `Config.KeycardWeight` baselines (`60/60/30/15`) rather than mechanical key baselines (`200/200/100/40`).
+* **Zero-Weight Disable Preservation**: Fixed `ScaleRarity` so setting a rarity weight to `0` in `Custom` mode preserves `0` across map location configs instead of clamping up to `1`.
+* **Non-Shrinking Container Grid Expansion**: Updated `ContainerGridService` to respect `overrideLootDistribution: false` and expand container dimensions via `Math.Max(existing, target)`, growing `2x2` Jackets to `3x3` without shrinking vanilla `3x4` Duffle Bags or `4x4` Dead Scavs.
+* **Minimum 1-Rouble Price Floor & Multiplier Guard**: Clamped positive scaled key prices in `ItemPriceService` to at least `1` rouble so low-value keys cannot round to `0` and break Flea Market fee calculations, and hardened `SanitizeMultiplier` against `-Infinity`.
+* **LazyLoad Callback & Malformed ID Resilience**: Added exception boundaries inside `StaticLoot.AddTransformer` callbacks and `MongoId` parent-chain traversal, and prevented empty custom count-distribution arrays from wiping container loot pools.
 
 ## [2.1.4]
 

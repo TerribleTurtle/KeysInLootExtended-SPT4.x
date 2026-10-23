@@ -15,6 +15,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Download Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download ${{ github.event.release.tag_name }} --pattern "*.zip"
+
       - name: VirusTotal Scan
         uses: crazy-max/ghaction-virustotal@v4
         with:

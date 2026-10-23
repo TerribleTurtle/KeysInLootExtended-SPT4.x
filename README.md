@@ -10,7 +10,7 @@ In standard Escape from Tarkov, many keys and keycards are locked exclusively be
 
 To keep the game balanced and prevent the economy from breaking, the mod introduces three core mechanics:
 1. **Rarity Scaling**: Common dorm keys will spawn frequently, while high-tier loot like a Red Keycard remains incredibly rare.
-2. **Container Expansion**: Jackets, Duffle Bags, and Dead Scavs are physically expanded on the inside (default 3x3) to make room for the additional loot.
+2. **Container Expansion**: Jackets, Duffle Bags, and Dead Scavs are physically expanded on the inside (minimum 3x3 by default, without shrinking larger vanilla containers like 3x4 Duffle Bags) to make room for the additional loot.
 3. **Price Balancing**: Since you will be finding more keys overall, the mod automatically reduces their Flea Market and Trader sell prices to maintain a stable economy.
 
 ---

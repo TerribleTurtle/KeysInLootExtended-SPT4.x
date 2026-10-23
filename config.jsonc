@@ -181,7 +181,7 @@
 		{ "count": 0, "relativeProbability": 200 }
 	],
 
-	// Override jacket container size. Vanilla default is 2x2.
+	// Minimum container grid size when overrideLootDistribution is true (expands 2x2 Jackets to 3x3 without shrinking larger 3x4 Duffle Bags).
 	"cellsH": 3,
 	"cellsV": 3,
 	

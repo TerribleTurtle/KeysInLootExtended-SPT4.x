@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
@@ -22,7 +21,6 @@ public class LootInjectionService
     private readonly TemplateTable _templateTable;
     private readonly LocationTable _locationTable;
     private readonly KeysInLootConfigLoader _configLoader;
-    private readonly ItemHelper _itemHelper;
     private readonly InjectedKeysService _injectedKeysService;
     private readonly ItemFilterService _itemFilterService;
 
@@ -33,7 +31,6 @@ public class LootInjectionService
     /// <param name="templateTable">The SPT template database table containing item templates.</param>
     /// <param name="locationTable">The SPT location database table containing map definitions.</param>
     /// <param name="configLoader">The global configuration loader service.</param>
-    /// <param name="itemHelper">Helper for checking item baseclasses.</param>
     /// <param name="injectedKeysService">Shared service that stores the MongoIds of all valid keys and keycards discovered during initialization.</param>
     /// <param name="itemFilterService">SPT service for checking global item blacklists.</param>
     public LootInjectionService(
@@ -41,7 +38,6 @@ public class LootInjectionService
         TemplateTable templateTable,
         LocationTable locationTable,
         KeysInLootConfigLoader configLoader,
-        ItemHelper itemHelper,
         InjectedKeysService injectedKeysService,
         ItemFilterService itemFilterService)
     {
@@ -49,7 +45,6 @@ public class LootInjectionService
         _templateTable = templateTable;
         _locationTable = locationTable;
         _configLoader = configLoader;
-        _itemHelper = itemHelper;
         _injectedKeysService = injectedKeysService;
         _itemFilterService = itemFilterService;
     }
@@ -79,6 +74,7 @@ public class LootInjectionService
         
         bool IsOfBaseclass(string itemId, string targetBaseclass)
         {
+            if (itemId == targetBaseclass) return false;
             string currentId = itemId;
             var visited = new HashSet<string>();
 
@@ -87,11 +83,18 @@ public class LootInjectionService
                 if (!visited.Add(currentId)) break; // Prevent infinite loops from poorly made circular mod templates
                 
                 if (currentId == targetBaseclass) return true;
-                if (_templateTable.Items.TryGetValue(currentId, out var itemTemplate))
+                try
                 {
-                    currentId = itemTemplate.Parent;
+                    if (_templateTable.Items.TryGetValue(currentId, out var itemTemplate))
+                    {
+                        currentId = itemTemplate.Parent;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+                catch (Exception ex) when (ex is FormatException or ArgumentException)
                 {
                     break;
                 }
@@ -103,47 +106,38 @@ public class LootInjectionService
         {
             // Filter out developer keys, test items, and quest-specific keys to prevent them from leaking into the game economy (e.g. Fence assort)
             if (item.Properties?.QuestItem == true) continue;
+            if (string.Equals(item.Type, "Node", StringComparison.OrdinalIgnoreCase)) continue;
             
+            MongoId id;
             try
             {
-                var id = new MongoId(item.Id);
+                id = new MongoId(item.Id);
                 if (_itemFilterService.IsItemBlacklisted(id) || _itemFilterService.IsLootableItemBlacklisted(id))
                     continue;
             }
-            catch (FormatException)
+            catch (Exception ex) when (ex is FormatException or ArgumentException)
             {
-                // Let the baseclass check handle the format exception logging below
+                _logger.Warning($"[KeysInLootExtended] Skipping item {item.Id} due to invalid MongoId format: {ex.Message}");
+                continue;
             }
 
             if (IsOfBaseclass(item.Id, KEYCARD_BASECLASS))
             {
-                try 
-                { 
-                    var id = new MongoId(item.Id);
-                    string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
-                    if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
-                    keycards.Add((item, id, rarity));
-                    _injectedKeysService.InjectedKeyIds.Add(id); 
-                } 
-                catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping keycard {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
+                string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
+                if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
+                keycards.Add((item, id, rarity));
+                _injectedKeysService.InjectedKeyIds.Add(id); 
             }
             else if (IsOfBaseclass(item.Id, KEY_BASECLASS))
             {
-                try 
-                { 
-                    var id = new MongoId(item.Id);
-                    string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
-                    if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
-                    keys.Add((item, id, rarity));
-                    _injectedKeysService.InjectedKeyIds.Add(id); 
-                } 
-                catch (FormatException ex) { _logger.Warning($"[KeysInLootExtended] Skipping key {item.Id} due to invalid MongoId format from another mod: {ex.Message}"); }
+                string rarity = item.Properties?.RarityPvE?.ToString() ?? "Not_exist";
+                if (ExplicitRarityMap.TryGetValue(item.Id, out var explicitRarity)) rarity = explicitRarity;
+                keys.Add((item, id, rarity));
+                _injectedKeysService.InjectedKeyIds.Add(id); 
             }
         }
 
         _logger.Success($"[KeysInLootExtended] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
-
-
 
         // Internal dictionary to map raw location IDs from the database to cleaner enum-style names
         // used by our custom JSON configuration files. "Sandbox" is internally "Ground Zero".
@@ -240,19 +234,26 @@ public class LootInjectionService
             Func<Dictionary<MongoId, StaticLootDetails>?, Dictionary<MongoId, StaticLootDetails>?> transformer = dict => 
             {
                 if (dict == null) return dict;
-                foreach (var target in targets)
+                try
                 {
-                    if (dict.ContainsKey(target.Id))
+                    foreach (var target in targets)
                     {
-                        var container = dict[target.Id];
-                        ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
-                        
-                        // We must instantiate a new array of ItemCountDistribution here rather than assigning
-                        // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
-                        // references that we don't want to inadvertently cross-contaminate.
-                        if (target.Counts != null) 
-                            container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+                        if (dict.ContainsKey(target.Id))
+                        {
+                            var container = dict[target.Id];
+                            ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
+                            
+                            // We must instantiate a new array of ItemCountDistribution here rather than assigning
+                            // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
+                            // references that we don't want to inadvertently cross-contaminate.
+                            if (target.Counts is { Length: > 0 }) 
+                                container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error($"[KeysInLootExtended] Error transforming static loot: {ex}");
                 }
                 return dict;
             };
@@ -262,7 +263,6 @@ public class LootInjectionService
         }
 
         _logger.Success($"[KeysInLootExtended] Successfully injected keys into {modifiedContainers} static containers across valid maps.");
-
     }
 
     private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
