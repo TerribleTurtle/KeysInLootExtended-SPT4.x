@@ -1,13 +1,13 @@
 using System.Reflection;
 using System.Text.Json;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers;
+using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Models.Common;
-using SPTarkov.Server.Core.Services;
+using SPTarkov.Server.Core.Services.Items;
 
 namespace KeysInLootExtended;
 
@@ -19,7 +19,8 @@ namespace KeysInLootExtended;
 public class LootInjectionService
 {
     private readonly ISptLogger<LootInjectionService> _logger;
-    private readonly DatabaseServer _databaseServer;
+    private readonly TemplateTable _templateTable;
+    private readonly LocationTable _locationTable;
     private readonly KeysInLootConfigLoader _configLoader;
     private readonly ItemHelper _itemHelper;
     private readonly InjectedKeysService _injectedKeysService;
@@ -29,21 +30,24 @@ public class LootInjectionService
     /// Initializes the LootInjectionService.
     /// </summary>
     /// <param name="logger">The SPT logger instance.</param>
-    /// <param name="databaseServer">The primary SPT database server instance.</param>
+    /// <param name="templateTable">The SPT template database table containing item templates.</param>
+    /// <param name="locationTable">The SPT location database table containing map definitions.</param>
     /// <param name="configLoader">The global configuration loader service.</param>
     /// <param name="itemHelper">Helper for checking item baseclasses.</param>
     /// <param name="injectedKeysService">Shared service that stores the MongoIds of all valid keys and keycards discovered during initialization.</param>
     /// <param name="itemFilterService">SPT service for checking global item blacklists.</param>
     public LootInjectionService(
         ISptLogger<LootInjectionService> logger,
-        DatabaseServer databaseServer,
+        TemplateTable templateTable,
+        LocationTable locationTable,
         KeysInLootConfigLoader configLoader,
         ItemHelper itemHelper,
         InjectedKeysService injectedKeysService,
         ItemFilterService itemFilterService)
     {
         _logger = logger;
-        _databaseServer = databaseServer;
+        _templateTable = templateTable;
+        _locationTable = locationTable;
         _configLoader = configLoader;
         _itemHelper = itemHelper;
         _injectedKeysService = injectedKeysService;
@@ -63,8 +67,7 @@ public class LootInjectionService
             return;
         }
 
-        var db = _databaseServer.GetTables();
-        var allItems = db.Templates.Items.Values;
+        var allItems = _templateTable.Items.Values;
         
         // Find keys and keycards
         // Note: These baseclass IDs are hardcoded native EFT IDs for "Key" and "Keycard" categories.
@@ -84,7 +87,7 @@ public class LootInjectionService
                 if (!visited.Add(currentId)) break; // Prevent infinite loops from poorly made circular mod templates
                 
                 if (currentId == targetBaseclass) return true;
-                if (db.Templates.Items.TryGetValue(currentId, out var itemTemplate))
+                if (_templateTable.Items.TryGetValue(currentId, out var itemTemplate))
                 {
                     currentId = itemTemplate.Parent;
                 }
@@ -175,13 +178,8 @@ public class LootInjectionService
 
         int modifiedContainers = 0;
 
-        // Extract all properties from Locations to get all maps including custom ones if they were added via properties.
-        // This reflection-based approach is intentionally used to bypass hardcoded map lists and dynamically discover custom modded maps.
-        var validLocations = db.Locations.GetType().GetProperties()
-            .Select(p => p.GetValue(db.Locations))
-            .Where(l => l != null)
-            .Cast<dynamic>()
-            .ToList();
+        // Retrieve all registered map locations via SPT 4.1's strongly-typed LocationTable dictionary.
+        var validLocations = _locationTable.GetDictionary().Values;
 
         var jacketContainerId = new MongoId("578f8778245977358849a9b5");
         var duffleContainerId = new MongoId("578f87a3245977356274f2cb");
@@ -189,15 +187,7 @@ public class LootInjectionService
 
         foreach (var location in validLocations)
         {
-            if (location == null) continue;
-            
-            object? baseObj = null;
-            // The db.Locations object is highly dynamic in SPT. Custom maps might be missing a .Base property,
-            // which throws a RuntimeBinderException. We safely swallow this to ignore invalid map objects.
-            try { baseObj = location.Base; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { continue; }
-            if (baseObj == null) continue;
-
-            if (location.StaticLoot == null)
+            if (location?.Base == null || location.StaticLoot == null)
                 continue;
 
             KeysInLootRarityConfig jacketKeyWeight = config.KeyWeight;
@@ -209,7 +199,8 @@ public class LootInjectionService
 
             if (config.EnableLocationsConfig)
             {
-                string baseId = location.Base.Id;
+                string baseId = location.Base.Id ?? string.Empty;
+                if (string.IsNullOrEmpty(baseId)) continue;
                 string enumName = locationIdToEnum.TryGetValue(baseId, out var mappedName) 
                     ? mappedName 
                     : baseId.ToLowerInvariant();

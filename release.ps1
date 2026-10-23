@@ -17,7 +17,14 @@ $zipName = "KeysInLootExtended-$version.zip"
 $zipPath = Join-Path $PWD $zipName
 
 Write-Host "Building project in Release mode for version $version..."
+if (Test-Path ".\dist\SPT") {
+    Remove-Item ".\dist\SPT" -Recurse -Force
+}
 dotnet build $csprojPath -c Release
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "dotnet build failed with exit code $LASTEXITCODE"
+    exit $LASTEXITCODE
+}
 
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
@@ -86,6 +93,10 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "Creating new release $version..."
     $releaseCmd = "gh release create $version $zipPath --title `"$version`" $releaseNotesArgs"
     Invoke-Expression $releaseCmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "gh release create failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+    }
 }
 
 if (Test-Path $notesFile) {

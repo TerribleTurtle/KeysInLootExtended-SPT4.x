@@ -6,9 +6,9 @@ This document is intended for mod developers and advanced users who want to unde
 
 The original `MusicManiac-KeysInLoot` was a fantastic proof of concept, but it was built for an older version of SPT-AKI. `KeysInLootExtended` (v2.0.0+) is a complete rewrite.
 
-1. **Migration to Native C# (.NET 9):** The original mod was written in TypeScript/JavaScript and ran on the Node.js backend. This version is a native C# Server Mod designed specifically for the SPT 4.0+ architecture.
+1. **Migration to Native C# (.NET 10):** The original mod was written in TypeScript/JavaScript and ran on the Node.js backend. This version is a native C# Server Mod designed specifically for the SPT / SP-Tushonka 4.1+ (.NET 10) architecture.
 2. **Performance Optimizations:** The original mod used array filtering to adjust prices, which scales poorly. This version uses pre-computed `HashSet<T>` lookups for O(1) performance during the price injection loop, drastically reducing server boot time.
-3. **Dynamic Map Discovery:** The original mod hardcoded a list of 12 maps (e.g., `tables.locations.bigmap`). This version uses C# Reflection to dynamically discover maps. This means if you install custom modded maps, `KeysInLootExtended` will automatically attempt to inject keys into their jackets without requiring an update.
+3. **Dynamic Map Discovery:** The original mod hardcoded a list of 12 maps (e.g., `tables.locations.bigmap`). This version queries SPT 4.1's `LocationTable.GetDictionary()` and registers `LazyLoad<T>` static loot transformers across all discovered locations.
 4. **Strict Error Handling:** Includes strict type-checking, `MongoId` parsing protection, and null-coalescing. Misconfigured JSON variables or missing item IDs from other mods will be safely caught and logged, rather than crashing the database generation.
 
 ## ⚖️ Understanding Loot Weights & The "Lottery Ticket" System
@@ -49,7 +49,7 @@ This means a super rare Red Keycard and a common Dorms 206 key will both have ex
 ## 🛠️ Building from Source
 
 If you wish to compile the mod yourself for development or debugging:
-1. Ensure you have the **.NET 9 SDK** installed.
+1. Ensure you have the **.NET 10 SDK** installed.
 2. Open a terminal in the repository root and run: `dotnet build KeysInLootExtended/KeysInLootExtended.csproj -c Release`
-3. The compiled DLLs will be automatically placed in the correct `dist/user/mods/KeysInLootExtended/` folder structure.
+3. The compiled DLLs will be automatically placed in the correct `dist/SPT/user/mods/KeysInLootExtended/` folder structure.
 4. Alternatively, you can run the provided `.\release.ps1` script to automatically build and package the mod into a ready-to-use `.zip` archive.

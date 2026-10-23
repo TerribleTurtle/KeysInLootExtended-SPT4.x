@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Models.Utils;
-using SPTarkov.Server.Core.Servers;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace KeysInLootExtended;
 
@@ -18,7 +17,7 @@ namespace KeysInLootExtended;
 public class ContainerGridService
 {
     private readonly ISptLogger<ContainerGridService> _logger;
-    private readonly DatabaseServer _databaseServer;
+    private readonly TemplateTable _templateTable;
     private readonly KeysInLootConfigLoader _configLoader;
 
     private static readonly MongoId[] TargetContainerIds = new[]
@@ -32,15 +31,15 @@ public class ContainerGridService
     /// Initializes a new instance of the <see cref="ContainerGridService"/> class.
     /// </summary>
     /// <param name="logger">The SPT logger.</param>
-    /// <param name="databaseServer">The SPT database server.</param>
+    /// <param name="templateTable">The SPT template database table containing item definitions.</param>
     /// <param name="configLoader">The configuration loader containing target grid sizes.</param>
     public ContainerGridService(
         ISptLogger<ContainerGridService> logger,
-        DatabaseServer databaseServer,
+        TemplateTable templateTable,
         KeysInLootConfigLoader configLoader)
     {
         _logger = logger;
-        _databaseServer = databaseServer;
+        _templateTable = templateTable;
         _configLoader = configLoader;
     }
 
@@ -61,7 +60,7 @@ public class ContainerGridService
         int clampedH = Math.Clamp(config.CellsH, 1, 14);
         int clampedV = Math.Clamp(config.CellsV, 1, 14);
 
-        var items = _databaseServer.GetTables().Templates.Items;
+        var items = _templateTable.Items;
 
         AdjustGridSizesInternal(items, clampedH, clampedV);
 

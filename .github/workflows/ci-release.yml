@@ -1,0 +1,107 @@
+name: CI & Auto-Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      overwrite:
+        description: "Overwrite existing GitHub Release if version already exists"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 10)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore Dependencies
+        run: |
+          dotnet restore ./KeysInLootExtended/KeysInLootExtended.csproj
+          dotnet restore ./KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj
+
+      - name: Build Mod (Release)
+        run: dotnet build ./KeysInLootExtended/KeysInLootExtended.csproj -c Release --no-restore
+
+      - name: Run Unit & Integration Tests
+        run: dotnet test ./KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj -c Release
+
+  release:
+    name: Package & Publish Release
+    needs: build-and-test
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Check Version & Package Release
+        id: package
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_OVERWRITE: ${{ inputs.overwrite }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $csprojPath = "./KeysInLootExtended/KeysInLootExtended.csproj"
+          [xml]$project = Get-Content $csprojPath
+          $version = $project.Project.PropertyGroup.Version
+          if ([string]::IsNullOrWhiteSpace($version)) {
+              Write-Error "Could not find <Version> in $csprojPath"
+              exit 1
+          }
+
+          Write-Host "Detected project version: $version"
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+          gh release view $version 2>$null
+          $releaseExists = ($LASTEXITCODE -eq 0)
+
+          if ($releaseExists -and $env:FORCE_OVERWRITE -ne "true") {
+              Write-Host "Release $version already exists and overwrite is not enabled. Skipping release publish."
+              "published=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              exit 0
+          }
+
+          if ($releaseExists) {
+              Write-Host "Release $version exists and overwrite=true; running release.ps1 -Overwrite..."
+              ./release.ps1 -Overwrite
+          } else {
+              Write-Host "New version $version detected; running release.ps1..."
+              ./release.ps1
+          }
+
+          "published=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: VirusTotal Scan
+        if: steps.package.outputs.published == 'true' && env.VT_API_KEY != ''
+        uses: crazy-max/ghaction-virustotal@v4
+        env:
+          VT_API_KEY: ${{ secrets.VT_API_KEY }}
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          update_release_body: true
+          files: |
+            .*\.zip$

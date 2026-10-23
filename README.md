@@ -1,6 +1,6 @@
-# TerribleTurtle - Keys In Loot Extended (SPT 4.x Compatible)
+# TerribleTurtle - Keys In Loot Extended (SPT / SP-Tushonka 4.1.x Compatible)
 
-> 🟢 **[FULLY SPT 4.x COMPATIBLE]** This mod has been completely rebuilt from the ground up for the modern SPT 4.x ecosystem.
+> 🟢 **[SPT / SP-Tushonka 4.1.x COMPATIBLE]** Version `2.2.0+` targets the **SP-Tushonka / SPT 4.1.x** ecosystem (`.NET 10`). *(If you are still on SPT 4.0.x, please use the `v2.1.4` release).*
 > 
 > *A heartfelt thanks to [MusicManiac](https://github.com/MusicManiac/KeysInLoot), the creator of the original "Keys In Loot" mod for the old SPT AKI 3.x system, for pioneering the foundational concept and mechanics that made this extended version possible.*
 

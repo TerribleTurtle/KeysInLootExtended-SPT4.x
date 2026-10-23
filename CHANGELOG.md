@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0]
+
+### SP-Tushonka / SPT 4.1.x Migration (.NET 10)
+* **SPT / SP-Tushonka 4.1.6 Compatibility**: Upgraded the target framework from `.NET 9` (`net9.0`) to `.NET 10` (`net10.0`) and updated server dependencies to `SPTushonka.Common`, `SPTushonka.DI`, and `SPTushonka.Server.Core` (`4.1.6`). *(Users still running SPT 4.0.13 should continue using `v2.1.4`).*
+* **4.1 Mod Metadata & Async Lifecycle**: Migrated `ModMetadata` to the new `IModMetadata` interface (`~4.1.0`) and updated `KeysInLootExtendedPlugin` to `IOnLoad.OnLoadAsync(CancellationToken)` at `OnLoadOrder.Routers + 2` (`400002`), ensuring key price adjustments and Fence blacklisting run before `HandbookCallbacks`, `TraderCallbacks`, and `RagfairCallbacks` initialize startup caches.
+* **Direct Table & Config Dependency Injection**: Migrated `LootInjectionService`, `ItemPriceService`, and `ContainerGridService` from the removed 4.0 `DatabaseServer` and `ConfigServer` wrappers to direct 4.1 constructor injection of `TemplateTable`, `LocationTable`, and `TraderConfig`.
+* **Strongly-Typed Map Discovery**: Replaced dynamic reflection over `db.Locations` with `LocationTable.GetDictionary()`, eliminating runtime binder overhead while preserving dynamic map discovery and `LazyLoad<T>` static loot transformers.
+
 ## [2.1.4]
 
 ### Bug Fixes

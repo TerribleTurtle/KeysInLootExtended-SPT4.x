@@ -1,12 +1,11 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Server;
-using SPTarkov.Server.Core.Servers;
-using SPTarkov.Server.Core.Models.Utils;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Models.Spt.Config;
 
 namespace KeysInLootExtended;
@@ -18,30 +17,31 @@ namespace KeysInLootExtended;
 public class ItemPriceService
 {
     private readonly ISptLogger<ItemPriceService> _logger;
-    private readonly DatabaseServer _databaseServer;
+    private readonly TemplateTable _templateTable;
     private readonly KeysInLootConfigLoader _configLoader;
     private readonly InjectedKeysService _injectedKeysService;
-    private readonly ConfigServer _configServer;
+    private readonly TraderConfig _traderConfig;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ItemPriceService"/> class.
     /// </summary>
     /// <param name="logger">The SPT logger.</param>
-    /// <param name="databaseServer">The SPT database server.</param>
+    /// <param name="templateTable">The SPT template database table containing item prices and handbook entries.</param>
     /// <param name="configLoader">The configuration loader containing user multipliers.</param>
     /// <param name="injectedKeysService">The service containing the fast-lookup HashSet of injected keys.</param>
+    /// <param name="traderConfig">The SPT trader configuration containing Fence's blacklist.</param>
     public ItemPriceService(
         ISptLogger<ItemPriceService> logger,
-        DatabaseServer databaseServer,
+        TemplateTable templateTable,
         KeysInLootConfigLoader configLoader,
         InjectedKeysService injectedKeysService,
-        ConfigServer configServer)
+        TraderConfig traderConfig)
     {
         _logger = logger;
-        _databaseServer = databaseServer;
+        _templateTable = templateTable;
         _configLoader = configLoader;
         _injectedKeysService = injectedKeysService;
-        _configServer = configServer;
+        _traderConfig = traderConfig;
     }
 
     /// <summary>
@@ -54,11 +54,9 @@ public class ItemPriceService
         if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
             return;
 
-        var tables = _databaseServer.GetTables();
-        
         AdjustPricesInternal(
-            tables.Templates.Prices,
-            tables.Templates.Handbook.Items, 
+            _templateTable.Prices,
+            _templateTable.Handbook.Items, 
             _injectedKeysService.InjectedKeyIds, 
             config.KeyFleaPricesMultiplier, 
             config.KeyTraderPricesMultiplier);
@@ -68,12 +66,11 @@ public class ItemPriceService
 
         if (config.BanKeysFromFence)
         {
-            var traderConfig = _configServer.GetConfig<TraderConfig>();
-            if (traderConfig?.Fence?.Blacklist != null)
+            if (_traderConfig?.Fence?.Blacklist != null)
             {
                 foreach (var mongoId in _injectedKeysService.InjectedKeyIds)
                 {
-                    traderConfig.Fence.Blacklist.Add(mongoId);
+                    _traderConfig.Fence.Blacklist.Add(mongoId);
                 }
                 _logger.Success($"[KeysInLootExtended] Successfully banned {_injectedKeysService.InjectedKeyIds.Count} keys from Fence's assort inventory.");
             }
