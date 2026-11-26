@@ -12,7 +12,7 @@
         "keycard": { "notExist": 0, "common": 0, "rare": 0, "superRare": 0 }
     },
     "deadScavContainer": {
-        // SPT 4.1.6 Dead Scav pool: 166432 (610 items) -> ~6.9 keys / 100 on Balanced
+        // SPT 4.1.6 Dead Scav pool: 166432 (610 items) -> ~7.0 keys / 100 on Balanced
         "key": { "notExist": 40, "common": 40, "rare": 20, "superRare": 8 },
         "keycard": { "notExist": 12, "common": 12, "rare": 6, "superRare": 4 }
     }

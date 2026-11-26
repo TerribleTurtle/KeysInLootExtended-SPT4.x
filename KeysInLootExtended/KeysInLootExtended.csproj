@@ -10,12 +10,24 @@
     <Authors>TerribleTurtle</Authors>
     <OutputPath>..\dist\SPT\user\mods\KeysInLootExtended\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SPTushonka.Common" Version="4.1.6" />
-    <PackageReference Include="SPTushonka.DI" Version="4.1.6" />
-    <PackageReference Include="SPTushonka.Server.Core" Version="4.1.6" />
+    <PackageReference Include="SPTushonka.Common" Version="4.1.6">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="SPTushonka.DI" Version="4.1.6">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="SPTushonka.Server.Core" Version="4.1.6">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

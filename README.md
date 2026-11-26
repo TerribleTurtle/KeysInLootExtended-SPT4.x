@@ -1,16 +1,18 @@
 # Keys In Loot Extended (SP-Tushonka / SPT 4.1.x)
 
-> Compatibility: Version `3.0.0+` targets SP-Tushonka / SPT `4.1.x` on `.NET 10`. For SPT `4.0.x`, use the [`v2.1.4` release](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases/tag/2.1.4).
+> Compatibility: Versions `2.2.0+` and `3.0.0+` target SP-Tushonka / SPT `4.1.x` on `.NET 10` (`3.0.0+` uses the current `configVersion: 3` format). For SPT `4.0.x`, use the [`v2.1.4` release](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases/tag/2.1.4).
 >
 > Credit and thanks to [MusicManiac](https://github.com/MusicManiac/KeysInLoot), author of the original *Keys In Loot* mod for SPT-AKI 3.x, whose core concept inspired this extended C# rewrite.
 
-## Overview & Why Vanilla Feels So Dry Solo
+## Overview
 
-In vanilla Escape from Tarkov, container drop rates are tuned around 50,000 live players feeding a multiplayer Flea Market. Checking SP-Tushonka `4.1.6` static container data shows two walls for solo SPT players:
+Keys In Loot Extended adds all `217` tradable Escape from Tarkov keys and keycards into static Jackets, Duffle Bags, and Dead Scavs across all 13 playable maps (including Labyrinth), with presets tuned around solo SPT playtimes and proportional sell-price scaling.
+
+In vanilla Tarkov, static container rates are tuned around 50,000 live players feeding a multiplayer Flea Market, creating two walls for solo SPT players:
 1. `67` of the game's `217` tradable keys and keycards (`31%`) have a `0%` chance of ever spawning in any Jacket, Duffle Bag, or Dead Scav, including all `13` keycards, `20` SuperRare boss/Arena/Streets keys, and `25` Rare keys (such as Resort West 205).
 2. Even keys that do exist in vanilla Jackets are tuned for crowd farming: Dorm room 314 Marked averages `1 in 1,968` Jackets (~225 hours of solo raiding), and Cottage back door averages `1 in 326,481` Jackets.
 
-Keys In Loot Extended puts all `217` tradable items into static Jackets, Duffle Bags, and Dead Scavs across all 13 playable maps (including Labyrinth):
+All `217` tradable items injected by the mod break down into four groups:
 - `47` Common keys: Early quest and utility doors (2-story Dorms, Portable Bunkhouse, Pumping Station, cash registers).
 - `75` Rare keys: Mid-to-high loot and quest rooms (Health Resort wings, Reserve `RB-OB`/`ORB`, Streets apartments, USEC Cottage, Labyrinth rooms).
 - `82` SuperRare keys: Marked Rooms (Dorms 314, `RB-BK`, `RB-VO`, Abandoned Factory, Shared Bedroom), Shturman's Stash, Kaban's LexOs dealership, and all 4 Arena boss hideouts.
@@ -20,8 +22,8 @@ Keys In Loot Extended puts all `217` tradable items into static Jackets, Duffle 
 
 ## Installation & Upgrading from v2.x
 
-1. Download the `.zip` archive matching your server version from [GitHub Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases):
-   - SP-Tushonka / SPT `4.1.x` (`.NET 10`): `KeysInLootExtended-3.0.0.zip` (or newer)
+1. Download the latest `.zip` archive matching your server version from [GitHub Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases):
+   - SP-Tushonka / SPT `4.1.x` (`.NET 10`): `KeysInLootExtended-3.0.0.zip` (or latest `2.2.0+` / `3.x` release)
    - SPT `4.0.x` (`.NET 9`): `KeysInLootExtended-2.1.4.zip`
 2. Extract the archive into your SPT root folder so the files land at `<SPT_Root>/user/mods/KeysInLootExtended/`.
 3. Upgrading from `v2.x`: `v3.0.0` introduces a clean `configVersion: 3` layout. If a mod manager preserves your older `v2.x` `config.jsonc`, the mod automatically backs it up to `config.backup.jsonc` on startup and writes a fresh `v3` `config.jsonc` (`Balanced`).
@@ -107,4 +109,4 @@ In vanilla Tarkov data, 21 valid keys and keycards carry an uncategorized `Not_e
   $env:SPT_DATA_PATH = "C:\Path\To\SPT\SPT_Runtime\SPT_Data"
   dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release --logger "console;verbosity=detailed"
   ```
-- Release Packaging: Pushing a new `<Version>` in `KeysInLootExtended.csproj` (kept in sync with `ModMetadata.Version`) triggers `.github/workflows/ci-release.yml`, which builds, runs the test suite, packages `KeysInLootExtended-<Version>.zip` via `.\release.ps1`, and publishes the matching `CHANGELOG.md` section to GitHub Releases.
+- Release Packaging: Run `.\release.ps1 -PackageOnly` to test, build, and verify `KeysInLootExtended-<Version>.zip` locally without uploading, or `.\release.ps1` to publish directly via `gh release`. In CI (`.github/workflows/ci-release.yml`), every push and pull request verifies the package, while pushing a matching version tag (such as `3.0.0` or `v3.0.0`, synced between `<Version>` in `KeysInLootExtended.csproj` and `ModMetadata.Version`) or running `workflow_dispatch` publishes the release notes from `CHANGELOG.md` and attaches the VirusTotal scan link.

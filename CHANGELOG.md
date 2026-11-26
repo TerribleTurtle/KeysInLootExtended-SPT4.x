@@ -14,6 +14,7 @@
 * **SPT 4.1.6 Map Pool & Keycard Recalibration**: Recalibrated all 13 `locations/*.jsonc` files against SP-Tushonka `4.1.6` static container pool totals and a `60/60/30/20` `Balanced` keycard baseline so `Balanced` consistently averages `25.0`-`25.7` keys per 100 Jackets across every map.
 * **Live Debug Pool Telemetry**: Implemented `"debugLogs": true` support in `LootInjectionService` to log evaluated per-map key pool weight percentages on raid load, and corrected startup transformer log counts.
 * **Three-Layer In-Memory Simulation & Raid Parity Suite**: Added a CI-safe SP-Tushonka `4.1.6` golden-fixture simulator (closed-form math + seeded Monte Carlo using SPT's `ContainerExtensions` 2D slot placement and seasonal filtering) plus an opt-in `SPT_DATA_PATH` harness that executes 590 full raids through SPT's compiled `LocationLootGenerator`.
+* **Clean Release Archive & Tag-Gated CI**: Stripped `.pdb` symbols, `.deps.json`, and host `SPTushonka.*` runtime assets from the packaged mod folder so `KeysInLootExtended-<Version>.zip` ships only `KeysInLootExtended.dll`, `config.jsonc`, and `locations/*.jsonc` with POSIX `/` zip paths; gated `.github/workflows/ci-release.yml` publishing on version tags and `workflow_dispatch` while verifying `./release.ps1 -PackageOnly` on every push and PR.
 
 ## [2.2.0]
 

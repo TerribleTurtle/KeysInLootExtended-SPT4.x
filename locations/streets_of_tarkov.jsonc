@@ -2,17 +2,17 @@
 // Whole integers only; pools exceeding int.MaxValue / 2 are normalized automatically.
 {
     "jacketContainer": {
-        // SPT 4.1.6 Jacket pool: 556259 (193 items) -> ~25.0 keys / 100 on Balanced
+        // SPT 4.1.6 Jacket pool: 556259 (193 items) -> ~25.4 keys / 100 on Balanced
         "key": { "notExist": 1205, "common": 1205, "rare": 602, "superRare": 241 },
         "keycard": { "notExist": 362, "common": 362, "rare": 181, "superRare": 120 }
     },
     "duffleBagContainer": {
-        // SPT 4.1.6 Duffle pool: 3365383 (326 items) -> ~11.0 keys / 100 on Balanced
+        // SPT 4.1.6 Duffle pool: 3365383 (326 items) -> ~11.1 keys / 100 on Balanced
         "key": { "notExist": 1905, "common": 1905, "rare": 952, "superRare": 381 },
         "keycard": { "notExist": 572, "common": 572, "rare": 286, "superRare": 190 }
     },
     "deadScavContainer": {
-        // SPT 4.1.6 Dead Scav pool: 2254644 (707 items) -> ~7.0 keys / 100 on Balanced
+        // SPT 4.1.6 Dead Scav pool: 2254644 (707 items) -> ~7.1 keys / 100 on Balanced
         "key": { "notExist": 550, "common": 550, "rare": 275, "superRare": 110 },
         "keycard": { "notExist": 165, "common": 165, "rare": 82, "superRare": 55 }
     }

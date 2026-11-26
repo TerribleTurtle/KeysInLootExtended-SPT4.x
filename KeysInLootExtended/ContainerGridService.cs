@@ -61,7 +61,7 @@ public class ContainerGridService
 
         AdjustGridSizesInternal(items, clampedH, clampedV);
 
-        _logger.Success($"[KeysInLootExtended] Adjusted Jacket, Duffle Bag, and Dead Scav grid sizes to {clampedH}x{clampedV}.");
+        _logger.Success($"[KeysInLootExtended] Enforced minimum {clampedH}x{clampedV} container grid size across Jackets, Duffle Bags, and Dead Scavs.");
     }
 
     /// <summary>

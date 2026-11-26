@@ -49,7 +49,7 @@ public class KeysInLootExtendedPlugin(
                 return Task.CompletedTask;
             }
 
-            logger.Success($"[KeysInLootExtended] Initialized v3.0.0 (preset: {configLoader.Config.Preset}, reduceCommonKeys: {configLoader.Config.ReduceCommonKeys}).");
+            logger.Success($"[KeysInLootExtended] Initialized v{new ModMetadata().Version} (preset: {configLoader.Config.Preset}, reduceCommonKeys: {configLoader.Config.ReduceCommonKeys}).");
 
             lootInjectionService.InjectKeysIntoLocations();
             itemPriceService.AdjustPrices();

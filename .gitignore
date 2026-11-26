@@ -1,26 +1,22 @@
-# build folder
-dist
-
-# Dependency directory
-node_modules/
-package-lock.json
-.DS_Store
-.env
+# Build & staging output
+dist/
+[Bb]in/
+[Oo]bj/
+TestResults/
 *.zip
-ReleaseCheck/
 
-# IDE
-.vs
-.vscode
-bin/
-obj/
+# Mod runtime backup artifact
+config.backup.jsonc
 
-# Junk
-/*.cs
-temp*/
-temp/
-SptCoreProject/
-reflect.csproj
-project.txt
-temp.txt
-test_*.ps1
+# IDE & user-specific files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Local environment & OS metadata
+.env
+.env.*
+.DS_Store
+Thumbs.db

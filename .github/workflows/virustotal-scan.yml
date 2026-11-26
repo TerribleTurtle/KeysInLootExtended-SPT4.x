@@ -4,27 +4,34 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: read
+
 jobs:
   scan:
     name: Scan Release Assets
+    if: github.actor != 'github-actions[bot]' && !contains(github.event.release.body, 'virustotal.com')
     runs-on: ubuntu-latest
     permissions:
       contents: write # Required to update the release body with scan results
-    
+    env:
+      VT_API_KEY: ${{ secrets.VT_API_KEY }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Download Release Assets
+        if: env.VT_API_KEY != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release download ${{ github.event.release.tag_name }} --pattern "*.zip"
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mkdir -p release-assets
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern "*.zip" --dir release-assets
 
       - name: VirusTotal Scan
+        if: env.VT_API_KEY != ''
         uses: crazy-max/ghaction-virustotal@v4
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           update_release_body: true
           files: |
-            .*\.zip$
+            release-assets/*.zip
