@@ -1,112 +1,103 @@
-# Keys In Loot Extended (SP-Tushonka / SPT 4.1.x)
+# Keys In Loot Extended
 
-> Compatibility: Versions `2.2.0+` and `3.0.0+` target SP-Tushonka / SPT `4.1.x` on `.NET 10` (`3.0.0+` uses the current `configVersion: 3` format). For SPT `4.0.x`, use the [`v2.1.4` release](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases/tag/2.1.4).
->
-> Credit and thanks to [MusicManiac](https://github.com/MusicManiac/KeysInLoot), author of the original *Keys In Loot* mod for SPT-AKI 3.x, whose core concept inspired this extended C# rewrite.
+> **For SP-Tushonka / SPT 4.1.x** (on SPT 4.0.x? Use [v2.1.4](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases/tag/2.1.4)) · Credit to [MusicManiac](https://github.com/MusicManiac/KeysInLoot) for the original *Keys In Loot* concept
 
-## Overview
+## Why Use This Mod?
 
-Keys In Loot Extended adds all `217` tradable Escape from Tarkov keys and keycards into static Jackets, Duffle Bags, and Dead Scavs across all 13 playable maps (including Labyrinth), with presets tuned around solo SPT playtimes and proportional sell-price scaling.
+In vanilla Tarkov, nearly a third of all keys and keycards (including every Labs/Labrys keycard and several boss and quest keys) have a **0% chance** to ever spawn inside containers, and the rest are tuned around thousands of live players feeding the Flea Market.
 
-In vanilla Tarkov, static container rates are tuned around 50,000 live players feeding a multiplayer Flea Market, creating two walls for solo SPT players:
-1. `67` of the game's `217` tradable keys and keycards (`31%`) have a `0%` chance of ever spawning in any Jacket, Duffle Bag, or Dead Scav: all `13` keycards, `20` SuperRare boss/Arena/Streets keys, `25` Rare keys (such as Resort West 205), and `9` Common keys.
-2. Even keys that do exist in vanilla Jackets are tuned for crowd farming: Dorm room 314 Marked averages `1 in 1,968` Jackets (~225 hours of solo raiding), and Cottage back door averages `1 in 326,481` Jackets.
+**Keys In Loot Extended** puts every real key and keycard into **Jackets, Duffle Bags, and Dead Scavs** across all 13 maps (including Labyrinth), tuned around solo SPT playtimes—while scaling down key sell prices so finding keys unlocks doors instead of printing free millions.
 
-All `217` tradable items injected by the mod break down into four groups:
-- `47` Common keys: Early quest and utility doors (2-story Dorms, Portable Bunkhouse, Pumping Station, cash registers).
-- `75` Rare keys: Mid-to-high loot and quest rooms (Health Resort wings, Reserve `RB-OB`/`ORB`, Streets apartments, USEC Cottage, Labyrinth rooms).
-- `82` SuperRare keys: Marked Rooms (Dorms 314, `RB-BK`, `RB-VO`, Abandoned Factory, Shared Bedroom), Shturman's Stash, Kaban's LexOs dealership, and all 4 Arena boss hideouts.
-- `13` SuperRare keycards: Labs Access, all 6 Colored Labs cards, Labrys Access, TerraGroup Storage, Blue Marking, `#11SR`, and `#21WS`.
+## Install
 
----
+1. Download `KeysInLootExtended-3.0.0.zip` from [Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases).
+2. Extract it straight into your SPT root folder (`<SPT_Root>/user/mods/KeysInLootExtended/`).
 
-## Installation & Upgrading from v2.x
+*Upgrading from 2.x?* Delete your old `KeysInLootExtended` folder first. If a mod manager keeps your old `config.jsonc`, the mod backs it up to `config.backup.jsonc` and starts fresh on **Balanced** (set `"enabled": false` in the new file if you previously had the mod disabled).
 
-1. Download the latest `.zip` archive matching your server version from [GitHub Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases):
-   - SP-Tushonka / SPT `4.1.x` (`.NET 10`): `KeysInLootExtended-3.0.0.zip` (or latest `2.2.0+` / `3.x` release)
-   - SPT `4.0.x` (`.NET 9`): `KeysInLootExtended-2.1.4.zip`
-2. Extract the archive into your SPT root folder so the files land at `<SPT_Root>/user/mods/KeysInLootExtended/`.
-3. Upgrading from `v2.x`: `v3.0.0` introduces a clean `configVersion: 3` layout. If a mod manager preserves your older `v2.x` `config.jsonc`, the mod automatically backs it up to `config.backup.jsonc` on startup and writes a fresh `v3` `config.jsonc` (`enabled: true`, `preset: "Balanced"`). If you previously had the mod set to `"Disabled"`, set `"enabled": false` in the new `config.jsonc`.
+## Pick a Preset
 
----
+Open `config.jsonc` and set `"preset"` right at the top:
 
-## Presets & Real Playtime Pacing
+| Preset | Who It's For | Typical 2-Hour Session (~3–4 Raids) | Key Sell Value |
+| :--- | :--- | :--- | :---: |
+| **Hardcore** | Zero-to-hero, No-Flea, long wipes | ~2 keys (~1 SuperRare room a week) | 100% (Vanilla) |
+| **Balanced** *(Default)* | Normal solo SPT playthrough | ~6–7 keys (~1 SuperRare room per session) | 40% |
+| **Casual** | Busy schedule / a couple hours after work | ~16 keys (~3 SuperRare rooms per session) | 25% |
+| **Custom** | Full manual control | Uses the `"custom"` block at the bottom of `config.jsonc` | Custom |
 
-Set `preset` at the top of `config.jsonc` (not case-sensitive). Estimates below are verified against SP-Tushonka `4.1.6` pools assuming ~35 minutes per full SPT raid + stash cycle (~`3.5` raids in a 2-hour session, searching `5` Jackets, `4` Duffle Bags, and `1` Dead Scav per raid).
+- **Normal container loot stays intact:** Checking Jackets and Duffles still gives normal meds, food, and hideout barter parts instead of starving or flooding containers.
+- **Getting spammed with duplicate Dorms keys mid-wipe?** Flip `"reduceCommonKeys": true` in `config.jsonc` to cut common filler keys by 85% on *any* preset, so ~90% of keys you pull are Rare or SuperRare rooms.
 
-| Mode | Keys / 100 Jackets (C / R / SR) | Keys in a 2-Hr Night (`3.5` Raids) | Avg Time: `Rare+` / `SuperRare` / `Keycard` | Unique Unlocks (`12h` / `40h`) | Container Item Counts | Sell Value |
-| :--- | :---: | :---: | :---: | :---: | :--- | :---: |
-| Vanilla (`enabled: false`) | `13.2` Customs / `5.8` avg | `~1-3` (`67` keys = `0%`) | `~8-12h` / `~35h+` / Never (`0%`) | Caps below `150 / 217` | 100% vanilla counts & grids | `1.00x` |
-| `Hardcore` | `7.1` (`3.6` / `2.5` / `1.0`) | `~1.9` keys | `~2.2h` / `~7.2h` / `~83h` | `11` / `33` of `217` | 100% vanilla counts & grids | `1.00x` |
-| `Balanced` *(Default)* | `25.4` (`11.7` / `9.3` / `4.4`) | `~6.6` keys (~1 SR) | `~35m` / `~1.8h` / `~24h` | `35` / `90` of `217` | `1.32` avg Jacket; vanilla Duffle & Scav | `0.40x` |
-| `Casual` | `67.0` (`26.4` / `26.6` / `14.1`) | `~15.8` keys (~3 SR) | `~12m` / `~36m` / `~7.8h` | `74` / `152` of `217` | `2.27` avg Jacket, `2.38` avg Duffle | `0.25x` |
-| `Custom` | User-defined | User-defined | User-defined | User-defined | Manual `"custom"` block | User |
+## Quick Tweaks (`config.jsonc`)
 
-*(Why `Balanced` can drop ~1 SuperRare per 2-hour night without ending progression early: there are `95` different SuperRare keys and keycards in the pool. Because duplicates accumulate over time, hunting one specific Marked key still averages ~150 hours on `Balanced`.)*
+All everyday options sit at the top of `config.jsonc` and work on **any** preset (no need to switch to `Custom`):
 
-### How Each Mode Feels & Why You Pick It
-- Vanilla (`"enabled": false`): Leaves Tarkov untouched. Most maps drop ~1 common key every couple of raids, and a third of all keys/keycards never appear in containers. Use this only to test vanilla behavior or temporarily turn the mod off.
-- `Hardcore`: Built for zero-to-hero, No-Flea, and long-wipe players (`10-20+ hrs/week`). Keeps vanilla container pacing (~1 key per hour, `100%` untouched meds/food/barter counts, full `1.00x` sell value), except all `217` keys can actually drop. Finding a Rare room (~2.2 hrs) or SuperRare key (~7.2 hrs, ~1 per week) becomes a milestone that shapes where you raid next.
-- `Balanced` *(Default)*: Built for regular solo SPT players (`6-10 hrs/week`, `40-80 hr` wipe). Checking Jackets reliably pays off (~2 keys per raid, ~1 SuperRare room per 2-hour evening, ~1 Keycard every ~24 hours) without crowding out normal Jacket items (`106.6` non-key items per 100 Jackets vs `94.0` in vanilla). Sell prices scale to `0.40x` so keys are worth bringing into raid to unlock doors rather than flipping for easy millions.
-- `Casual`: Built for busy adults and weekend players (`2 hours` free after work, `12-25 hr` total playthrough). Over half of Jackets hold a key, unlocking `~74` unique keys (`~18` SuperRares) in `12 hours` (matching the room variety `Balanced` reaches around `35 hours`, plus a Keycard roughly every `8 hours` so you actually get to run Labs and Labrys), while `0.25x` sell value keeps rouble progression grounded.
-- `reduceCommonKeys: true` *(Mid/Late-Wipe Filter)*: Early wipe (`false`), you want the `47` Common Dorms and utility keys. Once your keytool already has them, setting `"reduceCommonKeys": true` cuts `Common` (and uncategorized `NotExist`) weights by `85%` on any preset so `86%-91%` of drops are `Rare` or `SuperRare` (`4.2` keys/100 on `Hardcore`, `16.7` on `Balanced`, `49.5` on `Casual`) without changing your tier's Rare/SuperRare pace.
-- `Custom`: Uses the nested `"custom": { ... }` block in `config.jsonc` when you want to zero out a specific rarity tier (`"superRare": 0`), write custom item-count curves, or expand container grids up to `14x14`.
+| Setting | Default | What It Does |
+| :--- | :---: | :--- |
+| `enabled` | `true` | Turns the mod on or off without uninstalling. |
+| `preset` | `"Balanced"` | `"Hardcore"`, `"Balanced"`, `"Casual"`, or `"Custom"`. |
+| `reduceCommonKeys` | `false` | Cuts common filler key drops by 85% once you already own early quest/Dorms keys. |
+| `spawnWeightMultiplier` | `1.0` | Master drop-rate dial (`1.5` = 50% more keys, `0.5` = half as many). |
+| `fleaPriceMultiplier` | `null` | Leave `null` for preset default, or set e.g. `1.0` for full vanilla Flea key prices. |
+| `traderPriceMultiplier` | `null` | Leave `null` for preset default, or set e.g. `1.0` for full vanilla Trader key prices. |
+| `banKeysFromFence` | `false` | Set `true` to stop simulated PMCs from selling found keys to Fence's shop. |
 
 ---
 
-## Configuration (`config.jsonc`)
-
-### 1. General Settings (Top of `config.jsonc`, apply to all presets)
-- `configVersion`: Internal schema marker (`3`). Missing or older values trigger an automatic backup to `config.backup.jsonc` and a fresh `v3` `config.jsonc` write.
-- `enabled`: Master boolean switch (`true` by default).
-- `preset`: `"Hardcore"`, `"Balanced"`, `"Casual"`, or `"Custom"`.
-- `reduceCommonKeys`: Cuts `Common` and `NotExist` weights to `15%` (`0.15x`) on top of any preset.
-- `spawnWeightMultiplier`: Master drop-rate multiplier applied on top of your preset (`1.0` = default, `1.5` = +50% weight, `0.5` = half weight).
-- `fleaPriceMultiplier` / `traderPriceMultiplier`: Leave `null` to use your preset's default sell value, or set a number (`1.0` for full vanilla prices, `0.0` for worthless `0`-rouble keys; positive prices clamp `>= 1` RUB).
-- `banKeysFromFence`: Simulated SPT PMCs loot static map containers and sell items to Fence. Set `true` to block all injected keys from Fence's shop inventory.
-- `enableLocationsConfig`: Scales per-map baselines in `locations/*.jsonc` proportionally by your preset so small maps (`Labyrinth`, `Ground Zero`) and large maps (`Customs`, `Streets`) stay within `25.0` to `25.7` keys per 100 Jackets on `Balanced`.
-- `debugLogs`: Set `true` to log evaluated per-map container key pool percentages when raids load.
-
-### 2. Custom Preset Block (`"custom": { ... }`)
-Evaluated only when `"preset"` is `"Custom"`:
-- `keyWeight` / `keycardWeight`: Integer ticket weights (`notExist`, `common`, `rare`, `superRare`). Setting any tier to `0` removes that tier from targeted containers.
-- `fleaPriceMultiplier` / `traderPriceMultiplier`: Sell value multipliers used in `Custom` mode.
-- `overrideLootDistribution` & `jacketsItemCounts` / `duffleBagsItemCounts` / `deadScavsItemCounts`: Integer item-count probability arrays (`null` keeps vanilla item counts for that container).
-- `minCellsH` / `minCellsV`: Minimum container grid width and height (`1` to `14`), expanding smaller `2x2` Jackets via `Math.Max` without shrinking larger `4x3` Duffle Bags or `4x4` Dead Scavs.
-
----
-
-## Item Filtering & Uncategorized Key Mappings
-
-At startup, `LootInjectionService` filters `TemplateTable.Items` down to `217` tradable items by excluding quest items (`QuestItem == true`), SPT global/lootable blacklist entries, abstract category nodes (`Type == "Node"`), unfinished placeholder items absent from `Handbook.Items` (7 cut Streets `"City key"` entries), and 1-rouble in-raid puzzle props (`Valve handwheel` and `Ariadne symbol key`).
-
-In vanilla Tarkov data, 21 valid keys and keycards carry an uncategorized `Not_exist` rarity tag (including several boss stash keys and high-tier keycards). Rather than letting boss keys roll at common rates, the mod maps those 21 items to explicit tiers:
+## Reference & Developer Details
 
 <details>
-<summary>View all 21 explicit rarity mappings</summary>
+<summary><strong>Advanced & Custom Settings (per-map files, debug logs, and the "custom" block)</strong></summary>
 
-- Common (5): Pumping station front door key, Pumping station back door key, Unknown key, Backup hideout key, Horse restaurant toilet key.
-- Rare (7): Cold storage room key, Aspect company office key, Unity Credit Bank archive room key, USEC cottage room key, Observation room key, Torture room key, Labyrinth key.
-- Superrare (9): Shturman's stash key, Keycard with a blue marking, Car dealership closed section key, TerraGroup storage room keycard, Labrys access keycard, Shatun's hideout key, Grumpy's hideout key, Voron's hideout key, Leon's hideout key.
+- `enableLocationsConfig` (`true`): Scales per-map baselines in `locations/*.jsonc` by your active preset so small pools (Labyrinth, Ground Zero) and large pools (Customs, Streets) drop keys at the same rate (~25 keys per 100 Jackets on Balanced).
+- `debugLogs` (`false`): Logs evaluated per-map container key pool percentages to the server console when raids load.
+- `"custom"` block (used only when `"preset": "Custom"`):
+  - `keyWeight` / `keycardWeight`: Integer pool weights (`notExist`, `common`, `rare`, `superRare`). Set any tier to `0` to block that tier completely.
+  - `fleaPriceMultiplier` / `traderPriceMultiplier`: Sell-price multipliers (`0.0` = 0 RUB; positive values clamp to at least 1 RUB).
+  - `overrideLootDistribution` & `jacketsItemCounts` / `duffleBagsItemCounts` / `deadScavsItemCounts`: Custom integer item-count curves (`null` keeps vanilla counts on that container).
+  - `minCellsH` / `minCellsV`: Minimum container grid size from 1 to 14 (expands 2x2 Jackets without shrinking 4x3 Duffles or 4x4 Dead Scavs).
+
 </details>
 
----
+<details>
+<summary><strong>Exact Drop Rates, Pool Breakdown & Boss Key Mappings</strong></summary>
 
-## Architecture, Building & Testing
+The mod filters Tarkov's item database down to **217 tradable keys and keycards** (47 Common keys, 75 Rare keys, 82 SuperRare keys, and 13 SuperRare keycards), automatically excluding quest-only items, blacklisted developer items, 7 unfinished Streets placeholder keys, and 2 1-rouble Labyrinth puzzle items.
 
-- SPT 4.1 Pipeline: Runs at `OnLoadOrder.Routers + 2` (`400002`) so handbook, Flea Market, and Fence blacklist updates settle before SPT's startup caches initialize. Static container injection hooks `Location.StaticLoot.AddTransformer(...)` across all discovered maps and maps both standard and Labyrinth container template IDs via `ContainerTargets`, clamping total container pool weights safely below `int.MaxValue / 2` and grid sizes to EFT's `14x14` UI ceiling.
-- Build (`Release`, requires `.NET 10 SDK`):
+| Mode | Keys per 100 Jackets (Common / Rare / SuperRare) | Avg Time: Rare+ / SuperRare / Keycard | Unique Keys Found (12h / 40h) |
+| :--- | :---: | :---: | :---: |
+| **Vanilla** (`enabled: false`) | 13.2 Customs / 5.8 map avg (67 keys = 0%) | ~8–12h / ~35h+ / Never (0%) | Caps below 150 / 217 |
+| **Hardcore** | 7.1 (3.6 / 2.5 / 1.0) | ~2.2h / ~7.2h / ~83h | 11 / 33 of 217 |
+| **Balanced** | 25.4 (11.7 / 9.3 / 4.4) | ~35m / ~1.8h / ~24h | 35 / 90 of 217 |
+| **Casual** | 67.0 (26.4 / 26.6 / 14.1) | ~12m / ~36m / ~7.8h | 74 / 152 of 217 |
+
+*(With `reduceCommonKeys: true`, Jackets average 4.2 keys/100 on Hardcore, 16.7 on Balanced, and 49.5 on Casual, with 86%–91% Rare and SuperRare drops.)*
+
+**21 Uncategorized (`Not_exist`) Keys Mapped to Proper Tiers:**
+- **Common (5):** Pumping station front door key, Pumping station back door key, Unknown key, Backup hideout key, Horse restaurant toilet key.
+- **Rare (7):** Cold storage room key, Aspect company office key, Unity Credit Bank archive room key, USEC cottage room key, Observation room key, Torture room key, Labyrinth key.
+- **Superrare (9):** Shturman's stash key, Keycard with a blue marking, Car dealership closed section key, TerraGroup storage room keycard, Labrys access keycard, Shatun's hideout key, Grumpy's hideout key, Voron's hideout key, Leon's hideout key.
+
+</details>
+
+<details>
+<summary><strong>Architecture, Building & Testing (.NET 10)</strong></summary>
+
+- **SPT 4.1 Pipeline:** Loads at `OnLoadOrder.Routers + 2` (`400002`) before startup handbook/Flea/Fence caches initialize, registers `Location.StaticLoot.AddTransformer(...)` callbacks across all discovered maps (including Labyrinth's dedicated Jacket and Dead Scav templates), normalizes pools exceeding `int.MaxValue / 2`, and clamps grids to EFT's 14x14 UI limit.
+- **Build (`Release`):**
   ```powershell
   dotnet build .\KeysInLootExtended\KeysInLootExtended.csproj -c Release
   ```
-  Compiled output and configs are staged to `dist/SPT/user/mods/KeysInLootExtended/`.
-- Run Unit & Golden-Fixture Simulation Tests (`< 1s`, no SPT install required):
+- **Run Unit & Golden-Fixture Simulation Tests (`< 1s`, no SPT install required):**
   ```powershell
   dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release
   ```
-- Run Optional Live-Database & 590-Raid `LocationLootGenerator` Parity Check (Read-Only):
+- **Run Optional Live-Database & 590-Raid `LocationLootGenerator` Parity Check (Read-Only):**
   ```powershell
   $env:SPT_DATA_PATH = "C:\Path\To\SPT\SPT_Runtime\SPT_Data"
   dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release --logger "console;verbosity=detailed"
   ```
-- Release Packaging: Run `.\release.ps1 -PackageOnly` to test, build, and verify `KeysInLootExtended-<Version>.zip` locally without uploading, or `.\release.ps1` to publish directly via `gh release`. In CI (`.github/workflows/ci-release.yml`), every push to `main`, version tag, and pull request verifies the package, while pushing a matching version tag (such as `3.0.0` or `v3.0.0`, synced between `<Version>` in `KeysInLootExtended.csproj` and `ModMetadata.Version`) or running `workflow_dispatch` on `main` publishes the release notes from `CHANGELOG.md` and attaches the VirusTotal scan link.
+- **Release Packaging:** `.\release.ps1 -PackageOnly` tests, builds, and verifies `KeysInLootExtended-<Version>.zip` locally; pushing a matching version tag (`3.0.0` / `v3.0.0`) or running `workflow_dispatch` on `main` publishes via `.github/workflows/ci-release.yml`.
+
+</details>
