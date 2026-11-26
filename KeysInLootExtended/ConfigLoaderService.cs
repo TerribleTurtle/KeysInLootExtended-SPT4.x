@@ -219,7 +219,8 @@ public class KeysInLootConfigLoader
             File.WriteAllText(configPath, defaultV3Text, utf8NoBom);
             logger.Warning(
                 $"[KeysInLootExtended] Legacy config.jsonc detected (configVersion {config.ConfigVersion} < {CurrentConfigVersion}). " +
-                $"Backed up old file to config.backup.jsonc and generated fresh v{CurrentConfigVersion} config.jsonc (preset: Balanced).");
+                $"Backed up old file to config.backup.jsonc and wrote fresh v{CurrentConfigVersion} config.jsonc " +
+                $"(reset to enabled: true, preset: Balanced; set enabled: false in config.jsonc if you previously ran Disabled).");
 
             config = JsonSerializer.Deserialize<KeysInLootCoreConfig>(defaultV3Text, JsonSettings)
                 ?? throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize embedded default v3 config.jsonc.");

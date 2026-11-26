@@ -2,19 +2,15 @@
 
 ## [3.0.0]
 
-### Clean-Cut Preset & Configuration Overhaul (`configVersion: 3`)
-* **Three Playstyle Tiers + Nested `Custom` Block**: Replaced the 9 legacy v2 profiles and numeric/string alias tables with 3 SPT playstyle tiers (`Hardcore`, `Balanced`, `Casual`) plus a nested `"custom": { ... }` block, calibrated in real SPT play hours (~2 keys per 2-hour session on `Hardcore`, ~6.5 keys and ~1 SuperRare/night on `Balanced`, ~16 keys/night and ~8-hour keycards on `Casual`) while preserving non-key container loot (`100`-`107` non-key Jacket items per 100 on `Hardcore`/`Balanced` vs `94` in vanilla).
-* **Top-First Boolean Switches & Overrides (`config.jsonc`)**: Replaced `"Disabled"` and `"consoleVerbosity"` strings with `"enabled": true` and `"debugLogs": false`, added `"reduceCommonKeys": false` (cuts `Common`/`NotExist` weights by `85%` on any preset so `86%`-`91%` of drops are `Rare` or `SuperRare`), and exposed top-level `spawnWeightMultiplier`, `fleaPriceMultiplier`, and `traderPriceMultiplier` overrides.
-* **Automatic `v2` Config Backup & Self-Healing**: Embedded `config.jsonc` as a build resource; older `config.jsonc` files missing `"configVersion": 3` are automatically backed up to `config.backup.jsonc` and replaced with a fresh `v3` `config.jsonc` on startup (and missing `config.jsonc` files self-heal).
-* **Documentation Consolidation**: Merged `TECHNICAL_README.md` into a matter-of-fact `README.md` grounded in SP-Tushonka `4.1.6` pool and play-hour measurements.
+> Compatibility: For SP-Tushonka / SPT `4.1.x` (if you are still on SPT `4.0.x`, stick with `v2.1.4`).
+>
+> Upgrading from `2.x`: Delete your old `user/mods/KeysInLootExtended` folder before extracting. If a mod manager keeps your old `config.jsonc`, the mod will back it up to `config.backup.jsonc` and start fresh on `Balanced` (if you previously had the mod disabled, set `"enabled": false` in the new file).
 
-### In-Memory Raid Simulation & SPT 4.1.6 Calibration
-* **Labyrinth Container Support (`ContainerTargets`)**: Added Labyrinth's dedicated Jacket (`67adf4a95247ac91530fcec7`) and Dead Scav (`67adf5752fc5ee84020a9940`) container template IDs into a shared container registry across `LootInjectionService` and `ContainerGridService` so `locations/labyrinth.jsonc` actively injects keys and expands grids/item caps.
-* **Structural Handbook Tradability Filter**: Added an `O(1)` `Handbook.Items` check (`Price > 1` RUB) during item discovery, automatically excluding 7 unfinished cut Streets placeholder keys (absent from Tarkov's Handbook) and 2 in-raid Labyrinth 1-rouble puzzle props (`Valve handwheel` and `Ariadne symbol key`), and pruned dead entries from `ExplicitRarityMap`.
-* **SPT 4.1.6 Map Pool & Keycard Recalibration**: Recalibrated all 13 `locations/*.jsonc` files against SP-Tushonka `4.1.6` static container pool totals and a `60/60/30/20` `Balanced` keycard baseline so `Balanced` consistently averages `25.0`-`25.7` keys per 100 Jackets across every map.
-* **Live Debug Pool Telemetry**: Implemented `"debugLogs": true` support in `LootInjectionService` to log evaluated per-map key pool weight percentages on raid load, and corrected startup transformer log counts.
-* **Three-Layer In-Memory Simulation & Raid Parity Suite**: Added a CI-safe SP-Tushonka `4.1.6` golden-fixture simulator (closed-form math + seeded Monte Carlo using SPT's `ContainerExtensions` 2D slot placement and seasonal filtering) plus an opt-in `SPT_DATA_PATH` harness that executes 590 full raids through SPT's compiled `LocationLootGenerator`.
-* **Clean Release Archive & Tag-Gated CI**: Stripped `.pdb` symbols, `.deps.json`, and host `SPTushonka.*` runtime assets from the packaged mod folder so `KeysInLootExtended-<Version>.zip` ships only `KeysInLootExtended.dll`, `config.jsonc`, and `locations/*.jsonc` with POSIX `/` zip paths; gated `.github/workflows/ci-release.yml` publishing on version tags and `workflow_dispatch` while verifying `./release.ps1 -PackageOnly` on every push and PR.
+### What's New in 3.0.0
+* Three clear presets tuned around real playtime: Replaced the old 9-profile list with `Hardcore` (~2 keys per 2-hour session), `Balanced` (~6 to 7 keys and ~1 SuperRare room per session, default), `Casual` (~16 keys per session for limited playtime), and `Custom`, while keeping normal meds, food, and barter items in containers intact.
+* Mid-wipe common key filter (`reduceCommonKeys`): Flip this on once your keytool already has early Dorms and utility keys to cut common filler drops by 85% on any preset, so ~90% of keys you pull are Rare or SuperRare rooms.
+* Quick dials right at the top of `config.jsonc`: Nudge overall drop rates or key sell prices up or down on top of any preset without having to switch into `Custom` mode.
+* Labyrinth and map fixes: Keys now spawn properly in Labyrinth Jackets and Dead Scavs, drop rates are evened out across all 13 maps (fixing low rates on Night Factory and Ground Zero 20+), and unfinished Streets placeholder keys and 1-rouble Labyrinth puzzle items no longer pollute container pools.
 
 ## [2.2.0]
 

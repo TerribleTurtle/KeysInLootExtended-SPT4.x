@@ -12,12 +12,12 @@
     // Pick a preset below (not case-sensitive).
     // Playtime estimates assume ~3.5 raids in a 2-hour session (~5 Jackets, 4 Duffles, 1 Dead Scav per raid):
     //   "Hardcore" - ~2 keys per 2-hr night (~7.2 hrs per SuperRare)   | Vanilla container counts | 1.00x sell value
-    //   "Balanced" - ~6.5 keys per 2-hr night (~1 SuperRare/night)     | Gentle Jacket curve      | 0.40x sell value (Default)
+    //   "Balanced" - ~6.6 keys per 2-hr night (~1 SuperRare/night)     | Gentle Jacket curve      | 0.40x sell value (Default)
     //   "Casual"   - ~16 keys per 2-hr night (~3 SuperRares/night)     | Boosted Jacket & Duffle  | 0.25x sell value
     //   "Custom"   - Uses the manual weight and item-count tables in Section 2 ("custom") below
     "preset": "Balanced",
 
-    // Mid/late-wipe filter: cuts Common key weights by 85% on any preset so ~90% of drops are Rare or SuperRare.
+    // Mid/late-wipe filter: cuts Common (and uncategorized NotExist) weights by 85% on any preset so ~90% of drops are Rare or SuperRare.
     "reduceCommonKeys": false,
 
     // Master drop-rate dial applied on top of your chosen preset (1.0 = default, 1.5 = +50% weight, 0.5 = half weight).
@@ -63,7 +63,7 @@
 
         // Container item-count overrides used by "Custom". Set false to keep vanilla item counts and grid sizes.
         // Set an individual container's array to null to leave that specific container on vanilla item counts.
-        // Whole integers only (decimals in count/relativeProbability will fail map deserialization).
+        // Whole integers only (decimals in count/relativeProbability will fail config.jsonc loading at startup).
         "overrideLootDistribution": true,
 
         "jacketsItemCounts": [

@@ -9,7 +9,7 @@
 Keys In Loot Extended adds all `217` tradable Escape from Tarkov keys and keycards into static Jackets, Duffle Bags, and Dead Scavs across all 13 playable maps (including Labyrinth), with presets tuned around solo SPT playtimes and proportional sell-price scaling.
 
 In vanilla Tarkov, static container rates are tuned around 50,000 live players feeding a multiplayer Flea Market, creating two walls for solo SPT players:
-1. `67` of the game's `217` tradable keys and keycards (`31%`) have a `0%` chance of ever spawning in any Jacket, Duffle Bag, or Dead Scav, including all `13` keycards, `20` SuperRare boss/Arena/Streets keys, and `25` Rare keys (such as Resort West 205).
+1. `67` of the game's `217` tradable keys and keycards (`31%`) have a `0%` chance of ever spawning in any Jacket, Duffle Bag, or Dead Scav: all `13` keycards, `20` SuperRare boss/Arena/Streets keys, `25` Rare keys (such as Resort West 205), and `9` Common keys.
 2. Even keys that do exist in vanilla Jackets are tuned for crowd farming: Dorm room 314 Marked averages `1 in 1,968` Jackets (~225 hours of solo raiding), and Cottage back door averages `1 in 326,481` Jackets.
 
 All `217` tradable items injected by the mod break down into four groups:
@@ -26,7 +26,7 @@ All `217` tradable items injected by the mod break down into four groups:
    - SP-Tushonka / SPT `4.1.x` (`.NET 10`): `KeysInLootExtended-3.0.0.zip` (or latest `2.2.0+` / `3.x` release)
    - SPT `4.0.x` (`.NET 9`): `KeysInLootExtended-2.1.4.zip`
 2. Extract the archive into your SPT root folder so the files land at `<SPT_Root>/user/mods/KeysInLootExtended/`.
-3. Upgrading from `v2.x`: `v3.0.0` introduces a clean `configVersion: 3` layout. If a mod manager preserves your older `v2.x` `config.jsonc`, the mod automatically backs it up to `config.backup.jsonc` on startup and writes a fresh `v3` `config.jsonc` (`Balanced`).
+3. Upgrading from `v2.x`: `v3.0.0` introduces a clean `configVersion: 3` layout. If a mod manager preserves your older `v2.x` `config.jsonc`, the mod automatically backs it up to `config.backup.jsonc` on startup and writes a fresh `v3` `config.jsonc` (`enabled: true`, `preset: "Balanced"`). If you previously had the mod set to `"Disabled"`, set `"enabled": false` in the new `config.jsonc`.
 
 ---
 
@@ -49,7 +49,7 @@ Set `preset` at the top of `config.jsonc` (not case-sensitive). Estimates below 
 - `Hardcore`: Built for zero-to-hero, No-Flea, and long-wipe players (`10-20+ hrs/week`). Keeps vanilla container pacing (~1 key per hour, `100%` untouched meds/food/barter counts, full `1.00x` sell value), except all `217` keys can actually drop. Finding a Rare room (~2.2 hrs) or SuperRare key (~7.2 hrs, ~1 per week) becomes a milestone that shapes where you raid next.
 - `Balanced` *(Default)*: Built for regular solo SPT players (`6-10 hrs/week`, `40-80 hr` wipe). Checking Jackets reliably pays off (~2 keys per raid, ~1 SuperRare room per 2-hour evening, ~1 Keycard every ~24 hours) without crowding out normal Jacket items (`106.6` non-key items per 100 Jackets vs `94.0` in vanilla). Sell prices scale to `0.40x` so keys are worth bringing into raid to unlock doors rather than flipping for easy millions.
 - `Casual`: Built for busy adults and weekend players (`2 hours` free after work, `12-25 hr` total playthrough). Over half of Jackets hold a key, unlocking `~74` unique keys (`~18` SuperRares) in `12 hours` (matching the room variety `Balanced` reaches around `35 hours`, plus a Keycard roughly every `8 hours` so you actually get to run Labs and Labrys), while `0.25x` sell value keeps rouble progression grounded.
-- `reduceCommonKeys: true` *(Mid/Late-Wipe Filter)*: Early wipe (`false`), you want the `47` Common Dorms and utility keys. Once your keytool already has them, setting `"reduceCommonKeys": true` cuts Common weights by `85%` on any preset so `86%-91%` of drops are `Rare` or `SuperRare` (`4.2` keys/100 on `Hardcore`, `16.7` on `Balanced`, `49.5` on `Casual`) without changing your tier's Rare/SuperRare pace.
+- `reduceCommonKeys: true` *(Mid/Late-Wipe Filter)*: Early wipe (`false`), you want the `47` Common Dorms and utility keys. Once your keytool already has them, setting `"reduceCommonKeys": true` cuts `Common` (and uncategorized `NotExist`) weights by `85%` on any preset so `86%-91%` of drops are `Rare` or `SuperRare` (`4.2` keys/100 on `Hardcore`, `16.7` on `Balanced`, `49.5` on `Casual`) without changing your tier's Rare/SuperRare pace.
 - `Custom`: Uses the nested `"custom": { ... }` block in `config.jsonc` when you want to zero out a specific rarity tier (`"superRare": 0`), write custom item-count curves, or expand container grids up to `14x14`.
 
 ---
@@ -109,4 +109,4 @@ In vanilla Tarkov data, 21 valid keys and keycards carry an uncategorized `Not_e
   $env:SPT_DATA_PATH = "C:\Path\To\SPT\SPT_Runtime\SPT_Data"
   dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release --logger "console;verbosity=detailed"
   ```
-- Release Packaging: Run `.\release.ps1 -PackageOnly` to test, build, and verify `KeysInLootExtended-<Version>.zip` locally without uploading, or `.\release.ps1` to publish directly via `gh release`. In CI (`.github/workflows/ci-release.yml`), every push and pull request verifies the package, while pushing a matching version tag (such as `3.0.0` or `v3.0.0`, synced between `<Version>` in `KeysInLootExtended.csproj` and `ModMetadata.Version`) or running `workflow_dispatch` publishes the release notes from `CHANGELOG.md` and attaches the VirusTotal scan link.
+- Release Packaging: Run `.\release.ps1 -PackageOnly` to test, build, and verify `KeysInLootExtended-<Version>.zip` locally without uploading, or `.\release.ps1` to publish directly via `gh release`. In CI (`.github/workflows/ci-release.yml`), every push to `main`, version tag, and pull request verifies the package, while pushing a matching version tag (such as `3.0.0` or `v3.0.0`, synced between `<Version>` in `KeysInLootExtended.csproj` and `ModMetadata.Version`) or running `workflow_dispatch` on `main` publishes the release notes from `CHANGELOG.md` and attaches the VirusTotal scan link.
