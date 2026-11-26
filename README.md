@@ -19,9 +19,10 @@ In vanilla Tarkov, nearly a third of all keys and keycards (including every Labs
 
 Open `config.jsonc` and set `"preset"` right at the top:
 
-| Preset | Who It's For | Typical 2-Hour Session (~3–4 Raids) | Key Sell Value |
+| Mode | Who It's For | Typical 2-Hour Session (~3–4 Raids) | Key Sell Value |
 | :--- | :--- | :--- | :---: |
-| **Hardcore** | Zero-to-hero, No-Flea, long wipes | ~2 keys (~1 SuperRare room a week) | 100% (Vanilla) |
+| *Vanilla (Mod Off)* | Base Tarkov reference (`"enabled": false`) | ~1–2 common keys (67 keys/keycards never spawn) | 100% |
+| **Hardcore** | Zero-to-hero, No-Flea, long wipes | ~2 keys (all 217 unlocked; ~1 SuperRare a week) | 100% |
 | **Balanced** *(Default)* | Normal solo SPT playthrough | ~6–7 keys (~1 SuperRare room per session) | 40% |
 | **Casual** | Busy schedule / a couple hours after work | ~16 keys (~3 SuperRare rooms per session) | 25% |
 | **Custom** | Full manual control | Uses the `"custom"` block at the bottom of `config.jsonc` | Custom |
