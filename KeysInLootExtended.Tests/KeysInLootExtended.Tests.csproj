@@ -22,4 +22,10 @@
     <ProjectReference Include="..\KeysInLootExtended\KeysInLootExtended.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="TestData\spt416_golden_fixture.json.gz">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

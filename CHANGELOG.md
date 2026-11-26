@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### In-Memory Raid Simulation & SPT 4.1.6 Calibration
+* **Labyrinth Container Support (`ContainerTargets`)**: Added Labyrinth's dedicated Jacket (`67adf4a95247ac91530fcec7`) and Dead Scav (`67adf5752fc5ee84020a9940`) container template IDs into a shared container registry across `LootInjectionService` and `ContainerGridService` so `locations/labyrinth.jsonc` actively injects keys and expands grids/item caps.
+* **Structural Handbook Tradability Filter**: Added an `O(1)` `Handbook.Items` check (`Price > 1` RUB) during item discovery, automatically excluding 7 unfinished cut Streets placeholder keys (absent from Tarkov's Handbook) and 2 in-raid Labyrinth 1-rouble puzzle props (`Valve handwheel` and `Ariadne symbol key`), and pruned dead entries from `ExplicitRarityMap`.
+* **SPT 4.1.6 Map Pool Recalibration**: Recalibrated all 13 `locations/*.jsonc` files against SP-Tushonka `4.1.6` static container pool totals—fixing stale SPT 3.11 weights on `factory_night` (`5.2` -> `26.4` keys/100 Jackets), `ground_zero_high` (`4.2` -> `27.1`), `lighthouse`, `woods`, `labyrinth`, and `customs` Dead Scavs so `Balanced` consistently averages ~26 keys per 100 Jackets across every map.
+* **Live Debug Pool Telemetry**: Implemented `"consoleVerbosity": "debug"` support in `LootInjectionService` to log evaluated per-map key pool weight percentages on raid load, and corrected startup transformer log counts.
+* **Three-Layer In-Memory Simulation & Raid Parity Suite**: Added a CI-safe SP-Tushonka `4.1.6` golden-fixture simulator (closed-form math + seeded Monte Carlo using SPT's `ContainerExtensions` 2D slot placement and seasonal filtering) plus an opt-in `SPT_DATA_PATH` harness that executes 590 full raids through SPT's compiled `LocationLootGenerator`.
+
 ## [2.2.0]
 
 ### SP-Tushonka / SPT 4.1.x Migration (.NET 10)

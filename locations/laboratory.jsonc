@@ -7,39 +7,35 @@
 */
 {
     "jacketContainer": {
-        // SPT 3.11.3
-        // Jacket total relative probability: 40176 (145 items)
-        // Average relative probability: 40176 / 145 = 277.3
-        // Dorm room key 114 relative to average probability: 64 / 277.3 = 0.231
-        // Example: Jacket (rare) (Dorm room key 114) relative probability: 64 -> 0.16% spawn chance
+        // SPT 4.1.6 calibrated
+        // Jacket vanilla pool weight: 125910 (167 items) -> Balanced target: ~25.0 keys / 100 containers
         "key": {
-            "notExist": 128,
-            "common": 128,
-            "rare": 64,
-            "superRare": 32
+            "notExist": 136,
+            "common": 136,
+            "rare": 68,
+            "superRare": 34
         },
         "keycard": {
-            "notExist": 38,
-            "common": 38,
-            "rare": 19,
-            "superRare": 12
+            "notExist": 41,
+            "common": 41,
+            "rare": 20,
+            "superRare": 13
         }
     },
     "duffleBagContainer": {
-        // Duffle Bag total relative probability: 120214 (287  items)
-        // Average relative probability: 120214 / 287  = 418.6
-        // Base (dorm 114): 0.231  * 418.6 = 96.8
+        // SPT 4.1.6 calibrated
+        // Duffle Bag vanilla pool weight: 458069 (302 items) -> Balanced target: ~11.2 keys / 100 containers
         "key": {
-            "notExist": 192,
-            "common": 192,
-            "rare": 96,
-            "superRare": 48
+            "notExist": 220,
+            "common": 220,
+            "rare": 110,
+            "superRare": 55
         },
         "keycard": {
-            "notExist": 58,
-            "common": 58,
-            "rare": 29,
-            "superRare": 18
+            "notExist": 66,
+            "common": 66,
+            "rare": 33,
+            "superRare": 21
         }
     },
     "deadScavContainer": {

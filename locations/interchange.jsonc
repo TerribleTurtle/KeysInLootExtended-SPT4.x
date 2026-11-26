@@ -7,32 +7,28 @@
 */
 {
     "jacketContainer": {
-        // SPT 3.11.3
-        // Jacket total relative probability: 27689 (145 items)
-        // Average relative probability: 27689 / 145 = 191.5
-        // Dorm room key 114 relative to average probability: 50 / 191.5 = 0.261
-        // Example: Jacket (rare) (Dorm room key 114) relative probability: 50 -> 0.18% spawn chance
+        // SPT 4.1.6 calibrated
+        // Jacket vanilla pool weight: 102838 (165 items) -> Balanced target: ~24.9 keys / 100 containers
         "key": {
-            "notExist": 100,
-            "common": 100,
-            "rare": 50,
-            "superRare": 25
+            "notExist": 110,
+            "common": 110,
+            "rare": 55,
+            "superRare": 28
         },
         "keycard": {
-            "notExist": 30,
-            "common": 30,
-            "rare": 15,
-            "superRare": 9
+            "notExist": 33,
+            "common": 33,
+            "rare": 16,
+            "superRare": 10
         }
     },
     "duffleBagContainer": {
-        // Duffle Bag total relative probability: 383256 (289 items)
-        // Average relative probability: 383256 / 289 = 1326.4
-        // Base (dorm 114): 0.261  * 1326.4 = 343.3
+        // SPT 4.1.6 calibrated
+        // Duffle Bag vanilla pool weight: 1431859 (313 items) -> Balanced target: ~11.2 keys / 100 containers
         "key": {
-            "notExist": 688,
-            "common": 688,
-            "rare": 344,
+            "notExist": 686,
+            "common": 686,
+            "rare": 343,
             "superRare": 172
         },
         "keycard": {
@@ -43,20 +39,19 @@
         }
     },
     "deadScavContainer": {
-        // Dead Scav total relative probability: 16403 (661 items)
-        // Average relative probability: 16403 / 661 = 24.8
-        // Base (dorm 114): 0.261 * 24.8 = 6.5
+        // SPT 4.1.6 calibrated
+        // Dead Scav vanilla pool weight: 62305 (678 items) -> Balanced target: ~7.0 keys / 100 containers
         "key": {
-            "notExist": 12,
-            "common": 12,
-            "rare": 6,
-            "superRare": 3
+            "notExist": 14,
+            "common": 14,
+            "rare": 7,
+            "superRare": 4
         },
         "keycard": {
             "notExist": 4,
             "common": 4,
             "rare": 2,
-            "superRare": 1
+            "superRare": 2
         }
     }
 }

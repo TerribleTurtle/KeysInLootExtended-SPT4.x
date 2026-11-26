@@ -7,54 +7,49 @@
 */
 {
     "jacketContainer": {
-        // SPT 3.11.3
-        // Jacket total relative probability: 8732 (144 items)
-        // Average relative probability: 8732 / 144 = 60.72
-        // Dorm room key 114 relative to average probability: 15 / 60.72 = 0.247
-        // Example: Jacket (rare) (Dorm room key 114) relative probability: 15 -> 0.17% spawn chance
+        // SPT 4.1.6 calibrated
+        // Jacket vanilla pool weight: 27684 (149 items) -> Balanced target: ~25.4 keys / 100 containers
         "key": {
-            "notExist": 32,
-            "common": 32,
-            "rare": 16,
+            "notExist": 30,
+            "common": 30,
+            "rare": 15,
             "superRare": 8
         },
         "keycard": {
-            "notExist": 10,
-            "common": 10,
-            "rare": 5,
+            "notExist": 9,
+            "common": 9,
+            "rare": 4,
             "superRare": 3
         }
     },
     "duffleBagContainer": {
-        // Duffle Bag total relative probability: 109102 (288 items)
-        // Average relative probability: 109102 / 288 = 378.51
-        // Base (dorm 114): 0.247  * 378.51 = 93.41
+        // SPT 4.1.6 calibrated
+        // Duffle Bag vanilla pool weight: 421925 (300 items) -> Balanced target: ~11.2 keys / 100 containers
         "key": {
-            "notExist": 188,
-            "common": 188,
-            "rare": 94,
-            "superRare": 47
+            "notExist": 202,
+            "common": 202,
+            "rare": 101,
+            "superRare": 50
         },
         "keycard": {
-            "notExist": 56,
-            "common": 56,
-            "rare": 28,
-            "superRare": 18
+            "notExist": 61,
+            "common": 61,
+            "rare": 30,
+            "superRare": 19
         }
     },
     "deadScavContainer": {
-        // Dead Scav total relative probability: 378834 (679 items)
-        // Average relative probability: 378834 / 679 = 557.04
-        // Base (dorm 114): 0.247 * 557.04 = 137.63
+        // SPT 4.1.6 calibrated
+        // Dead Scav vanilla pool weight: 1202169 (704 items) -> Balanced target: ~6.8 keys / 100 containers
         "key": {
-            "notExist": 276,
-            "common": 276,
-            "rare": 138,
-            "superRare": 69
+            "notExist": 272,
+            "common": 272,
+            "rare": 136,
+            "superRare": 68
         },
         "keycard": {
-            "notExist": 83,
-            "common": 83,
+            "notExist": 82,
+            "common": 82,
             "rare": 41,
             "superRare": 26
         }

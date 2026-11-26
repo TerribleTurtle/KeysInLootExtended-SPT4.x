@@ -8,8 +8,8 @@ The original `MusicManiac-KeysInLoot` was a fantastic proof of concept, but it w
 
 1. **Migration to Native C# (.NET 10):** The original mod was written in TypeScript/JavaScript and ran on the Node.js backend. This version is a native C# Server Mod designed specifically for the SPT / SP-Tushonka 4.1+ (.NET 10) architecture.
 2. **Performance Optimizations:** The original mod used array filtering to adjust prices, which scales poorly. This version uses pre-computed `HashSet<T>` lookups for O(1) performance during the price injection loop, drastically reducing server boot time.
-3. **Dynamic Map Discovery:** The original mod hardcoded a list of 12 maps (e.g., `tables.locations.bigmap`). This version queries SPT 4.1's `LocationTable.GetDictionary()` and registers `LazyLoad<T>` static loot transformers across all discovered locations.
-4. **Strict Error Handling:** Includes strict type-checking, `MongoId` parsing protection, and null-coalescing. Misconfigured JSON variables or missing item IDs from other mods will be safely caught and logged, rather than crashing the database generation.
+3. **Dynamic Map & Variant Container Discovery:** The original mod hardcoded a list of 12 maps (e.g., `tables.locations.bigmap`) and 3 container IDs. This version queries SPT 4.1's `LocationTable.GetDictionary()`, registers `LazyLoad<T>` static loot transformers across all discovered locations, and maps logical container groups (`ContainerTargets`) so map-specific container variants (such as Labyrinth's dedicated Jacket and Dead Scav templates) receive both loot injection and grid/`MaxCount` expansion.
+4. **Structural Item Hygiene & Strict Error Handling:** Includes strict type-checking, `MongoId` parsing protection, null-coalescing, and an `O(1)` Handbook tradability check (`Price > 1` RUB) that automatically excludes unfinished placeholder keys and 1-rouble in-raid puzzle props alongside `QuestItem`, abstract `Node`, and SPT blacklist filters.
 
 ## ⚖️ Understanding Loot Weights & The "Lottery Ticket" System
 
@@ -55,10 +55,18 @@ If you wish to compile or test the mod from source:
    dotnet build KeysInLootExtended/KeysInLootExtended.csproj -c Release
    ```
    The compiled mod and configuration files are automatically placed in `dist/SPT/user/mods/KeysInLootExtended/`.
-3. **Run Unit & End-to-End Integration Tests:**
+3. **Run Unit, Golden-Fixture Simulation & End-to-End Tests (`< 2s`, CI-safe):**
    ```powershell
    dotnet test KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj -c Release
    ```
-4. **Automated Releases (`CI & Auto-Release`):**
+   This runs both unit tests and deterministic in-memory simulations (analytical closed-form math + seeded Monte Carlo container openings using SPT's `ContainerExtensions` 2D slot placement) against a compact SP-Tushonka 4.1.6 golden fixture—no local game installation required.
+4. **Run Full Live-Database & Real SPT Raid Generator Parity Verification (Optional):**
+   Point `SPT_DATA_PATH` at any local SPT `4.1.x` `SPT_Data` directory (read-only) to verify against all live items and simulate 590 full raids inside SPT's compiled `LocationLootGenerator`:
+   ```powershell
+   $env:SPT_DATA_PATH = "C:\Path\To\SPT\SPT_Runtime\SPT_Data"
+   dotnet test KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj -c Release --logger "console;verbosity=detailed"
+   ```
+   *(Tip: On a live server with other loot mods installed, set `"consoleVerbosity": "debug"` in `config.jsonc` to log evaluated per-map container key weight shares when raids load.)*
+5. **Automated Releases (`CI & Auto-Release`):**
    - Pushing to `main` automatically runs the `.NET 10` build and test suite in GitHub Actions (`.github/workflows/ci-release.yml`).
    - Whenever `<Version>` in `KeysInLootExtended/KeysInLootExtended.csproj` (and `ModMetadata.Version` in `KeysInLootExtendedPlugin.cs`) is bumped to a new version not yet published on GitHub Releases, the workflow automatically executes `.\release.ps1` to package `KeysInLootExtended-<Version>.zip`, extract the matching `## [<Version>]` notes from `CHANGELOG.md`, and publish the GitHub Release.

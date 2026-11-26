@@ -7,58 +7,51 @@
 */
 {
     "jacketContainer": {
-        // SPT 3.11.3
-        // Jacket total relative probability: 56345 (146 items)
-        // Average relative probability: 385.5
-        // Dorm room key 114 relative to average probability: 84 / 385 = 0.218
-        // Example: Jacket (rare) (Dorm room key 114) relative probability: 84 -> 0.15% spawn chance
+        // SPT 4.1.6 calibrated
+        // Jacket vanilla pool weight: 200053 (176 items) -> Balanced target: ~25.1 keys / 100 containers
         "key": {
-            "notExist": 168,
-            "common": 168,
-            "rare": 84,
-            "superRare": 42
+            "notExist": 202,
+            "common": 202,
+            "rare": 101,
+            "superRare": 50
         },
         "keycard": {
-            "notExist": 50,
-            "common": 50,
-            "rare": 25,
-            "superRare": 16
+            "notExist": 61,
+            "common": 61,
+            "rare": 30,
+            "superRare": 19
         }
     },
     "duffleBagContainer": {
-        // Duffle Bag total relative probability: 225380 (290 items)
-        // Average relative probability: 777
-        // 0.218 (dorm 114) * 777 = 169.5
-        // Example: SPT 3.11.3 - Duffle Bag (Missam forklift key) relative probability: 272 -> 0.12% spawn chance
+        // SPT 4.1.6 calibrated
+        // Duffle Bag vanilla pool weight: 816063 (309 items) -> Balanced target: ~11.2 keys / 100 containers
         "key": {
-            "notExist": 340,
-            "common": 340,
-            "rare": 170,
-            "superRare": 85
+            "notExist": 390,
+            "common": 390,
+            "rare": 195,
+            "superRare": 98
         },
         "keycard": {
-            "notExist": 102,
-            "common": 102,
-            "rare": 51,
-            "superRare": 32
+            "notExist": 117,
+            "common": 117,
+            "rare": 58,
+            "superRare": 37
         }
     },
     "deadScavContainer": {
-        // Dead Scav total relative probability: 79670 (676 items)
-        // Average relative probability: 118
-        // 0.218 (dorm 114) * 118 = 25.7
-        // Example: SPT 3.11.3 - Dead Scav (GreenBat lithium battery) relative probability: 485 -> 0.13% spawn chance
+        // SPT 4.1.6 calibrated
+        // Dead Scav vanilla pool weight: 269279 (684 items) -> Balanced target: ~15.9 keys / 100 containers
         "key": {
-            "notExist": 52,
-            "common": 52,
-            "rare": 26,
-            "superRare": 13
+            "notExist": 132,
+            "common": 132,
+            "rare": 66,
+            "superRare": 33
         },
         "keycard": {
-            "notExist": 16,
-            "common": 16,
-            "rare": 8,
-            "superRare": 5
+            "notExist": 40,
+            "common": 40,
+            "rare": 20,
+            "superRare": 12
         }
     }
 }

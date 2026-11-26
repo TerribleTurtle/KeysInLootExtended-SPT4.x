@@ -20,13 +20,6 @@ public class ContainerGridService
     private readonly TemplateTable _templateTable;
     private readonly KeysInLootConfigLoader _configLoader;
 
-    private static readonly MongoId[] TargetContainerIds = new[]
-    {
-        new MongoId("578f8778245977358849a9b5"), // Jacket
-        new MongoId("578f87a3245977356274f2cb"), // Duffle Bag
-        new MongoId("5909e4b686f7747f5b744fa4")  // Dead Scav
-    };
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ContainerGridService"/> class.
     /// </summary>
@@ -82,7 +75,7 @@ public class ContainerGridService
         int clampedH = Math.Clamp(targetCellsH, 1, 14);
         int clampedV = Math.Clamp(targetCellsV, 1, 14);
 
-        foreach (var containerId in TargetContainerIds)
+        foreach (var containerId in ContainerTargets.All)
         {
             if (items.TryGetValue(containerId, out var templateItem))
             {

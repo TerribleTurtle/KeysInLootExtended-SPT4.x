@@ -71,6 +71,23 @@ public class LootInjectionService
 
         var keys = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
         var keycards = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
+
+        // Build an O(1) lookup of genuine tradable Handbook items (Price > 1 RUB).
+        // This structurally excludes unfinished cut placeholder keys (absent from Handbook)
+        // and in-raid puzzle mechanics (such as Labyrinth's 1-RUB Valve handwheel and Ariadne symbol key).
+        var validHandbookItemIds = new HashSet<MongoId>();
+        var handbookItems = _templateTable.Handbook?.Items;
+        bool enforceHandbookFilter = handbookItems is { Count: > 0 };
+        if (enforceHandbookFilter)
+        {
+            foreach (var hb in handbookItems!)
+            {
+                if (hb.Price is > 1.0)
+                {
+                    validHandbookItemIds.Add(hb.Id);
+                }
+            }
+        }
         
         bool IsOfBaseclass(string itemId, string targetBaseclass)
         {
@@ -113,6 +130,8 @@ public class LootInjectionService
             {
                 id = new MongoId(item.Id);
                 if (_itemFilterService.IsItemBlacklisted(id) || _itemFilterService.IsLootableItemBlacklisted(id))
+                    continue;
+                if (enforceHandbookFilter && !validHandbookItemIds.Contains(id))
                     continue;
             }
             catch (Exception ex) when (ex is FormatException or ArgumentException)
@@ -170,20 +189,19 @@ public class LootInjectionService
             deadScavCounts = config.OverrideLootDistributionDeadScavs?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
         }
 
-        int modifiedContainers = 0;
+        int registeredLocations = 0;
+        bool isDebugVerbosity = string.Equals(config.ConsoleVerbosity, "debug", StringComparison.OrdinalIgnoreCase);
+        var loggedDebugMaps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Retrieve all registered map locations via SPT 4.1's strongly-typed LocationTable dictionary.
         var validLocations = _locationTable.GetDictionary().Values;
-
-        var jacketContainerId = new MongoId("578f8778245977358849a9b5");
-        var duffleContainerId = new MongoId("578f87a3245977356274f2cb");
-        var deadScavContainerId = new MongoId("5909e4b686f7747f5b744fa4");
 
         foreach (var location in validLocations)
         {
             if (location?.Base == null || location.StaticLoot == null)
                 continue;
 
+            string mapBaseId = location.Base.Id ?? "unknown";
             KeysInLootRarityConfig jacketKeyWeight = config.KeyWeight;
             KeysInLootRarityConfig jacketKeycardWeight = config.KeycardWeight;
             KeysInLootRarityConfig duffleKeyWeight = config.KeyWeight;
@@ -193,11 +211,10 @@ public class LootInjectionService
 
             if (config.EnableLocationsConfig)
             {
-                string baseId = location.Base.Id ?? string.Empty;
-                if (string.IsNullOrEmpty(baseId)) continue;
-                string enumName = locationIdToEnum.TryGetValue(baseId, out var mappedName) 
+                if (string.IsNullOrEmpty(location.Base.Id)) continue;
+                string enumName = locationIdToEnum.TryGetValue(mapBaseId, out var mappedName) 
                     ? mappedName 
-                    : baseId.ToLowerInvariant();
+                    : mapBaseId.ToLowerInvariant();
 
                 var locConfig = _configLoader.LoadLocationConfig(enumName);
                 if (locConfig != null)
@@ -211,11 +228,11 @@ public class LootInjectionService
                 }
             }
 
-            var targets = new (MongoId Id, KeysInLootRarityConfig KeyWeight, KeysInLootRarityConfig KeycardWeight, ItemCountDistribution[]? Counts)[]
+            var targets = new (string Label, MongoId[] Ids, KeysInLootRarityConfig KeyWeight, KeysInLootRarityConfig KeycardWeight, ItemCountDistribution[]? Counts)[]
             {
-                (jacketContainerId, jacketKeyWeight, jacketKeycardWeight, jacketCounts),
-                (duffleContainerId, duffleKeyWeight, duffleKeycardWeight, duffleCounts),
-                (deadScavContainerId, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
+                ("Jacket", ContainerTargets.Jackets, jacketKeyWeight, jacketKeycardWeight, jacketCounts),
+                ("DuffleBag", ContainerTargets.DuffleBags, duffleKeyWeight, duffleKeycardWeight, duffleCounts),
+                ("DeadScav", ContainerTargets.DeadScavs, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
             };
 
             // -----------------------------------------------------------------------------------------
@@ -236,18 +253,31 @@ public class LootInjectionService
                 if (dict == null) return dict;
                 try
                 {
+                    bool logThisPass = isDebugVerbosity && loggedDebugMaps.Add(mapBaseId);
                     foreach (var target in targets)
                     {
-                        if (dict.ContainsKey(target.Id))
+                        foreach (var containerId in target.Ids)
                         {
-                            var container = dict[target.Id];
-                            ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
-                            
-                            // We must instantiate a new array of ItemCountDistribution here rather than assigning
-                            // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
-                            // references that we don't want to inadvertently cross-contaminate.
-                            if (target.Counts is { Length: > 0 }) 
-                                container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+                            if (dict.TryGetValue(containerId, out var container))
+                            {
+                                ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
+                                
+                                // We must instantiate a new array of ItemCountDistribution here rather than assigning
+                                // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
+                                // references that we don't want to inadvertently cross-contaminate.
+                                if (target.Counts is { Length: > 0 }) 
+                                    container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+
+                                if (logThisPass && container.ItemDistribution != null)
+                                {
+                                    double totW = container.ItemDistribution.Sum(x => (double)(x.RelativeProbability ?? 0f));
+                                    double keyW = container.ItemDistribution
+                                        .Where(x => _injectedKeysService.InjectedKeyIds.Contains(x.Tpl))
+                                        .Sum(x => (double)(x.RelativeProbability ?? 0f));
+                                    double pct = totW > 0 ? (100.0 * keyW / totW) : 0.0;
+                                    _logger.Info($"[KeysInLootExtended] [Debug] {mapBaseId} {target.Label}: key pool share = {pct:F2}% ({keyW:F0}/{totW:F0} weight)");
+                                }
+                            }
                         }
                     }
                 }
@@ -259,37 +289,23 @@ public class LootInjectionService
             };
 
             location.StaticLoot.AddTransformer(transformer);
-            modifiedContainers += 3;
+            registeredLocations++;
         }
 
-        _logger.Success($"[KeysInLootExtended] Successfully injected keys into {modifiedContainers} static containers across valid maps.");
+        _logger.Success($"[KeysInLootExtended] Registered static loot key transformers across {registeredLocations} locations.");
     }
 
     private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
-        // Common: Early game keys, quest keys, or very low-value loot rooms, disabled dev items
-        { "5671446a4bdc2d97058b4569", "Common" }, // Pistol case key
-        { "57518f7724597720a31c09ab", "Common" }, // Key 3
-        { "57518fd424597720c85dbaaa", "Common" }, // Key 5
-        { "5751916f24597720a27126df", "Common" }, // Key 2
+        // Common: Early game keys, quest-adjacent unlock keys, or low-value loot rooms
         { "57a349b2245977762b199ec7", "Common" }, // Pumping station front door key
-        { "590de4a286f77423d9312a32", "Common" }, // Folding car key
-        { "590de52486f774226a0c24c2", "Common" }, // Machinery key
         { "593858c486f774253a24cb52", "Common" }, // Pumping station back door key
         { "593962ca86f774068014d9af", "Common" }, // Unknown key
-        { "6391fcf5744e45201147080f", "Common" }, // Primorsky Ave apartment key
         { "6398fd8ad3de3849057f5128", "Common" }, // Backup hideout key
         { "658199a0490414548c0fa83b", "Common" }, // Horse restaurant toilet key
-        { "5751961824597720a31c09ac", "Common" }, // (off)Black Keycard
 
-        // Rare: Mid-to-high value safe keys, good loot rooms, and standard Streets/Labyrinth keys
+        // Rare: Mid-to-high value rooms and standard Streets/Labyrinth keys
         { "61a6446f4b5f8b70f451b166", "Rare" }, // Cold storage room key
-        { "63a39ddda3a2b32b5f6e007a", "Rare" }, // Apartment locked room safe key
-        { "63a39e0f64283b5e9c56b282", "Rare" }, // ?ity key
-        { "63a39e5b234195315d4020bf", "Rare" }, // Housing office second floor safe key
-        { "63a39e6acd6db0635c1975fe", "Rare" }, // Housing office first floor safe key
-        { "63a71f1a0aa9fb29da61c537", "Rare" }, // ?ity key
-        { "63a71f3b0aa9fb29da61c539", "Rare" }, // ?ity key
         { "64ce572331dd890873175115", "Rare" }, // Aspect company office key
         { "6582dc63cafcd9485374dbc5", "Rare" }, // Unity Credit Bank archive room key
         { "66265d7be65f224b2e17c6aa", "Rare" }, // USEC cottage room key
