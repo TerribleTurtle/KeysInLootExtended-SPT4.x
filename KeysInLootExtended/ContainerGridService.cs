@@ -38,7 +38,7 @@ public class ContainerGridService
 
     /// <summary>
     /// Main entry point to adjust grid sizes based on loaded configurations.
-    /// Safely exits early if the profile is set to "Disabled".
+    /// Safely exits early if the mod is disabled in config.jsonc.
     /// </summary>
     /// <remarks>
     /// Escape from Tarkov UI has a hard limit where grids > 14x14 will fail to render 
@@ -47,14 +47,15 @@ public class ContainerGridService
     public void AdjustGridSizes()
     {
         var config = _configLoader.Config;
-        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
+        if (!config.Enabled)
             return;
 
-        if (!config.OverrideLootDistribution)
+        var resolved = config.Resolved;
+        if (!resolved.OverrideLootDistribution)
             return;
 
-        int clampedH = Math.Clamp(config.CellsH, 1, 14);
-        int clampedV = Math.Clamp(config.CellsV, 1, 14);
+        int clampedH = Math.Clamp(resolved.MinCellsH, 1, 14);
+        int clampedV = Math.Clamp(resolved.MinCellsV, 1, 14);
 
         var items = _templateTable.Items;
 

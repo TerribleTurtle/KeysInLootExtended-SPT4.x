@@ -46,23 +46,25 @@ public class ItemPriceService
 
     /// <summary>
     /// Adjusts all key prices in the database based on the active configuration multipliers.
-    /// Safely exits early if the mod profile is "Disabled".
+    /// Safely exits early if the mod is disabled in config.jsonc.
     /// </summary>
     public void AdjustPrices()
     {
         var config = _configLoader.Config;
-        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
+        if (!config.Enabled)
             return;
+
+        var resolved = config.Resolved;
 
         AdjustPricesInternal(
             _templateTable.Prices,
             _templateTable.Handbook.Items, 
             _injectedKeysService.InjectedKeyIds, 
-            config.KeyFleaPricesMultiplier, 
-            config.KeyTraderPricesMultiplier);
+            resolved.FleaPriceMultiplier, 
+            resolved.TraderPriceMultiplier);
 
-        _logger.Success($"[KeysInLootExtended] Flea prices adjusted by a {config.KeyFleaPricesMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
-        _logger.Success($"[KeysInLootExtended] Trader prices adjusted by a {config.KeyTraderPricesMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
+        _logger.Success($"[KeysInLootExtended] Flea prices adjusted by a {resolved.FleaPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
+        _logger.Success($"[KeysInLootExtended] Trader prices adjusted by a {resolved.TraderPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
 
         if (config.BanKeysFromFence)
         {

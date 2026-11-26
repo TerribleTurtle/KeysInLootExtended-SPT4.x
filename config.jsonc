@@ -1,202 +1,83 @@
 {
-	// -----------------------------------------------------------------------------
-	// LOOT WEIGHT SYSTEM (How likely a key is to spawn)
-	// -----------------------------------------------------------------------------
-	// Think of loot weights like lottery tickets in a hat. A standard Jacket has about 200,000 tickets total.
-	// If you give a key 500 weight, you are putting 500 tickets in the hat.
-	//
-	// -----------------------------------------------------------------------------
-	// SCALED LOOT WEIGHT SYSTEM
-	// -----------------------------------------------------------------------------
-	// Because we are injecting 200+ keys at once, using the raw vanilla game weights 
-	// (which are 10,000+) would bloat the loot pool and make finding junk impossible.
-	// Instead, we highly recommend using these Scaled Target Weights, which are mathematically 
-	// the absolute closest we can get to a true vanilla experience with the mod enabled:
-	// 
-	// - "notExist"  (Very Common): 200 - 500
-	// - "common"    (Common)     : 100 - 300
-	// - "rare"      (Rare)       : 50 - 100
-	// - "superRare" (Ultra Rare) : 10 - 40
-	// 
-	// ⚠️ WARNING ON GLOBAL WEIGHTS (RARITY FLATTENING) ⚠️
-	// If you set a global weight of 500 for ALL rarities, you are adding 100,000 new tickets to the hat.
-	// This severely dilutes regular loot (like junk and meds) AND flattens key rarity, meaning a Red Keycard 
-	// will spawn just as often as a common dorm key. Always use a tiered approach!
-	// 
-	// DO NOT use decimals or numbers over 1,000,000 (32-bit integer limits).
-	
-	// =============================================================================
-	// EXPERIENCE PROFILES
-	// =============================================================================
-	// You can easily change the entire vibe of the mod by selecting a profile below.
-	// Profiles act as a dynamic multiplier on top of the finely-tuned map locations!
-	// 
-	// The active profile dictates not just how often you find keys, but the intended "feel" of your progression.
-	//
-	// 1 - 🟢 "Balanced" (The Working Adult)
-	//     - The Feel: Quantity and Consistency. You find keys frequently to keep the dopamine flowing, though many will be common.
-	//     - Market: Because keys drop 2x more than vanilla, market prices are crashed (0.4x) to simulate supply/demand and prevent economy breakage.
-	//     - 100 Jackets: ~25 keys (12 Common, 8 Rare, 5 SuperRare).
-	// 
-	// 2 - 🔵 "Bountiful" (The Looter Shooter)
-	//     - The Feel: Loot explosions. Every jacket is stuffed. You find keys constantly.
-	//     - Market: Keys drop 4x more than vanilla. Market prices are heavily crashed (0.2x).
-	//     - 100 Jackets: ~65 keys (30 Common, 22 Rare, 12 SuperRare).
-	//
-	// 3 - 🟢 "Generous" (The Best of Both Worlds)
-	//     - The Feel: Frequent keys that lean heavily toward quality. A mix of Bountiful's volume and Refined's anti-trash filter.
-	//     - Market: Keys drop ~2.5x more than vanilla, but skew rare. Market prices moderately crashed (0.5x).
-	//     - 100 Jackets: ~75 keys (9 Common, 37 Rare, 29 SuperRare).
-	//
-	// 4 - 🟣 "Refined" (The Anti-Trash)
-	//     - The Feel: Quality over Quantity. You don't find keys often, but the junk has been purged. When you see a key, it's almost guaranteed to be a banger.
-	//     - Market: Keys are slightly more common than vanilla, but extremely high quality. Prices are kept at 1.0x (Vanilla).
-	//     - 100 Jackets: ~20 keys (2 Common, 9 Rare, 8 SuperRare).
-	//
-	// 5 - 🔴 "Hardcore Scarcity" (The Masochist)
-	//     - The Feel: Brutal scarcity. You will open 20 jackets and find nothing. When you find a key, you gasp.
-	//     - Market: Keys are rarer than vanilla. Prices are kept at 1.0x (Vanilla).
-	//     - 100 Jackets: ~2 keys (1 Common, 0.7 Rare, 0.5 SuperRare).
-	//
-	// 6 - 🟡 "The MusicManiac Classic" (The Original Mod)
-	//     - Bypasses location-specific logic. Adds massive flat weights to all containers everywhere. Very chaotic. Prices crashed (0.75x).
-	//     - 100 Jackets: ~115 keys (Wildly unpredictable quality across maps).
-	//
-	// 7 - 🟠 "The Loot Piñata" (Cheat Profile)
-	//     - Pure chaos. 10-25 items per container, practically 100% chance for a key, mostly SuperRare. Prices 1.0x.
-	//     - 100 Jackets: ~1,600 keys. 
-	//
-	// 8 - ⚪ "Custom"
-	//     - Uses the manual variable settings defined below.
-	//
-	// 9 - ❌ "Disabled" (The Purist / Vanilla)
-	//     - Bypasses the mod completely. Pure 100% vanilla Tarkov.
-	//     - 100 Jackets: ~7 keys (mostly Common).
-	//
-	// -------------------------------------------------------------
-	
-	"activeProfile": "1",
+    // Internal config schema version. Older v2 configs missing this field are automatically
+    // backed up to config.backup.jsonc and replaced with a fresh v3 config on server startup.
+    "configVersion": 3,
 
-	// =============================================================================
-	// CUSTOM VARIABLES (Only used if "activeProfile" is set to "8" or "Custom")
-	// =============================================================================
+    // =========================================================================
+    // 1. GENERAL SETTINGS (Apply to all presets)
+    // =========================================================================
+    // Master on/off switch. Set false to leave Tarkov's vanilla container pools, prices, and grids untouched.
+    "enabled": true,
 
-	// Global weights for keys based on their natural rarity
-	// set to 0 to disable adding them to the loot pool
-	// higher value = more likely item will spawn
-	"keyWeight": {
-		"notExist": 200,
-		"common": 200,
-		"rare": 100,
-		"superRare": 40
-	},
-	
-	// Global weights for keycards based on their natural rarity
-	"keycardWeight": {
-		"notExist": 60,
-		"common": 60,
-		"rare": 30,
-		"superRare": 15
-	},
+    // Pick a preset below (not case-sensitive).
+    // Playtime estimates assume ~3.5 raids in a 2-hour session (~5 Jackets, 4 Duffles, 1 Dead Scav per raid):
+    //   "Hardcore" - ~2 keys per 2-hr night (~7.2 hrs per SuperRare)   | Vanilla container counts | 1.00x sell value
+    //   "Balanced" - ~6.5 keys per 2-hr night (~1 SuperRare/night)     | Gentle Jacket curve      | 0.40x sell value (Default)
+    //   "Casual"   - ~16 keys per 2-hr night (~3 SuperRares/night)     | Boosted Jacket & Duffle  | 0.25x sell value
+    //   "Custom"   - Uses the manual weight and item-count tables in Section 2 ("custom") below
+    "preset": "Balanced",
 
-	// -----------------------------------------------------------------------------
-	// ECONOMY REBALANCE (Key Sell Prices)
-	// -----------------------------------------------------------------------------
-	// Because this mod injects highly valuable keys into common containers, it can easily 
-	// ruin the player economy. These multipliers automatically adjust the SELL price of all keys.
-	// 
-	// How to use:
-	// - 1.0 = 100% (Vanilla prices. Keys sell for full value)
-	// - 0.4 = 40% (Default. A key that normally sells for 1,000,000 will now sell for 400,000)
-	// - 0.0 = 0% (Keys become completely worthless and sell for 0 roubles)
-	// 
-	// Limits:
-	// - Minimum: 0.0
-	// - Maximum: None, but anything above 1.0 will artificially inflate key prices.
-	"keyFleaPricesMultiplier" : 0.4,
-	"keyTraderPricesMultiplier": 0.4,
+    // Mid/late-wipe filter: cuts Common key weights by 85% on any preset so ~90% of drops are Rare or SuperRare.
+    "reduceCommonKeys": false,
 
-	// -----------------------------------------------------------------------------
-	// FENCE ECONOMY
-	// -----------------------------------------------------------------------------
-	// Because simulated PMCs will find these valuable keys more often, they will 
-	// flood Fence's inventory. Set this to true to permanently block these keys 
-	// from Fence's assort.
-	"banKeysFromFence": false,
+    // Master drop-rate dial applied on top of your chosen preset (1.0 = default, 1.5 = +50% weight, 0.5 = half weight).
+    "spawnWeightMultiplier": 1.0,
 
-	// -----------------------------------------------------------------------------
-	// CONTAINER DENSITY (Total Items Per Container)
-	// -----------------------------------------------------------------------------
-	// Set to true to override the game's default loot density (how many items spawn in a container).
-	// Set to false to keep vanilla density (highly recommended if you want a hardcore/scarce experience).
-	"overrideLootDistribution": true,
-	
-	/*
-	HOW DENSITY TABLES WORK:
-	The tables below completely DELETE and REPLACE the vanilla game's item count probabilities for Jackets, Duffles, and Scavs. 
-	
-	The "count" is the TOTAL number of items (keys, meds, junk, etc.) that will spawn in the container.
-	The "relativeProbability" is the chance of that count being chosen, calculated against the sum of all probabilities.
-	
-	Example (The defaults below sum to exactly 10,000 for easy percentages):
-	[ { "count": 2, "relativeProbability": 4000 },
-	  { "count": 1, "relativeProbability": 4500 },
-	  { "count": 0, "relativeProbability": 1500 } ]
-	  
-	In this example, the total sum is 10000. 
-	- 4000/10000 (40%) chance to spawn exactly 2 items.
-	- 4500/10000 (45%) chance to spawn exactly 1 item.
-	- 1500/10000 (15%) chance to spawn 0 items (empty container).
-	
-	Limits & Warnings:
-	- DO NOT use decimals! Decimals will immediately crash the server on map load.
-	- DO NOT exceed a total probability sum of 2,147,483,647 (32-bit limit).
-	*/
+    // Optional sell-price overrides. Leave null to use your preset's default sell value,
+    // or set a number (e.g. 1.0 for full vanilla prices, 0.0 for worthless 0-rouble keys) on any preset.
+    "fleaPriceMultiplier": null,
+    "traderPriceMultiplier": null,
 
-	
-	"overrideLootDistributionJackets": [
-		{ "count": 5, "relativeProbability": 200 },
-		{ "count": 4, "relativeProbability": 800 },
-		{ "count": 3, "relativeProbability": 3500 },
-		{ "count": 2, "relativeProbability": 4300 },
-		{ "count": 1, "relativeProbability": 1000 },
-		{ "count": 0, "relativeProbability": 200 }
-	],
+    // Simulated PMCs loot map containers and sell items to Fence. Set true to block injected keys from Fence.
+    "banKeysFromFence": false,
 
-	"overrideLootDistributionDuffleBags": [
-		{ "count": 5, "relativeProbability": 200 },
-		{ "count": 4, "relativeProbability": 800 },
-		{ "count": 3, "relativeProbability": 3500 },
-		{ "count": 2, "relativeProbability": 4300 },
-		{ "count": 1, "relativeProbability": 1000 },
-		{ "count": 0, "relativeProbability": 200 }
-	],
+    // Scales the per-map baseline files in locations/*.jsonc by your preset so small maps
+    // (Labyrinth, Ground Zero) and large maps (Customs, Streets) give consistent drop rates.
+    "enableLocationsConfig": true,
 
-	"overrideLootDistributionDeadScavs": [
-		{ "count": 5, "relativeProbability": 200 },
-		{ "count": 4, "relativeProbability": 800 },
-		{ "count": 3, "relativeProbability": 3500 },
-		{ "count": 2, "relativeProbability": 4300 },
-		{ "count": 1, "relativeProbability": 1000 },
-		{ "count": 0, "relativeProbability": 200 }
-	],
+    // Set true to log evaluated per-map container key pool % when raids load.
+    "debugLogs": false,
 
-	// Minimum container grid size when overrideLootDistribution is true (expands 2x2 Jackets to 3x3 without shrinking larger 3x4 Duffle Bags).
-	"cellsH": 3,
-	"cellsV": 3,
-	
-	// -----------------------------------------------------------------------------
-	// LOCATION-BASED (PER-MAP) CONFIGURATION
-	// -----------------------------------------------------------------------------
-	// Set this to true to enable modifying individual map settings
-	// A folder named locations is provided with this mod
-	// Read the README.md to understand this completely
-	// WARNING: If enabled, map-specific files in the locations/ folder will OVERRIDE your global active profile weights!
-	"enableLocationsConfig": true,
+    // =========================================================================
+    // 2. CUSTOM PRESET SETTINGS (Only used when preset is "Custom")
+    // =========================================================================
+    "custom": {
+        // Spawn weights act like tickets added to a container's loot pool (Customs Jacket pool is ~200,000).
+        // Set any tier to 0 to block that rarity from spawning. Whole integers only.
+        "keyWeight": {
+            "notExist": 200,
+            "common": 200,
+            "rare": 100,
+            "superRare": 40
+        },
+        "keycardWeight": {
+            "notExist": 60,
+            "common": 60,
+            "rare": 30,
+            "superRare": 20
+        },
 
-	// -----------------------------------------------------------------------------
-	// DEBUG & LOGGING
-	// -----------------------------------------------------------------------------
-	// Set consoleVerbosity to control logging detail. Valid values: "info", "debug"
-	"consoleVerbosity": "info"
+        // Key sell-price multipliers used by "Custom" (1.0 = vanilla value; positive prices clamp >= 1 RUB).
+        "fleaPriceMultiplier": 0.4,
+        "traderPriceMultiplier": 0.4,
+
+        // Container item-count overrides used by "Custom". Set false to keep vanilla item counts and grid sizes.
+        // Set an individual container's array to null to leave that specific container on vanilla item counts.
+        // Whole integers only (decimals in count/relativeProbability will fail map deserialization).
+        "overrideLootDistribution": true,
+
+        "jacketsItemCounts": [
+            { "count": 3, "relativeProbability": 500 },
+            { "count": 2, "relativeProbability": 2500 },
+            { "count": 1, "relativeProbability": 6700 },
+            { "count": 0, "relativeProbability": 300 }
+        ],
+        "duffleBagsItemCounts": null,
+        "deadScavsItemCounts": null,
+
+        // Minimum container grid dimensions (1 to 14) when overrideLootDistribution is true.
+        // Expands smaller containers (2x2 Jackets -> 3x3) without shrinking larger ones (4x3 Duffles, 4x4 Dead Scavs).
+        "minCellsH": 3,
+        "minCellsV": 3
+    }
 }

@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string ModGuid { get; init; } = "DJ-KeysInLootExtended";
     public string Name { get; init; } = "KeysInLootExtended";
     public string Author { get; init; } = "TerribleTurtle";
-    public SemanticVersioning.Version Version { get; init; } = new("2.2.0");
+    public SemanticVersioning.Version Version { get; init; } = new("3.0.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     
     public List<string>? Incompatibilities { get; init; }
@@ -43,7 +43,13 @@ public class KeysInLootExtendedPlugin(
     {
         try
         {
-            logger.Success($"[KeysInLootExtended] Initialized and Loaded Config: {configLoader.Config.ActiveProfile}");
+            if (!configLoader.Config.Enabled)
+            {
+                logger.Warning("[KeysInLootExtended] Mod is disabled in config.jsonc (enabled: false).");
+                return Task.CompletedTask;
+            }
+
+            logger.Success($"[KeysInLootExtended] Initialized v3.0.0 (preset: {configLoader.Config.Preset}, reduceCommonKeys: {configLoader.Config.ReduceCommonKeys}).");
 
             lootInjectionService.InjectKeysIntoLocations();
             itemPriceService.AdjustPrices();

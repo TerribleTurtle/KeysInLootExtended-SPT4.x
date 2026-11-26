@@ -137,7 +137,7 @@ public static class ContainerLootSimulator
         var (allDbKeys, rarityMap) = BuildKeyReferenceCatalog(env, itemFilterService);
 
         return new ProfileSimulationRun(
-            configLoader.Config.ActiveProfile,
+            configLoader.Config.Enabled ? configLoader.Config.Preset : "disabled",
             env,
             configLoader,
             injectedKeysService,
@@ -468,41 +468,24 @@ public static class ContainerLootSimulator
         Action<KeysInLootCoreConfig>? configureCustom = null)
     {
         string configPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.jsonc");
-        var jsonOpts = new JsonSerializerOptions
-        {
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true
-        };
-        jsonOpts.Converters.Add(new CultureInvariantDoubleConverter());
-
-        var freshConfig = JsonSerializer.Deserialize<KeysInLootCoreConfig>(File.ReadAllText(configPath), jsonOpts)
+        var freshConfig = JsonSerializer.Deserialize<KeysInLootCoreConfig>(
+                File.ReadAllText(configPath),
+                KeysInLootConfigLoader.JsonSettings)
             ?? throw new InvalidDataException("Failed to deserialize config.jsonc in test simulator.");
 
-        string normalized = KeysInLootConfigLoader.NormalizeProfileKey(rawProfile);
-        var profileDictField = typeof(KeysInLootConfigLoader).GetField(
-            "ProfileDefinitions",
-            BindingFlags.NonPublic | BindingFlags.Static)!;
-        var profileDict = (System.Collections.IDictionary)profileDictField.GetValue(null)!;
-
-        if (!profileDict.Contains(normalized))
+        if (string.Equals(rawProfile?.Trim(), "disabled", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(rawProfile?.Trim(), "off", StringComparison.OrdinalIgnoreCase))
         {
-            normalized = "custom";
+            freshConfig.Enabled = false;
         }
-
-        if (normalized == "custom")
+        else
         {
-            freshConfig.KeyWeight ??= new();
-            freshConfig.KeycardWeight ??= new();
+            freshConfig.Enabled = true;
+            freshConfig.Preset = rawProfile ?? "Balanced";
         }
-
-        freshConfig.ActiveProfile = normalized;
-        var profileDef = profileDict[normalized]!;
-        var applyProp = profileDef.GetType().GetProperty("ApplyCoreConfig")!;
-        var applyDelegate = (Action<KeysInLootCoreConfig>)applyProp.GetValue(profileDef)!;
-        applyDelegate(freshConfig);
 
         configureCustom?.Invoke(freshConfig);
+        KeysInLootConfigLoader.ApplyResolvedSettings(freshConfig);
 
         typeof(KeysInLootConfigLoader)
             .GetProperty(nameof(KeysInLootConfigLoader.Config))!

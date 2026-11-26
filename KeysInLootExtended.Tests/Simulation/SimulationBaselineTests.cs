@@ -24,7 +24,7 @@ public class SimulationBaselineTests
     public async Task GoldenFixture_AnalyticalAndMonteCarlo_ShouldAgreeWithinStatisticalBounds()
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
-        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1"); // Balanced
+        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
 
         var analytical = ContainerLootSimulator.ComputeAnalyticalMetrics(
             run, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
@@ -36,8 +36,6 @@ public class SimulationBaselineTests
         Assert.Equal(3, analytical.GridCellsV);
         Assert.Equal(9, analytical.GridMaxCount);
 
-        // Over 15,000 deterministic seeded openings on a 3x3 container (max 5 items rolled),
-        // analytical and Monte Carlo must agree closely.
         Assert.InRange(
             Math.Abs(analytical.ExpectedKeysPer100Containers - mc.SimulatedKeysPer100Containers),
             0.0,
@@ -46,19 +44,22 @@ public class SimulationBaselineTests
     }
 
     [Theory]
-    [InlineData("1")]
-    [InlineData("2")]
-    [InlineData("3")]
-    [InlineData("4")]
-    [InlineData("5")]
-    [InlineData("6")]
-    [InlineData("7")]
-    [InlineData("9")]
-    public async Task AllProfiles_ShouldNeverInjectQuestNodeOrBlacklistedItems(string profile)
+    [InlineData("Hardcore")]
+    [InlineData("Balanced")]
+    [InlineData("Casual")]
+    [InlineData("Custom")]
+    [InlineData("Disabled")]
+    public async Task AllPresets_ShouldNeverInjectQuestNodeOrBlacklistedItems(string preset)
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
-        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, profile);
+        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, preset);
         var filterService = new ItemFilterService(run.Environment.ItemConfig);
+
+        if (preset == "Disabled")
+        {
+            Assert.Empty(run.InjectedKeysService.InjectedKeyIds);
+            return;
+        }
 
         foreach (var id in run.InjectedKeysService.InjectedKeyIds)
         {
@@ -71,35 +72,108 @@ public class SimulationBaselineTests
     }
 
     [Fact]
-    public async Task MonteCarlo_ShouldEnforceMaxCountCap_AndGridCapacity()
+    public async Task MonteCarlo_ShouldEnforceMaxCountCap_AndSupportHighDensityCustomGrids()
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
 
-        // Simulate what would happen if OverrideLootDistribution ran WITHOUT ContainerGridService expanding MaxCount=1
-        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1");
+        // Simulate what happens if Casual's OverrideLootDistribution ran WITHOUT ContainerGridService expanding MaxCount=1
+        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Casual");
         var jacketGrid = run.Environment.TemplateTable.Items[ContainerLootSimulator.StandardJacketId]
             .Properties!.Grids!.First().Properties!;
-        jacketGrid.MaxCount = 1; // Force vanilla MaxCount=1 cap
+        jacketGrid.MaxCount = 1;
 
         var mc = ContainerLootSimulator.RunMonteCarlo(
             run, "bigmap", ContainerLootSimulator.StandardJacketId, trials: 5_000, seed: 42);
 
-        // Every container rolling >1 item is physically capped at 1 item by MaxCount=1
         Assert.True(mc.DroppedByMaxCount > 3_000);
         Assert.InRange(mc.SimulatedItemsPerContainer, 0.90, 1.00);
 
-        // Also verify Loot Pinata (profile 7: 10-25 items on 5x5=25 grid) runs cleanly without crashing
-        var pinataRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "7");
-        var pinataMc = ContainerLootSimulator.RunMonteCarlo(
-            pinataRun, "bigmap", ContainerLootSimulator.StandardJacketId, trials: 5_000, seed: 42);
-        Assert.InRange(pinataMc.SimulatedKeysPer100Containers, 1200.0, 1650.0);
+        // Verify a high-density 5x5 Custom setup (10-25 items) runs cleanly without overflow or crashes
+        var sandboxCounts = new List<ItemCountDistributionConfig>
+        {
+            new() { Count = 25, RelativeProbability = 100 },
+            new() { Count = 20, RelativeProbability = 300 },
+            new() { Count = 15, RelativeProbability = 500 },
+            new() { Count = 10, RelativeProbability = 100 }
+        };
+        var customRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Custom", c =>
+        {
+            c.EnableLocationsConfig = false;
+            c.Custom.KeyWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
+            c.Custom.KeycardWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
+            c.Custom.OverrideLootDistribution = true;
+            c.Custom.JacketsItemCounts = sandboxCounts;
+            c.Custom.MinCellsH = 5;
+            c.Custom.MinCellsV = 5;
+        });
+
+        var customMc = ContainerLootSimulator.RunMonteCarlo(
+            customRun, "bigmap", ContainerLootSimulator.StandardJacketId, trials: 5_000, seed: 42);
+        Assert.InRange(customMc.SimulatedKeysPer100Containers, 1200.0, 1650.0);
+    }
+
+    [Fact]
+    public async Task Presets_ShouldAscendMonotonically_PreserveNonKeyLoot_AndSupportReduceCommonKeys()
+    {
+        var snapshot = SptDatabaseLoader.LoadGoldenFixture();
+        var disabled = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Disabled");
+        var hardcore = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Hardcore");
+        var balanced = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
+        var casual = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Casual");
+
+        Assert.False(hardcore.ConfigLoader.Config.Resolved.OverrideLootDistribution);
+
+        var vanJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            disabled, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+        var hcJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            hardcore, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+        var balJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            balanced, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+        var casJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            casual, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+
+        Assert.Equal(2, hcJacket.GridCellsH);
+        Assert.Equal(2, hcJacket.GridCellsV);
+        Assert.Equal(vanJacket.ExpectedTotalItemsPerContainer, hcJacket.ExpectedTotalItemsPerContainer, precision: 6);
+
+        // Strict monotonic progression: Hardcore < Balanced < Casual
+        Assert.True(hcJacket.ExpectedKeysPer100Containers < balJacket.ExpectedKeysPer100Containers);
+        Assert.True(balJacket.ExpectedKeysPer100Containers < casJacket.ExpectedKeysPer100Containers);
+
+        // Balanced preserves non-key Jacket items and leaves Duffle & Dead Scav counts vanilla
+        double vanNonKeyJacket = (vanJacket.ExpectedTotalItemsPerContainer * 100.0) - vanJacket.ExpectedKeysPer100Containers;
+        double balNonKeyJacket = (balJacket.ExpectedTotalItemsPerContainer * 100.0) - balJacket.ExpectedKeysPer100Containers;
+        Assert.InRange(balNonKeyJacket, vanNonKeyJacket * 0.95, vanNonKeyJacket * 1.20);
+
+        var vanDuffle = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            disabled, "bigmap", "customs", "Duffle", ContainerLootSimulator.StandardDuffleId);
+        var balDuffle = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            balanced, "bigmap", "customs", "Duffle", ContainerLootSimulator.StandardDuffleId);
+        Assert.Equal(vanDuffle.ExpectedTotalItemsPerContainer, balDuffle.ExpectedTotalItemsPerContainer, precision: 6);
+
+        var vanScav = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            disabled, "bigmap", "customs", "DeadScav", ContainerLootSimulator.StandardDeadScavId);
+        var balScav = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            balanced, "bigmap", "customs", "DeadScav", ContainerLootSimulator.StandardDeadScavId);
+        Assert.Equal(vanScav.ExpectedTotalItemsPerContainer, balScav.ExpectedTotalItemsPerContainer, precision: 6);
+
+        // Verify reduceCommonKeys=true achieves >= 85% Rare+SuperRare share across Hardcore, Balanced, and Casual
+        foreach (var preset in new[] { "Hardcore", "Balanced", "Casual" })
+        {
+            var filteredRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(
+                snapshot, preset, c => c.ReduceCommonKeys = true);
+            var m = ContainerLootSimulator.ComputeAnalyticalMetrics(
+                filteredRun, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+            double highTierShare = (m.ExpectedRarePer100 + m.ExpectedSuperRarePer100) / m.ExpectedKeysPer100Containers;
+            Assert.True(highTierShare >= 0.85, $"Expected {preset} + reduceCommonKeys Rare/SR share >= 85%, got {highTierShare:P1}");
+        }
     }
 
     [Fact]
     public async Task Labyrinth_ShouldExpandGrids_AndInjectKeysIntoLabyrinthJacketAndDeadScav()
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
-        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1"); // Balanced
+        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
 
         var labJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
             run, "labyrinth", "labyrinth", "Jacket", ContainerLootSimulator.LabyrinthJacketId);
@@ -110,22 +184,20 @@ public class SimulationBaselineTests
         Assert.Equal(3, labJacket.GridCellsH);
         Assert.Equal(3, labJacket.GridCellsV);
         Assert.Equal(9, labJacket.GridMaxCount);
-        Assert.True(labJacket.ExpectedKeysPer100Containers > 15.0,
-            $"Expected Labyrinth Jacket > 15 keys/100 on Balanced, got {labJacket.ExpectedKeysPer100Containers:F2}");
+        Assert.True(labJacket.ExpectedKeysPer100Containers > 15.0);
 
         Assert.True(labScav.ExistsOnMap);
         Assert.Equal(4, labScav.GridCellsH);
         Assert.Equal(4, labScav.GridCellsV);
         Assert.Equal(16, labScav.GridMaxCount);
-        Assert.True(labScav.ExpectedKeysPer100Containers > 4.0,
-            $"Expected Labyrinth Dead Scav > 4 keys/100 on Balanced, got {labScav.ExpectedKeysPer100Containers:F2}");
+        Assert.True(labScav.ExpectedKeysPer100Containers > 4.0);
     }
 
     [Fact]
     public async Task InjectedKeys_ShouldExcludeHandbookMissingPlaceholders_AndOneRoublePuzzleProps()
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
-        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1");
+        var run = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
 
         var valveHandwheel = new MongoId("678fa929819ddc4c350c0317");
         var ariadneKey = new MongoId("67e183377c6c2011970f3149");
@@ -148,11 +220,11 @@ public class SimulationBaselineTests
     }
 
     [Fact]
-    public async Task All13PlayableMaps_OnBalancedProfile_ShouldStayWithinTargetDropBands()
+    public async Task All13PlayableMaps_OnBalancedPreset_ShouldStayWithinTargetDropBands()
     {
         var snapshot = SptDatabaseLoader.LoadGoldenFixture();
-        var vanillaRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "9");
-        var balancedRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1");
+        var vanillaRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Disabled");
+        var balancedRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
 
         foreach (var (folder, cfgName) in ContainerLootSimulator.PlayableMaps)
         {
@@ -178,11 +250,9 @@ public class SimulationBaselineTests
                 ? ContainerLootSimulator.LabyrinthDeadScavId
                 : ContainerLootSimulator.StandardDeadScavId;
             var sBal = ContainerLootSimulator.ComputeAnalyticalMetrics(balancedRun, folder, cfgName, "DeadScav", sId);
-            var sVan = ContainerLootSimulator.ComputeAnalyticalMetrics(vanillaRun, folder, cfgName, "DeadScav", sId);
             if (sBal.ExistsOnMap)
             {
                 Assert.InRange(sBal.ExpectedKeysPer100Containers, 5.5, 17.5);
-                // Customs Dead Scavs should not suffer a major nerf below vanilla (~15.8)
                 if (cfgName == "customs")
                 {
                     Assert.InRange(sBal.ExpectedKeysPer100Containers, 14.0, 17.5);
@@ -203,9 +273,8 @@ public class SimulationBaselineTests
             var live = SptDatabaseLoader.LoadLiveSptData(livePath);
             activeSnapshot = live;
 
-            // Verify 100% mathematical parity between committed Golden Fixture and live SPT_Data
-            var goldenBal = await ContainerLootSimulator.ExecuteModInMemoryAsync(golden, "1");
-            var liveBal = await ContainerLootSimulator.ExecuteModInMemoryAsync(live, "1");
+            var goldenBal = await ContainerLootSimulator.ExecuteModInMemoryAsync(golden, "Balanced");
+            var liveBal = await ContainerLootSimulator.ExecuteModInMemoryAsync(live, "Balanced");
 
             Assert.Equal(goldenBal.InjectedKeysService.InjectedKeyIds.Count, liveBal.InjectedKeysService.InjectedKeyIds.Count);
 
@@ -238,13 +307,12 @@ public class SimulationBaselineTests
         string? livePath = Environment.GetEnvironmentVariable("SPT_DATA_PATH");
         if (string.IsNullOrWhiteSpace(livePath) || !Directory.Exists(livePath))
         {
-            // Hermetic CI mode (no full SPT_Data presets/staticContainers on GitHub runner)
             return;
         }
 
         var liveSnapshot = SptDatabaseLoader.LoadLiveSptData(livePath);
-        var simRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(liveSnapshot, "1"); // Balanced
-        var realEngine = await RealSptRaidEngineHarness.CreateAsync(livePath, "1");
+        var simRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(liveSnapshot, "Balanced");
+        var realEngine = await RealSptRaidEngineHarness.CreateAsync(livePath, "Balanced");
 
         var testMaps = new (string Folder, string CfgName, MongoId JacketId, MongoId? DuffleId, MongoId ScavId, int Raids)[]
         {
@@ -299,15 +367,15 @@ public class SimulationBaselineTests
     private static async Task<string> BuildMarkdownScoreboardAsync(SptDatabaseSnapshot snapshot)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"# In-Memory Simulation Scoreboard — {snapshot.SourceLabel}");
+        sb.AppendLine($"# In-Memory Simulation Scoreboard (v3.0.0) - {snapshot.SourceLabel}");
         sb.AppendLine();
 
-        var vanillaRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "9");
-        var balancedRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "1");
+        var vanillaRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Disabled");
+        var balancedRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Balanced");
 
         sb.AppendLine($"- **Injected Keys + Keycards:** `{balancedRun.InjectedKeysService.InjectedKeyIds.Count}`");
         sb.AppendLine();
-        sb.AppendLine("## 1. 13-Map Scoreboard (`Disabled` vs. `Balanced`, Keys per 100 Containers)");
+        sb.AppendLine("## 1. 13-Map Scoreboard (`enabled: false` vs. `Balanced`, Keys per 100 Containers)");
         sb.AppendLine();
         sb.AppendLine("| Map | Jackets (Van -> Bal Math / Bal 10k Roll) | Duffles (Van -> Bal Math / Bal 10k Roll) | Dead Scavs (Van -> Bal Math / Bal 10k Roll) |");
         sb.AppendLine("| :--- | :---: | :---: | :---: |");
@@ -326,19 +394,44 @@ public class SimulationBaselineTests
         }
 
         sb.AppendLine();
-        sb.AppendLine("## 2. All Profiles Summary (Customs Jackets & 13-Map Jacket Average)");
+        sb.AppendLine("## 2. v3.0.0 Presets & `reduceCommonKeys` Summary (Customs & 13-Map Jacket Average)");
         sb.AppendLine();
-        sb.AppendLine("| Profile | Customs Math (C / R / SR) | Customs 10k MC Roll (`>=1 Key %`) | 13-Map Jacket Avg |");
-        sb.AppendLine("| :--- | :---: | :---: | :---: |");
+        sb.AppendLine("| Mode | Customs Jackets (C / R / SR) | 10k MC Roll (`>=1 Key %`) | 2-Hr Night (~3.5 Raids) | Avg Hrs / SuperRare | Non-Key Jacket / 100 | 13-Map Avg | Sell Mult |");
+        sb.AppendLine("| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |");
 
-        string[] profileOrder = ["1", "2", "3", "4", "5", "6", "7", "9"];
-        foreach (var p in profileOrder)
+        var modes = new (string Label, string Preset, bool ReduceCommon)[]
         {
-            var pRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, p);
-            var cMath = ContainerLootSimulator.ComputeAnalyticalMetrics(
+            ("Hardcore", "Hardcore", false),
+            ("Balanced", "Balanced", false),
+            ("Casual", "Casual", false),
+            ("Hardcore (reduceCommon)", "Hardcore", true),
+            ("Balanced (reduceCommon)", "Balanced", true),
+            ("Casual (reduceCommon)", "Casual", true),
+            ("Vanilla (enabled: false)", "Disabled", false)
+        };
+
+        foreach (var (label, preset, reduceCommon) in modes)
+        {
+            var pRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(
+                snapshot, preset, c => c.ReduceCommonKeys = reduceCommon);
+            var cJacket = ContainerLootSimulator.ComputeAnalyticalMetrics(
                 pRun, "bigmap", "customs", "Jacket", ContainerLootSimulator.StandardJacketId);
+            var cDuffle = ContainerLootSimulator.ComputeAnalyticalMetrics(
+                pRun, "bigmap", "customs", "Duffle", ContainerLootSimulator.StandardDuffleId);
+            var cScav = ContainerLootSimulator.ComputeAnalyticalMetrics(
+                pRun, "bigmap", "customs", "DeadScav", ContainerLootSimulator.StandardDeadScavId);
             var cMc = ContainerLootSimulator.RunMonteCarlo(
                 pRun, "bigmap", ContainerLootSimulator.StandardJacketId, trials: 10_000, seed: 1337);
+
+            double raidKeys = (0.05 * cJacket.ExpectedKeysPer100Containers)
+                + (0.04 * cDuffle.ExpectedKeysPer100Containers)
+                + (0.01 * cScav.ExpectedKeysPer100Containers);
+            double raidSr = (0.05 * cJacket.ExpectedSuperRarePer100)
+                + (0.04 * cDuffle.ExpectedSuperRarePer100)
+                + (0.01 * cScav.ExpectedSuperRarePer100);
+            double twoHourKeys = raidKeys * 3.5;
+            double hrsPerSr = raidSr > 0 ? 1.0 / (raidSr * 1.75) : double.PositiveInfinity;
+            double nonKeyJacket = (cJacket.ExpectedTotalItemsPerContainer * 100.0) - cJacket.ExpectedKeysPer100Containers;
 
             var mapValues = new List<double>();
             foreach (var (folder, cfgName) in ContainerLootSimulator.PlayableMaps)
@@ -352,8 +445,10 @@ public class SimulationBaselineTests
             }
 
             double avg13 = mapValues.Count > 0 ? mapValues.Average() : 0.0;
+            double sellMult = pRun.NormalizedProfile == "disabled" ? 1.0 : pRun.ConfigLoader.Config.Resolved.FleaPriceMultiplier;
+            string srHrsStr = double.IsInfinity(hrsPerSr) ? "inf" : $"{hrsPerSr:F1}h";
             sb.AppendLine(
-                $"| `{p} - {pRun.NormalizedProfile}` | `{cMath.ExpectedKeysPer100Containers:F1}` (`{cMath.ExpectedCommonPer100:F1}` / `{cMath.ExpectedRarePer100:F1}` / `{cMath.ExpectedSuperRarePer100:F1}`) | `{cMc.SimulatedKeysPer100Containers:F1}` (`{cMc.ContainersWithAtLeastOneKeyPercent:F1}%`) | `{avg13:F1}` |");
+                $"| `{label}` | `{cJacket.ExpectedKeysPer100Containers:F1}` (`{cJacket.ExpectedCommonPer100:F1}` / `{cJacket.ExpectedRarePer100:F1}` / `{cJacket.ExpectedSuperRarePer100:F1}`) | `{cMc.SimulatedKeysPer100Containers:F1}` (`{cMc.ContainersWithAtLeastOneKeyPercent:F1}%`) | `{twoHourKeys:F1}` | `{srHrsStr}` | `{nonKeyJacket:F1}` | `{avg13:F1}` | `{sellMult:F2}x` |");
         }
 
         return sb.ToString();
@@ -371,7 +466,7 @@ public class SimulationBaselineTests
         var b = ContainerLootSimulator.ComputeAnalyticalMetrics(balancedRun, folder, cfgName, kind, cid);
         if (!b.ExistsOnMap)
         {
-            return "—";
+            return "-";
         }
 
         var mc = ContainerLootSimulator.RunMonteCarlo(balancedRun, folder, cid, trials: 10_000, seed: 1337);

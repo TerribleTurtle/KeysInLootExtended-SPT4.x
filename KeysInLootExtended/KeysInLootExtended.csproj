@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <Version>2.2.0</Version>
+    <Version>3.0.0</Version>
     <Authors>TerribleTurtle</Authors>
     <OutputPath>..\dist\SPT\user\mods\KeysInLootExtended\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\config.jsonc" LogicalName="KeysInLootExtended.default_config.jsonc" />
     <None Include="..\config.jsonc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

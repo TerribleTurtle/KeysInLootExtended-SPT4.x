@@ -1,7 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Globalization;
 
 namespace KeysInLootExtended;
 
@@ -19,7 +20,6 @@ public class CultureInvariantDoubleConverter : JsonConverter<double>
             var stringValue = reader.GetString();
             if (stringValue != null)
             {
-                // Replace comma with dot to handle European decimal formats gracefully
                 stringValue = stringValue.Replace(',', '.');
                 if (double.TryParse(stringValue, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
                 {
@@ -38,59 +38,150 @@ public class CultureInvariantDoubleConverter : JsonConverter<double>
     }
 }
 
+public class NullableCultureInvariantDoubleConverter : JsonConverter<double?>
+{
+    private static readonly CultureInvariantDoubleConverter Inner = new();
+
+    public override double? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Null)
+        {
+            return null;
+        }
+        return Inner.Read(ref reader, typeof(double), options);
+    }
+
+    public override void Write(Utf8JsonWriter writer, double? value, JsonSerializerOptions options)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteNumberValue(value.Value);
+        }
+        else
+        {
+            writer.WriteNullValue();
+        }
+    }
+}
+
 /// <summary>
-/// Core configuration model representing the global state defined in config.jsonc.
+/// v3.0.0 root configuration model deserialized from config.jsonc.
 /// </summary>
 public class KeysInLootCoreConfig
 {
     /// <summary>
-    /// Selects the overarching spawn and economy profile. Valid values include "Balanced", "Bountiful", "Generous", "Refined", "Hardcore Scarcity", "The MusicManiac Classic", "The Loot Piñata", "Disabled", and "Custom".
+    /// Schema version. Files missing configVersion (deserializing as 0) are backed up and upgraded to v3.
     /// </summary>
-    [JsonPropertyName("activeProfile")]
-    public string ActiveProfile { get; set; } = "Balanced";
+    [JsonPropertyName("configVersion")]
+    public int ConfigVersion { get; set; } = 0;
 
-    [JsonPropertyName("keyWeight")]
-    public KeysInLootRarityConfig KeyWeight { get; set; } = new();
+    /// <summary>
+    /// Master on/off switch. When false, the mod leaves all loot pools, prices, Fence, and container grids untouched.
+    /// </summary>
+    [JsonPropertyName("enabled")]
+    public bool Enabled { get; set; } = true;
 
-    [JsonPropertyName("keycardWeight")]
-    public KeysInLootRarityConfig KeycardWeight { get; set; } = new();
+    /// <summary>
+    /// Selected preset: "Hardcore", "Balanced", "Casual", or "Custom".
+    /// </summary>
+    [JsonPropertyName("preset")]
+    public string Preset { get; set; } = "Balanced";
 
-    [JsonPropertyName("keyTraderPricesMultiplier")]
-    public double KeyTraderPricesMultiplier { get; set; } = 0.4;
+    /// <summary>
+    /// Cuts Common and NotExist key/keycard weights by 85% on top of any preset so drops lean ~90% Rare & SuperRare.
+    /// </summary>
+    [JsonPropertyName("reduceCommonKeys")]
+    public bool ReduceCommonKeys { get; set; } = false;
+
+    /// <summary>
+    /// Master multiplier applied to key and keycard weights on top of any preset (1.0 = preset default).
+    /// </summary>
+    [JsonPropertyName("spawnWeightMultiplier")]
+    public double SpawnWeightMultiplier { get; set; } = 1.0;
+
+    /// <summary>
+    /// Optional Flea Market sell-price multiplier override. Null uses the active preset's multiplier.
+    /// </summary>
+    [JsonPropertyName("fleaPriceMultiplier")]
+    public double? FleaPriceMultiplier { get; set; } = null;
+
+    /// <summary>
+    /// Optional Trader sell-price multiplier override. Null uses the active preset's multiplier.
+    /// </summary>
+    [JsonPropertyName("traderPriceMultiplier")]
+    public double? TraderPriceMultiplier { get; set; } = null;
 
     [JsonPropertyName("banKeysFromFence")]
     public bool BanKeysFromFence { get; set; } = false;
 
-    [JsonPropertyName("keyFleaPricesMultiplier")]
-    public double KeyFleaPricesMultiplier { get; set; } = 0.4;
+    [JsonPropertyName("enableLocationsConfig")]
+    public bool EnableLocationsConfig { get; set; } = true;
+
+    [JsonPropertyName("debugLogs")]
+    public bool DebugLogs { get; set; } = false;
+
+    [JsonPropertyName("custom")]
+    public KeysInLootCustomConfig Custom { get; set; } = new();
+
+    /// <summary>
+    /// Computed effective settings after resolving the selected preset and applying top-level overrides.
+    /// </summary>
+    [JsonIgnore]
+    internal ResolvedLootSettings Resolved { get; set; } = new();
+}
+
+/// <summary>
+/// Manual tables evaluated only when preset is set to "Custom".
+/// </summary>
+public class KeysInLootCustomConfig
+{
+    [JsonPropertyName("keyWeight")]
+    public KeysInLootRarityConfig KeyWeight { get; set; } = new();
+
+    [JsonPropertyName("keycardWeight")]
+    public KeysInLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
+
+    [JsonPropertyName("fleaPriceMultiplier")]
+    public double FleaPriceMultiplier { get; set; } = 0.4;
+
+    [JsonPropertyName("traderPriceMultiplier")]
+    public double TraderPriceMultiplier { get; set; } = 0.4;
 
     [JsonPropertyName("overrideLootDistribution")]
     public bool OverrideLootDistribution { get; set; } = true;
 
-    [JsonPropertyName("overrideLootDistributionJackets")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionJackets { get; set; } = null;
+    [JsonPropertyName("jacketsItemCounts")]
+    public List<ItemCountDistributionConfig>? JacketsItemCounts { get; set; } = null;
 
-    [JsonPropertyName("overrideLootDistributionDuffleBags")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionDuffleBags { get; set; } = null;
+    [JsonPropertyName("duffleBagsItemCounts")]
+    public List<ItemCountDistributionConfig>? DuffleBagsItemCounts { get; set; } = null;
 
-    [JsonPropertyName("overrideLootDistributionDeadScavs")]
-    public List<ItemCountDistributionConfig>? OverrideLootDistributionDeadScavs { get; set; } = null;
+    [JsonPropertyName("deadScavsItemCounts")]
+    public List<ItemCountDistributionConfig>? DeadScavsItemCounts { get; set; } = null;
 
-    [JsonPropertyName("cellsH")]
-    public int CellsH { get; set; } = 3;
+    [JsonPropertyName("minCellsH")]
+    public int MinCellsH { get; set; } = 3;
 
-    [JsonPropertyName("cellsV")]
-    public int CellsV { get; set; } = 3;
+    [JsonPropertyName("minCellsV")]
+    public int MinCellsV { get; set; } = 3;
+}
 
-    [JsonPropertyName("enableLocationsConfig")]
-    public bool EnableLocationsConfig { get; set; } = true;
-
-    [JsonPropertyName("consoleVerbosity")]
-    public string? ConsoleVerbosity { get; set; }
+internal sealed class ResolvedLootSettings
+{
+    public KeysInLootRarityConfig KeyWeight { get; set; } = new();
+    public KeysInLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
+    public double FleaPriceMultiplier { get; set; } = 0.4;
+    public double TraderPriceMultiplier { get; set; } = 0.4;
+    public bool OverrideLootDistribution { get; set; } = true;
+    public List<ItemCountDistributionConfig>? JacketsItemCounts { get; set; }
+    public List<ItemCountDistributionConfig>? DuffleBagsItemCounts { get; set; }
+    public List<ItemCountDistributionConfig>? DeadScavsItemCounts { get; set; }
+    public int MinCellsH { get; set; } = 3;
+    public int MinCellsV { get; set; } = 3;
 }
 
 /// <summary>
-/// Configuration model representing map-specific overrides defined in the locations directory.
+/// Configuration model representing map-specific baseline weights in the locations directory.
 /// </summary>
 public class KeysInLootLocationConfig
 {
@@ -105,7 +196,7 @@ public class KeysInLootLocationConfig
 }
 
 /// <summary>
-/// Defines weight overrides for a specific type of container (e.g., Jacket, Duffle Bag).
+/// Defines weight baselines for a container category (Jacket, Duffle Bag, Dead Scav).
 /// </summary>
 public class KeysInLootContainerConfig
 {
@@ -117,7 +208,7 @@ public class KeysInLootContainerConfig
 }
 
 /// <summary>
-/// Represents the relative probabilities across the four standard SPT item rarities.
+/// Relative spawn weights across the four EFT RarityPvE tiers.
 /// </summary>
 public class KeysInLootRarityConfig
 {
@@ -132,10 +223,18 @@ public class KeysInLootRarityConfig
 
     [JsonPropertyName("superRare")]
     public int SuperRare { get; set; } = 40;
+
+    public KeysInLootRarityConfig Clone() => new()
+    {
+        NotExist = NotExist,
+        Common = Common,
+        Rare = Rare,
+        SuperRare = SuperRare
+    };
 }
 
 /// <summary>
-/// Represents a targeted configuration for item count distributions within a container grid.
+/// Item count probability entry for a container.
 /// </summary>
 public class ItemCountDistributionConfig
 {

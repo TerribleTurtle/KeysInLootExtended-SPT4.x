@@ -128,9 +128,9 @@ namespace KeysInLootExtended.Tests
 
             var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
             var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
-            configLoader.Config.OverrideLootDistribution = false;
-            configLoader.Config.CellsH = 5;
-            configLoader.Config.CellsV = 5;
+            configLoader.Config.Resolved.OverrideLootDistribution = false;
+            configLoader.Config.Resolved.MinCellsH = 5;
+            configLoader.Config.Resolved.MinCellsV = 5;
 
             var gridService = new ContainerGridService(NoOpLoggerProxy.Create<ContainerGridService>(), templateTable, configLoader);
             gridService.AdjustGridSizes();

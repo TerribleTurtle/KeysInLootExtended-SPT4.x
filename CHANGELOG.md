@@ -1,12 +1,18 @@
 # Changelog
 
-## [Unreleased]
+## [3.0.0]
+
+### Clean-Cut Preset & Configuration Overhaul (`configVersion: 3`)
+* **Three Playstyle Tiers + Nested `Custom` Block**: Replaced the 9 legacy v2 profiles and numeric/string alias tables with 3 SPT playstyle tiers (`Hardcore`, `Balanced`, `Casual`) plus a nested `"custom": { ... }` block, calibrated in real SPT play hours (~2 keys per 2-hour session on `Hardcore`, ~6.5 keys and ~1 SuperRare/night on `Balanced`, ~16 keys/night and ~8-hour keycards on `Casual`) while preserving non-key container loot (`100`-`107` non-key Jacket items per 100 on `Hardcore`/`Balanced` vs `94` in vanilla).
+* **Top-First Boolean Switches & Overrides (`config.jsonc`)**: Replaced `"Disabled"` and `"consoleVerbosity"` strings with `"enabled": true` and `"debugLogs": false`, added `"reduceCommonKeys": false` (cuts `Common`/`NotExist` weights by `85%` on any preset so `86%`-`91%` of drops are `Rare` or `SuperRare`), and exposed top-level `spawnWeightMultiplier`, `fleaPriceMultiplier`, and `traderPriceMultiplier` overrides.
+* **Automatic `v2` Config Backup & Self-Healing**: Embedded `config.jsonc` as a build resource; older `config.jsonc` files missing `"configVersion": 3` are automatically backed up to `config.backup.jsonc` and replaced with a fresh `v3` `config.jsonc` on startup (and missing `config.jsonc` files self-heal).
+* **Documentation Consolidation**: Merged `TECHNICAL_README.md` into a matter-of-fact `README.md` grounded in SP-Tushonka `4.1.6` pool and play-hour measurements.
 
 ### In-Memory Raid Simulation & SPT 4.1.6 Calibration
 * **Labyrinth Container Support (`ContainerTargets`)**: Added Labyrinth's dedicated Jacket (`67adf4a95247ac91530fcec7`) and Dead Scav (`67adf5752fc5ee84020a9940`) container template IDs into a shared container registry across `LootInjectionService` and `ContainerGridService` so `locations/labyrinth.jsonc` actively injects keys and expands grids/item caps.
 * **Structural Handbook Tradability Filter**: Added an `O(1)` `Handbook.Items` check (`Price > 1` RUB) during item discovery, automatically excluding 7 unfinished cut Streets placeholder keys (absent from Tarkov's Handbook) and 2 in-raid Labyrinth 1-rouble puzzle props (`Valve handwheel` and `Ariadne symbol key`), and pruned dead entries from `ExplicitRarityMap`.
-* **SPT 4.1.6 Map Pool Recalibration**: Recalibrated all 13 `locations/*.jsonc` files against SP-Tushonka `4.1.6` static container pool totals—fixing stale SPT 3.11 weights on `factory_night` (`5.2` -> `26.4` keys/100 Jackets), `ground_zero_high` (`4.2` -> `27.1`), `lighthouse`, `woods`, `labyrinth`, and `customs` Dead Scavs so `Balanced` consistently averages ~26 keys per 100 Jackets across every map.
-* **Live Debug Pool Telemetry**: Implemented `"consoleVerbosity": "debug"` support in `LootInjectionService` to log evaluated per-map key pool weight percentages on raid load, and corrected startup transformer log counts.
+* **SPT 4.1.6 Map Pool & Keycard Recalibration**: Recalibrated all 13 `locations/*.jsonc` files against SP-Tushonka `4.1.6` static container pool totals and a `60/60/30/20` `Balanced` keycard baseline so `Balanced` consistently averages `25.0`-`25.7` keys per 100 Jackets across every map.
+* **Live Debug Pool Telemetry**: Implemented `"debugLogs": true` support in `LootInjectionService` to log evaluated per-map key pool weight percentages on raid load, and corrected startup transformer log counts.
 * **Three-Layer In-Memory Simulation & Raid Parity Suite**: Added a CI-safe SP-Tushonka `4.1.6` golden-fixture simulator (closed-form math + seeded Monte Carlo using SPT's `ContainerExtensions` 2D slot placement and seasonal filtering) plus an opt-in `SPT_DATA_PATH` harness that executes 590 full raids through SPT's compiled `LocationLootGenerator`.
 
 ## [2.2.0]

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
@@ -31,13 +33,13 @@ public class NoOpLoggerProxy : DispatchProxy
 public class ModMetadataTests
 {
     [Fact]
-    public void ModMetadata_ShouldImplementIModMetadataAndTargetSpt41()
+    public void ModMetadata_ShouldImplementIModMetadataAndTargetSpt41_Version300()
     {
         IModMetadata metadata = new ModMetadata();
         var asmVersion = typeof(ModMetadata).Assembly.GetName().Version!;
 
         Assert.Equal("DJ-KeysInLootExtended", metadata.ModGuid);
-        Assert.Equal(new SemanticVersioning.Version("2.2.0"), metadata.Version);
+        Assert.Equal(new SemanticVersioning.Version("3.0.0"), metadata.Version);
         Assert.Equal($"{asmVersion.Major}.{asmVersion.Minor}.{asmVersion.Build}", metadata.Version.ToString());
         Assert.True(metadata.SptVersion.IsSatisfied(new SemanticVersioning.Version("4.1.0")));
         Assert.True(metadata.SptVersion.IsSatisfied(new SemanticVersioning.Version("4.1.6")));
@@ -46,13 +48,15 @@ public class ModMetadataTests
     }
 
     [Fact]
-    public void ConfigLoader_ShouldLoadRealConfigAndAll13LocationFiles()
+    public void ConfigLoader_ShouldLoadRealV3ConfigAndAll13LocationFiles()
     {
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
         var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
 
         Assert.NotNull(configLoader.Config);
-        Assert.False(string.IsNullOrWhiteSpace(configLoader.Config.ActiveProfile));
+        Assert.Equal(3, configLoader.Config.ConfigVersion);
+        Assert.True(configLoader.Config.Enabled);
+        Assert.Equal("balanced", configLoader.Config.Preset);
 
         string[] mapNames =
         [
@@ -72,29 +76,147 @@ public class ModMetadataTests
     }
 
     [Fact]
+    public void LoadOrMigrateCoreConfig_ShouldBackupLegacyV2Config_WriteFreshV3_SelfHealMissing_AndRejectBrokenJson()
+    {
+        string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"kil_v3_test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            string configPath = System.IO.Path.Combine(tempDir, "config.jsonc");
+            string backupPath = System.IO.Path.Combine(tempDir, "config.backup.jsonc");
+
+            // 1. Legacy v2 config (missing configVersion) -> backs up to config.backup.jsonc & writes fresh v3 config.jsonc
+            string legacyV2 = """
+            {
+                // Old v2 config
+                "activeProfile": "Generous",
+                "keyFleaPricesMultiplier": 0.5,
+                "consoleVerbosity": "info"
+            }
+            """;
+            File.WriteAllText(configPath, legacyV2, Encoding.UTF8);
+
+            var migrated = KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>());
+
+            Assert.True(File.Exists(backupPath), "Expected legacy config.jsonc to be backed up to config.backup.jsonc");
+            Assert.Contains("\"activeProfile\": \"Generous\"", File.ReadAllText(backupPath, Encoding.UTF8));
+            Assert.Contains("\"configVersion\": 3", File.ReadAllText(configPath, Encoding.UTF8));
+            Assert.Equal(3, migrated.ConfigVersion);
+            Assert.True(migrated.Enabled);
+            Assert.Equal("balanced", migrated.Preset);
+
+            // 2. Missing config.jsonc -> self-heals by writing embedded default v3 config.jsonc
+            File.Delete(configPath);
+            var healed = KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>());
+            Assert.True(File.Exists(configPath), "Expected missing config.jsonc to be regenerated from embedded resource");
+            Assert.Equal(3, healed.ConfigVersion);
+            Assert.Equal("balanced", healed.Preset);
+
+            // 3. Broken JSON syntax in user's v3 config -> fails loudly with JsonException without clobbering their file
+            string brokenV3 = "{ \"configVersion\": 3, \"preset\": \"Balanced\", broken_token }";
+            File.WriteAllText(configPath, brokenV3, Encoding.UTF8);
+            Assert.Throws<JsonException>(() =>
+                KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>()));
+            Assert.Equal(brokenV3, File.ReadAllText(configPath, Encoding.UTF8));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+            {
+                Directory.Delete(tempDir, recursive: true);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("Hardcore", "hardcore")]
+    [InlineData("BALANCED", "balanced")]
+    [InlineData(" casual ", "casual")]
+    [InlineData("Custom", "custom")]
+    [InlineData("typo_unknown", "balanced")]
+    [InlineData("", "balanced")]
+    public void ApplyResolvedSettings_ShouldResolveValidPresets_AndFallbackUnknownToBalanced(string rawPreset, string expectedPreset)
+    {
+        var cfg = new KeysInLootCoreConfig { ConfigVersion = 3, Preset = rawPreset };
+        KeysInLootConfigLoader.ApplyResolvedSettings(cfg);
+        Assert.Equal(expectedPreset, cfg.Preset);
+    }
+
+    [Fact]
+    public void ApplyResolvedSettings_ShouldApplyReduceCommonKeys_SpawnMultiplier_AndPriceOverrides()
+    {
+        // 1. reduceCommonKeys cuts Common & NotExist by 85% (0.15x) while keeping Rare & SuperRare intact
+        var reducedCfg = new KeysInLootCoreConfig
+        {
+            ConfigVersion = 3,
+            Preset = "Balanced",
+            ReduceCommonKeys = true
+        };
+        KeysInLootConfigLoader.ApplyResolvedSettings(reducedCfg);
+
+        Assert.Equal(30, reducedCfg.Resolved.KeyWeight.Common);   // 200 * 0.15 = 30
+        Assert.Equal(30, reducedCfg.Resolved.KeyWeight.NotExist); // 200 * 0.15 = 30
+        Assert.Equal(100, reducedCfg.Resolved.KeyWeight.Rare);    // untouched
+        Assert.Equal(40, reducedCfg.Resolved.KeyWeight.SuperRare);// untouched
+        Assert.Equal(9, reducedCfg.Resolved.KeycardWeight.Common);// 60 * 0.15 = 9
+        Assert.Equal(20, reducedCfg.Resolved.KeycardWeight.SuperRare);
+
+        // 2. SpawnWeightMultiplier + Price overrides stack cleanly on top of any preset
+        var scaledCfg = new KeysInLootCoreConfig
+        {
+            ConfigVersion = 3,
+            Preset = "Casual",
+            SpawnWeightMultiplier = 2.0,
+            FleaPriceMultiplier = 1.0,
+            TraderPriceMultiplier = 0.85
+        };
+        KeysInLootConfigLoader.ApplyResolvedSettings(scaledCfg);
+
+        Assert.Equal("casual", scaledCfg.Preset);
+        Assert.Equal(600, scaledCfg.Resolved.KeyWeight.Common);
+        Assert.Equal(380, scaledCfg.Resolved.KeyWeight.Rare);
+        Assert.Equal(170, scaledCfg.Resolved.KeyWeight.SuperRare);
+        Assert.Equal(90, scaledCfg.Resolved.KeycardWeight.SuperRare);
+        Assert.Equal(1.0, scaledCfg.Resolved.FleaPriceMultiplier);
+        Assert.Equal(0.85, scaledCfg.Resolved.TraderPriceMultiplier);
+
+        // 3. Preset = "Custom" clones Custom weights so ReduceCommonKeys & SpawnWeightMultiplier never mutate config.Custom
+        var customCfg = new KeysInLootCoreConfig
+        {
+            ConfigVersion = 3,
+            Preset = "Custom",
+            ReduceCommonKeys = true,
+            SpawnWeightMultiplier = 2.0
+        };
+        customCfg.Custom.KeyWeight = new KeysInLootRarityConfig { NotExist = 100, Common = 100, Rare = 50, SuperRare = 20 };
+        KeysInLootConfigLoader.ApplyResolvedSettings(customCfg);
+
+        Assert.Equal(100, customCfg.Custom.KeyWeight.Common); // Unmutated source!
+        Assert.Equal(30, customCfg.Resolved.KeyWeight.Common); // 100 * 2.0 * 0.15 = 30
+        Assert.Equal(100, customCfg.Resolved.KeyWeight.Rare);  // 50 * 2.0 = 100
+    }
+
+    [Fact]
     public async Task EndToEnd_OnLoadAsync_ShouldInjectKeysViaLazyLoad_ScalePrices_BanFromFence_AndResizeGrids()
     {
-        // 1. Setup real ConfigLoader reading the repo's config.jsonc and locations/*.jsonc
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
         var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
         configLoader.Config.BanKeysFromFence = true;
 
-        // 2. Setup TemplateTable with baseclasses, valid keys, ExplicitRarityMap boss key, quest key, blacklisted key, circular item, and containers
         var keyBaseId = new MongoId("543be5e94bdc2df1348b4568");
         var keycardBaseId = new MongoId("5c164d2286f774194c5e69fa");
-        var commonKeyId = new MongoId("5780cf7f2459777de4559322"); // Dorm room 206 key
-        var shturmanKeyId = new MongoId("5d08d21286f774736e7c94c3"); // In ExplicitRarityMap -> Superrare
-        var keycardId = new MongoId("5c1d0d6d86f7744bb2683e1f"); // Yellow keycard
-        var questKeyId = new MongoId("593962ca86f774068014d9af"); // Quest key (QuestItem = true)
-        var blacklistedKeyId = new MongoId("600000000000000000000001"); // Blacklisted in ItemConfig
-        var circularItemId = new MongoId("600000000000000000000002"); // Self-referencing parent cycle
-        var nodeItemId = new MongoId("600000000000000000000003"); // Item with Type == "Node"
-        var badFormatItemId = new MongoId("600000000000000000000004"); // Malformed MongoId in item.Id
+        var commonKeyId = new MongoId("5780cf7f2459777de4559322");
+        var shturmanKeyId = new MongoId("5d08d21286f774736e7c94c3");
+        var keycardId = new MongoId("5c1d0d6d86f7744bb2683e1f");
+        var questKeyId = new MongoId("593962ca86f774068014d9af");
+        var blacklistedKeyId = new MongoId("600000000000000000000001");
+        var circularItemId = new MongoId("600000000000000000000002");
+        var nodeItemId = new MongoId("600000000000000000000003");
+        var badFormatItemId = new MongoId("600000000000000000000004");
 
         var jacketId = new MongoId("578f8778245977358849a9b5");
         var duffleId = new MongoId("578f87a3245977356274f2cb");
         var deadScavId = new MongoId("5909e4b686f7747f5b744fa4");
-
         var rootParentId = new MongoId("54009119af1c881c07000029");
 
         static TemplateItem CreateItem(MongoId id, MongoId parentId, string? rarityPvE = null, bool questItem = false, string? type = null)
@@ -177,7 +299,6 @@ public class ModMetadataTests
         typeof(TemplateTable).GetProperty("Prices")!.SetValue(templateTable, pricesDict);
         typeof(TemplateTable).GetProperty("Handbook")!.SetValue(templateTable, handbook);
 
-        // 3. Setup LocationTable with Bigmap (Customs) and Laboratory using SPT 4.1.6's real LazyLoad<T>
         var locationTable = (LocationTable)RuntimeHelpers.GetUninitializedObject(typeof(LocationTable));
         Location CreateTestLocation(string id)
         {
@@ -199,7 +320,6 @@ public class ModMetadataTests
         typeof(LocationTable).GetProperty("Bigmap")!.SetValue(locationTable, CreateTestLocation("bigmap"));
         typeof(LocationTable).GetProperty("Terminal")!.SetValue(locationTable, CreateTestLocation("Terminal"));
 
-        // 4. Setup ItemFilterService & TraderConfig
         var itemConfig = (ItemConfig)RuntimeHelpers.GetUninitializedObject(typeof(ItemConfig));
         typeof(ItemConfig).GetProperty("Blacklist")!.SetValue(itemConfig, new HashSet<MongoId> { blacklistedKeyId });
         typeof(ItemConfig).GetProperty("LootableItemBlacklist")!.SetValue(itemConfig, new HashSet<MongoId>());
@@ -211,7 +331,6 @@ public class ModMetadataTests
         typeof(TraderConfig).GetProperty("Fence")!.SetValue(traderConfig, fenceConfig);
 
         var injectedKeysService = new InjectedKeysService();
-        var itemHelper = (ItemHelper)RuntimeHelpers.GetUninitializedObject(typeof(ItemHelper));
 
         var lootService = new LootInjectionService(
             NoOpLoggerProxy.Create<LootInjectionService>(),
@@ -240,56 +359,48 @@ public class ModMetadataTests
             gridService,
             NoOpLoggerProxy.Create<KeysInLootExtendedPlugin>());
 
-        // 5. Execute the full 4.1.6 OnLoadAsync entrypoint
         await plugin.OnLoadAsync(CancellationToken.None);
 
-        // 6. Assert key discovery & filtering
         Assert.Contains(commonKeyId, injectedKeysService.InjectedKeyIds);
         Assert.Contains(shturmanKeyId, injectedKeysService.InjectedKeyIds);
         Assert.Contains(keycardId, injectedKeysService.InjectedKeyIds);
-        Assert.DoesNotContain(keyBaseId, injectedKeysService.InjectedKeyIds); // Baseclasses must not match themselves
+        Assert.DoesNotContain(keyBaseId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(keycardBaseId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(questKeyId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(blacklistedKeyId, injectedKeysService.InjectedKeyIds);
         Assert.DoesNotContain(circularItemId, injectedKeysService.InjectedKeyIds);
-        Assert.DoesNotContain(nodeItemId, injectedKeysService.InjectedKeyIds); // Node items must be skipped
-        Assert.DoesNotContain(badFormatItemId, injectedKeysService.InjectedKeyIds); // Invalid MongoId must be caught & skipped
+        Assert.DoesNotContain(nodeItemId, injectedKeysService.InjectedKeyIds);
+        Assert.DoesNotContain(badFormatItemId, injectedKeysService.InjectedKeyIds);
 
-        // 7. Assert LazyLoad<T> transformer modifies Bigmap and Laboratory StaticLoot on the fly
         var resolvedCustomsLoot = locationTable.Bigmap.StaticLoot!.Value;
         Assert.NotNull(resolvedCustomsLoot);
         var customsJacketDist = resolvedCustomsLoot![jacketId].ItemDistribution!.ToDictionary(x => x.Tpl, x => x.RelativeProbability);
 
         var expectedCustomsConfig = configLoader.LoadLocationConfig("customs")!;
         Assert.Equal(expectedCustomsConfig.JacketContainer!.Key!.Common, customsJacketDist[commonKeyId]);
-        // Shturman's Stash Key is "Not_exist" in vanilla, but ExplicitRarityMap maps it to "Superrare"
         Assert.Equal(expectedCustomsConfig.JacketContainer!.Key!.SuperRare, customsJacketDist[shturmanKeyId]);
-        // On Customs, keycards are now enabled proportionally
         Assert.True(customsJacketDist.ContainsKey(keycardId));
         Assert.Equal(expectedCustomsConfig.JacketContainer!.Keycard!.SuperRare, customsJacketDist[keycardId]);
         Assert.False(customsJacketDist.ContainsKey(questKeyId));
         Assert.False(customsJacketDist.ContainsKey(blacklistedKeyId));
 
-        // On Terminal (no location override file), fallback to global config weights (where keycards are > 0)
         var resolvedTerminalLoot = locationTable.Terminal!.StaticLoot!.Value;
         Assert.NotNull(resolvedTerminalLoot);
         var terminalJacketDist = resolvedTerminalLoot![jacketId].ItemDistribution!.ToDictionary(x => x.Tpl, x => x.RelativeProbability);
-        Assert.Equal(configLoader.Config.KeycardWeight.SuperRare, terminalJacketDist[keycardId]);
+        Assert.Equal(configLoader.Config.Resolved.KeycardWeight.SuperRare, terminalJacketDist[keycardId]);
 
-        // 8. Assert Flea & Handbook price scaling + Fence blacklist
-        double expectedFleaMult = configLoader.Config.KeyFleaPricesMultiplier;
-        double expectedTraderMult = configLoader.Config.KeyTraderPricesMultiplier;
+        double expectedFleaMult = configLoader.Config.Resolved.FleaPriceMultiplier;
+        double expectedTraderMult = configLoader.Config.Resolved.TraderPriceMultiplier;
         Assert.Equal(Math.Round(10000 * expectedFleaMult), templateTable.Prices[commonKeyId]);
-        Assert.Equal(10000, templateTable.Prices[questKeyId]); // Unchanged because quest keys are excluded
+        Assert.Equal(10000, templateTable.Prices[questKeyId]);
         Assert.Equal(Math.Round(10000 * expectedTraderMult), templateTable.Handbook.Items.First(x => x.Id == commonKeyId).Price);
 
         Assert.Contains(commonKeyId, traderConfig.Fence.Blacklist);
         Assert.Contains(shturmanKeyId, traderConfig.Fence.Blacklist);
         Assert.DoesNotContain(questKeyId, traderConfig.Fence.Blacklist);
 
-        // 9. Assert container grid & MaxCount resizing
-        int expectedH = Math.Clamp(configLoader.Config.CellsH, 1, 14);
-        int expectedV = Math.Clamp(configLoader.Config.CellsV, 1, 14);
+        int expectedH = Math.Clamp(configLoader.Config.Resolved.MinCellsH, 1, 14);
+        int expectedV = Math.Clamp(configLoader.Config.Resolved.MinCellsV, 1, 14);
         foreach (var cid in new[] { jacketId, duffleId, deadScavId })
         {
             var gProps = templateTable.Items[cid].Properties!.Grids!.First().Properties!;
@@ -303,14 +414,10 @@ public class ModMetadataTests
     public void CultureInvariantDoubleConverter_ShouldThrowJsonException_OnNonStringTokens()
     {
         var converter = new CultureInvariantDoubleConverter();
-        var jsonBytes = System.Text.Encoding.UTF8.GetBytes("{\"nested\": 123}");
+        var jsonBytes = Encoding.UTF8.GetBytes("{\"nested\": 123}");
         var reader = new Utf8JsonReader(jsonBytes);
-        reader.Read(); // Position on StartObject
+        reader.Read();
 
-        var ex = Record.Exception(() =>
-        {
-            // We use helper to invoke without lambda capturing ref struct
-        });
         try
         {
             converter.Read(ref reader, typeof(double), new JsonSerializerOptions());
@@ -322,20 +429,16 @@ public class ModMetadataTests
         }
     }
 
-    [Theory]
-    [InlineData("hardcore", "hardcore scarcity")]
-    [InlineData("Hardcore Scarcity", "hardcore scarcity")]
-    [InlineData("musicmaniac", "the musicmaniac classic")]
-    [InlineData("classic", "the musicmaniac classic")]
-    [InlineData("the musicmaniac classic", "the musicmaniac classic")]
-    [InlineData("balanced", "balanced")]
-    [InlineData("(1)", "balanced")]
-    [InlineData("custom", "custom")]
-    [InlineData("unknown_xyz", "unknown_xyz")]
-    public void NormalizeProfileKey_ShouldMapAliasesCorrectly(string input, string expected)
+    [Fact]
+    public void NullableCultureInvariantDoubleConverter_ShouldDeserializeNullNumbersAndStrings()
     {
-        string actual = KeysInLootConfigLoader.NormalizeProfileKey(input);
-        Assert.Equal(expected, actual);
+        var opts = new JsonSerializerOptions();
+        opts.Converters.Add(new NullableCultureInvariantDoubleConverter());
+
+        Assert.Null(JsonSerializer.Deserialize<double?>("null", opts));
+        Assert.Equal(0.75, JsonSerializer.Deserialize<double?>("0.75", opts));
+        Assert.Equal(0.75, JsonSerializer.Deserialize<double?>("\"0,75\"", opts));
+        Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<double?>("\"not-a-number\"", opts));
     }
 
     [Fact]
@@ -349,14 +452,11 @@ public class ModMetadataTests
             SuperRare = 100
         };
 
-        // When ratio <= 0, should become 0
         KeysInLootConfigLoader.ScaleRarity(rarity, 0.0, -0.5, 0.001, 2.0);
 
         Assert.Equal(0, rarity.Common);
         Assert.Equal(0, rarity.Rare);
-        // 100 * 0.001 = 0.1 -> clamps to minimum 1
         Assert.Equal(1, rarity.SuperRare);
-        // 100 * 2.0 = 200
         Assert.Equal(200, rarity.NotExist);
     }
 
@@ -369,7 +469,6 @@ public class ModMetadataTests
             Keycard = new KeysInLootRarityConfig { Common = 60 }
         };
 
-        // key common ratio: 1.5x, keycard common ratio: 0.5x
         KeysInLootConfigLoader.ScaleContainer(container, 1.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0);
 
         Assert.Equal(300, container.Key!.Common);

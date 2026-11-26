@@ -1,57 +1,19 @@
-/*
-  LOCATION CONFIGURATION (Advanced Map-Specific Spawn Overrides)
-  - 'notExist', 'common', 'rare', 'superRare' map to the item's internal RarityPvE tag.
-  - The numbers act as the 'relativeProbability' spawn weight.
-  - WARNING: Do not use decimals. Do not use absurdly large numbers. The maximum safe sum of all items in a pool is 2,147,483,647 (32-bit integer limit). If exceeded, loot generation breaks.
-  - This file is ONLY loaded if 'enableLocationsConfig' is set to true in the global config.jsonc.
-*/
+// Per-map baseline weights for the "Balanced" preset (scaled proportionally by your preset when enableLocationsConfig is true).
+// Whole integers only; pools exceeding int.MaxValue / 2 are normalized automatically.
 {
     "jacketContainer": {
-        // SPT 4.1.6 calibrated
-        // Jacket vanilla pool weight: 457094 (189 items) -> Balanced target: ~24.9 keys / 100 containers
-        "key": {
-            "notExist": 492,
-            "common": 492,
-            "rare": 246,
-            "superRare": 123
-        },
-        "keycard": {
-            "notExist": 148,
-            "common": 148,
-            "rare": 74,
-            "superRare": 46
-        }
+        // SPT 4.1.6 Jacket pool: 457094 (189 items) -> ~25.0 keys / 100 on Balanced
+        "key": { "notExist": 990, "common": 990, "rare": 495, "superRare": 198 },
+        "keycard": { "notExist": 297, "common": 297, "rare": 148, "superRare": 99 }
     },
     "duffleBagContainer": {
-        // SPT 4.1.6 calibrated
-        // Duffle Bag vanilla pool weight: 1073341 (307 items) -> Balanced target: ~11.2 keys / 100 containers
-        "key": {
-            "notExist": 514,
-            "common": 514,
-            "rare": 257,
-            "superRare": 128
-        },
-        "keycard": {
-            "notExist": 154,
-            "common": 154,
-            "rare": 77,
-            "superRare": 48
-        }
+        // SPT 4.1.6 Duffle pool: 1073341 (307 items) -> ~11.0 keys / 100 on Balanced
+        "key": { "notExist": 612, "common": 612, "rare": 306, "superRare": 122 },
+        "keycard": { "notExist": 184, "common": 184, "rare": 92, "superRare": 61 }
     },
     "deadScavContainer": {
-        // SPT 4.1.6 calibrated
-        // Dead Scav vanilla pool weight: 430761 (688 items) -> Balanced target: ~6.8 keys / 100 containers
-        "key": {
-            "notExist": 98,
-            "common": 98,
-            "rare": 49,
-            "superRare": 24
-        },
-        "keycard": {
-            "notExist": 29,
-            "common": 29,
-            "rare": 15,
-            "superRare": 9
-        }
+        // SPT 4.1.6 Dead Scav pool: 430761 (688 items) -> ~7.0 keys / 100 on Balanced
+        "key": { "notExist": 105, "common": 105, "rare": 52, "superRare": 21 },
+        "keycard": { "notExist": 32, "common": 32, "rare": 16, "superRare": 10 }
     }
 }

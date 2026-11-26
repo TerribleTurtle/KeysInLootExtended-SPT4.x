@@ -51,16 +51,17 @@ public class LootInjectionService
 
     /// <summary>
     /// Executes the primary loot injection routine.
-    /// Safely exits early if the profile is "Disabled".
+    /// Safely exits early if the mod is disabled in config.jsonc.
     /// </summary>
     public void InjectKeysIntoLocations()
     {
         var config = _configLoader.Config;
-        if (string.Equals(config.ActiveProfile, "disabled", StringComparison.OrdinalIgnoreCase))
+        if (!config.Enabled)
         {
-            _logger.Warning("[KeysInLootExtended] Mod is Disabled. Skipping loot injection.");
+            _logger.Warning("[KeysInLootExtended] Mod is disabled. Skipping loot injection.");
             return;
         }
+        var resolved = config.Resolved;
 
         var allItems = _templateTable.Items.Values;
         
@@ -182,16 +183,15 @@ public class LootInjectionService
         ItemCountDistribution[]? duffleCounts = null;
         ItemCountDistribution[]? deadScavCounts = null;
         
-        if (config.OverrideLootDistribution)
+        if (resolved.OverrideLootDistribution)
         {
-            jacketCounts = config.OverrideLootDistributionJackets?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-            duffleCounts = config.OverrideLootDistributionDuffleBags?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
-            deadScavCounts = config.OverrideLootDistributionDeadScavs?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+            jacketCounts = resolved.JacketsItemCounts?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+            duffleCounts = resolved.DuffleBagsItemCounts?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
+            deadScavCounts = resolved.DeadScavsItemCounts?.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
         }
 
         int registeredLocations = 0;
-        bool isDebugVerbosity = string.Equals(config.ConsoleVerbosity, "debug", StringComparison.OrdinalIgnoreCase);
-        var loggedDebugMaps = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool isDebugVerbosity = config.DebugLogs;
 
         // Retrieve all registered map locations via SPT 4.1's strongly-typed LocationTable dictionary.
         var validLocations = _locationTable.GetDictionary().Values;
@@ -202,12 +202,12 @@ public class LootInjectionService
                 continue;
 
             string mapBaseId = location.Base.Id ?? "unknown";
-            KeysInLootRarityConfig jacketKeyWeight = config.KeyWeight;
-            KeysInLootRarityConfig jacketKeycardWeight = config.KeycardWeight;
-            KeysInLootRarityConfig duffleKeyWeight = config.KeyWeight;
-            KeysInLootRarityConfig duffleKeycardWeight = config.KeycardWeight;
-            KeysInLootRarityConfig deadScavKeyWeight = config.KeyWeight;
-            KeysInLootRarityConfig deadScavKeycardWeight = config.KeycardWeight;
+            KeysInLootRarityConfig jacketKeyWeight = resolved.KeyWeight;
+            KeysInLootRarityConfig jacketKeycardWeight = resolved.KeycardWeight;
+            KeysInLootRarityConfig duffleKeyWeight = resolved.KeyWeight;
+            KeysInLootRarityConfig duffleKeycardWeight = resolved.KeycardWeight;
+            KeysInLootRarityConfig deadScavKeyWeight = resolved.KeyWeight;
+            KeysInLootRarityConfig deadScavKeycardWeight = resolved.KeycardWeight;
 
             if (config.EnableLocationsConfig)
             {
@@ -219,12 +219,12 @@ public class LootInjectionService
                 var locConfig = _configLoader.LoadLocationConfig(enumName);
                 if (locConfig != null)
                 {
-                    jacketKeyWeight = locConfig.JacketContainer?.Key ?? config.KeyWeight;
-                    jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? config.KeycardWeight;
-                    duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? config.KeyWeight;
-                    duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? config.KeycardWeight;
-                    deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? config.KeyWeight;
-                    deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? config.KeycardWeight;
+                    jacketKeyWeight = locConfig.JacketContainer?.Key ?? resolved.KeyWeight;
+                    jacketKeycardWeight = locConfig.JacketContainer?.Keycard ?? resolved.KeycardWeight;
+                    duffleKeyWeight = locConfig.DuffleBagContainer?.Key ?? resolved.KeyWeight;
+                    duffleKeycardWeight = locConfig.DuffleBagContainer?.Keycard ?? resolved.KeycardWeight;
+                    deadScavKeyWeight = locConfig.DeadScavContainer?.Key ?? resolved.KeyWeight;
+                    deadScavKeycardWeight = locConfig.DeadScavContainer?.Keycard ?? resolved.KeycardWeight;
                 }
             }
 
@@ -248,12 +248,13 @@ public class LootInjectionService
             // deserialization pipeline. Whenever the server requests the static loot, our transformer 
             // natively intercepts and injects our custom keys and loot distributions on the fly.
             // -----------------------------------------------------------------------------------------
+            int debugLoggedOnce = 0;
             Func<Dictionary<MongoId, StaticLootDetails>?, Dictionary<MongoId, StaticLootDetails>?> transformer = dict => 
             {
                 if (dict == null) return dict;
                 try
                 {
-                    bool logThisPass = isDebugVerbosity && loggedDebugMaps.Add(mapBaseId);
+                    bool logThisPass = isDebugVerbosity && System.Threading.Interlocked.Exchange(ref debugLoggedOnce, 1) == 0;
                     foreach (var target in targets)
                     {
                         foreach (var containerId in target.Ids)
