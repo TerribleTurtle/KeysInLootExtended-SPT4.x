@@ -1,19 +1,19 @@
-# Keys In Loot Extended
+# Dynamic Key Loot
 
-> **For SP-Tushonka / SPT 4.1.x** (on SPT 4.0.x? Use [v2.1.4](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases/tag/2.1.4)) · Credit to [MusicManiac](https://github.com/MusicManiac/KeysInLoot) for the original *Keys In Loot* concept
+> **For SP-Tushonka / SPT 4.1.x** (on SPT 4.0.x? Legacy [v2.1.4](https://github.com/TerribleTurtle/DynamicKeyLoot/releases/tag/2.1.4) is still available)
 
 ## Why Use This Mod?
 
 In vanilla Tarkov, nearly a third of all keys and keycards (including every Labs/Labrys keycard and several boss and quest keys) have a **0% chance** to ever spawn inside containers, and the rest are tuned around thousands of live players feeding the Flea Market.
 
-**Keys In Loot Extended** puts every real key and keycard into **Jackets, Duffle Bags, and Dead Scavs** across all 13 maps (including Labyrinth), tuned around solo SPT playtimes—while scaling down key sell prices so finding keys unlocks doors instead of printing free millions.
+**Dynamic Key Loot** puts every real key and keycard into **Jackets, Duffle Bags, and Dead Scavs** across all 13 maps (including Labyrinth), tuned around solo SPT playtimes—while scaling down key sell prices so finding keys unlocks doors instead of printing free millions.
 
 ## Install
 
-1. Download `KeysInLootExtended-<Version>.zip` from [Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases).
-2. Extract it straight into your SPT root folder (`<SPT_Root>/user/mods/KeysInLootExtended/`).
+1. Download `DynamicKeyLoot-<Version>.zip` from [Releases](https://github.com/TerribleTurtle/DynamicKeyLoot/releases).
+2. Extract it straight into your SPT root folder (`<SPT_Root>/user/mods/DynamicKeyLoot/`).
 
-*Upgrading from 2.x?* Delete your old `KeysInLootExtended` folder first. If a mod manager keeps your old `config.jsonc`, the mod backs it up to `config.backup.jsonc` and starts fresh on **Balanced** (set `"enabled": false` in the new file if you previously had the mod disabled).
+*Upgrading from 2.x (`KeysInLootExtended`)?* Delete your old `user/mods/KeysInLootExtended` folder first so both mods don't run side by side. If you copy over an old `config.jsonc`, the mod backs it up to `config.backup.jsonc` and starts fresh on **Balanced** (set `"enabled": false` in the new file if you previously had the mod disabled).
 
 ## Pick a Preset
 
@@ -45,6 +45,10 @@ All everyday options sit at the top of `config.jsonc` and work on **any** preset
 | `banKeysFromFence` | `false` | Set `true` to stop simulated PMCs from selling found keys to Fence's shop. |
 
 ---
+
+## Credits
+
+Big thanks to [MusicManiac](https://github.com/MusicManiac/KeysInLoot) — their original *Keys In Loot* mod sparked the idea for this project and showed how much better SPT feels when keys actually turn up in containers.
 
 ## Reference & Developer Details
 
@@ -88,17 +92,17 @@ The mod filters Tarkov's item database down to **217 tradable keys and keycards*
 - **SPT 4.1 Pipeline:** Loads at `OnLoadOrder.Routers + 2` (`400002`) before startup handbook/Flea/Fence caches initialize, registers `Location.StaticLoot.AddTransformer(...)` callbacks across all discovered maps (including Labyrinth's dedicated Jacket and Dead Scav templates), normalizes pools exceeding `int.MaxValue / 2`, and clamps grids to EFT's 14x14 UI limit.
 - **Build (`Release`):**
   ```powershell
-  dotnet build .\KeysInLootExtended\KeysInLootExtended.csproj -c Release
+  dotnet build .\DynamicKeyLoot\DynamicKeyLoot.csproj -c Release
   ```
 - **Run Unit & Golden-Fixture Simulation Tests (`< 1s`, no SPT install required):**
   ```powershell
-  dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release
+  dotnet test .\DynamicKeyLoot.Tests\DynamicKeyLoot.Tests.csproj -c Release
   ```
 - **Run Optional Live-Database & 590-Raid `LocationLootGenerator` Parity Check (Read-Only):**
   ```powershell
   $env:SPT_DATA_PATH = "C:\Path\To\SPT\SPT_Runtime\SPT_Data"
-  dotnet test .\KeysInLootExtended.Tests\KeysInLootExtended.Tests.csproj -c Release --logger "console;verbosity=detailed"
+  dotnet test .\DynamicKeyLoot.Tests\DynamicKeyLoot.Tests.csproj -c Release --logger "console;verbosity=detailed"
   ```
-- **Release Packaging:** `.\release.ps1 -PackageOnly` tests, builds, and verifies `KeysInLootExtended-<Version>.zip` locally; pushing a matching version tag (`3.0.0` / `v3.0.0`) or running `workflow_dispatch` on `main` publishes via `.github/workflows/ci-release.yml`.
+- **Release Packaging:** `.\release.ps1 -PackageOnly` tests, builds, and verifies `DynamicKeyLoot-<Version>.zip` locally; pushing a matching version tag (`3.0.0` / `v3.0.0`) or running `workflow_dispatch` on `main` publishes via `.github/workflows/ci-release.yml`.
 
 </details>

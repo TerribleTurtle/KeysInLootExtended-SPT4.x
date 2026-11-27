@@ -6,7 +6,7 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Services.Items;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Registers static loot transformers that inject keys and keycards into target containers.
@@ -17,7 +17,7 @@ public class LootInjectionService
     private readonly ISptLogger<LootInjectionService> _logger;
     private readonly TemplateTable _templateTable;
     private readonly LocationTable _locationTable;
-    private readonly KeysInLootConfigLoader _configLoader;
+    private readonly DynamicKeyLootConfigLoader _configLoader;
     private readonly InjectedKeysService _injectedKeysService;
     private readonly ItemFilterService _itemFilterService;
 
@@ -25,7 +25,7 @@ public class LootInjectionService
         ISptLogger<LootInjectionService> logger,
         TemplateTable templateTable,
         LocationTable locationTable,
-        KeysInLootConfigLoader configLoader,
+        DynamicKeyLootConfigLoader configLoader,
         InjectedKeysService injectedKeysService,
         ItemFilterService itemFilterService)
     {
@@ -42,7 +42,7 @@ public class LootInjectionService
         var config = _configLoader.Config;
         if (!config.Enabled)
         {
-            _logger.Warning("[KeysInLootExtended] Mod is disabled. Skipping loot injection.");
+            _logger.Warning("[DynamicKeyLoot] Mod is disabled. Skipping loot injection.");
             return;
         }
         var resolved = config.Resolved;
@@ -119,7 +119,7 @@ public class LootInjectionService
             }
             catch (Exception ex) when (ex is FormatException or ArgumentException)
             {
-                _logger.Warning($"[KeysInLootExtended] Skipping item {item.Id} due to invalid MongoId format: {ex.Message}");
+                _logger.Warning($"[DynamicKeyLoot] Skipping item {item.Id} due to invalid MongoId format: {ex.Message}");
                 continue;
             }
 
@@ -139,7 +139,7 @@ public class LootInjectionService
             }
         }
 
-        _logger.Success($"[KeysInLootExtended] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
+        _logger.Success($"[DynamicKeyLoot] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
 
         // Map SPT location IDs to locations/*.jsonc filenames ("Sandbox" is Ground Zero).
         var locationIdToEnum = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -181,12 +181,12 @@ public class LootInjectionService
                 continue;
 
             string mapBaseId = location.Base.Id ?? "unknown";
-            KeysInLootRarityConfig jacketKeyWeight = resolved.KeyWeight;
-            KeysInLootRarityConfig jacketKeycardWeight = resolved.KeycardWeight;
-            KeysInLootRarityConfig duffleKeyWeight = resolved.KeyWeight;
-            KeysInLootRarityConfig duffleKeycardWeight = resolved.KeycardWeight;
-            KeysInLootRarityConfig deadScavKeyWeight = resolved.KeyWeight;
-            KeysInLootRarityConfig deadScavKeycardWeight = resolved.KeycardWeight;
+            DynamicKeyLootRarityConfig jacketKeyWeight = resolved.KeyWeight;
+            DynamicKeyLootRarityConfig jacketKeycardWeight = resolved.KeycardWeight;
+            DynamicKeyLootRarityConfig duffleKeyWeight = resolved.KeyWeight;
+            DynamicKeyLootRarityConfig duffleKeycardWeight = resolved.KeycardWeight;
+            DynamicKeyLootRarityConfig deadScavKeyWeight = resolved.KeyWeight;
+            DynamicKeyLootRarityConfig deadScavKeycardWeight = resolved.KeycardWeight;
 
             if (config.EnableLocationsConfig)
             {
@@ -207,7 +207,7 @@ public class LootInjectionService
                 }
             }
 
-            var targets = new (string Label, MongoId[] Ids, KeysInLootRarityConfig KeyWeight, KeysInLootRarityConfig KeycardWeight, ItemCountDistribution[]? Counts)[]
+            var targets = new (string Label, MongoId[] Ids, DynamicKeyLootRarityConfig KeyWeight, DynamicKeyLootRarityConfig KeycardWeight, ItemCountDistribution[]? Counts)[]
             {
                 ("Jacket", ContainerTargets.Jackets, jacketKeyWeight, jacketKeycardWeight, jacketCounts),
                 ("DuffleBag", ContainerTargets.DuffleBags, duffleKeyWeight, duffleKeycardWeight, duffleCounts),
@@ -242,7 +242,7 @@ public class LootInjectionService
                                         .Where(x => _injectedKeysService.InjectedKeyIds.Contains(x.Tpl))
                                         .Sum(x => (double)(x.RelativeProbability ?? 0f));
                                     double pct = totW > 0 ? (100.0 * keyW / totW) : 0.0;
-                                    _logger.Info($"[KeysInLootExtended] [Debug] {mapBaseId} {target.Label}: key pool share = {pct:F2}% ({keyW:F0}/{totW:F0} weight)");
+                                    _logger.Info($"[DynamicKeyLoot] [Debug] {mapBaseId} {target.Label}: key pool share = {pct:F2}% ({keyW:F0}/{totW:F0} weight)");
                                 }
                             }
                         }
@@ -250,7 +250,7 @@ public class LootInjectionService
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"[KeysInLootExtended] Error transforming static loot: {ex}");
+                    _logger.Error($"[DynamicKeyLoot] Error transforming static loot: {ex}");
                 }
                 return dict;
             };
@@ -259,7 +259,7 @@ public class LootInjectionService
             registeredLocations++;
         }
 
-        _logger.Success($"[KeysInLootExtended] Registered static loot key transformers across {registeredLocations} locations.");
+        _logger.Success($"[DynamicKeyLoot] Registered static loot key transformers across {registeredLocations} locations.");
     }
 
     private static readonly Dictionary<string, string> ExplicitRarityMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -292,7 +292,7 @@ public class LootInjectionService
         { "679b9819a2f2dd4da9023512", "Superrare" }  // Labrys access keycard
     };
 
-    private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keys, KeysInLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keycards, KeysInLootRarityConfig keycardWeights)
+    private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keys, DynamicKeyLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keycards, DynamicKeyLootRarityConfig keycardWeights)
     {
         var existingItems = container.ItemDistribution?.ToList() ?? new List<ItemDistribution>();
         var distDict = new Dictionary<MongoId, List<ItemDistribution>>();
@@ -303,7 +303,7 @@ public class LootInjectionService
             distDict[entry.Tpl].Add(entry);
         }
 
-        void ProcessItems(List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> items, KeysInLootRarityConfig weights)
+        void ProcessItems(List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> items, DynamicKeyLootRarityConfig weights)
         {
             foreach (var tuple in items)
             {
@@ -362,7 +362,7 @@ public class LootInjectionService
         int safeCeiling = int.MaxValue / 2;
         if (totalWeight > safeCeiling)
         {
-            _logger.Warning($"[KeysInLootExtended] A container's weight exceeds int.MaxValue/2! Normalizing weights to leave ecosystem headroom...");
+            _logger.Warning($"[DynamicKeyLoot] A container's weight exceeds int.MaxValue/2! Normalizing weights to leave ecosystem headroom...");
             double scale = (double)safeCeiling / totalWeight;
             foreach (var key in distDict.Keys.ToList())
             {

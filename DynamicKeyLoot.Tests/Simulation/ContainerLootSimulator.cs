@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using SPTarkov.Server.Core.Extensions;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
@@ -15,7 +9,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Services.Items;
 using SPTarkov.Server.Core.Services.Server;
 
-namespace KeysInLootExtended.Tests.Simulation;
+namespace DynamicKeyLoot.Tests.Simulation;
 
 public sealed record AnalyticalContainerMetrics(
     string MapName,
@@ -47,7 +41,7 @@ public sealed record MonteCarloContainerMetrics(
 public sealed record ProfileSimulationRun(
     string NormalizedProfile,
     InMemorySptEnvironment Environment,
-    KeysInLootConfigLoader ConfigLoader,
+    DynamicKeyLootConfigLoader ConfigLoader,
     InjectedKeysService InjectedKeysService,
     IReadOnlySet<MongoId> AllValidKeysAndKeycardsInDatabase,
     IReadOnlyDictionary<MongoId, string> ResolvedKeyRarities);
@@ -94,11 +88,11 @@ public static class ContainerLootSimulator
     public static async Task<ProfileSimulationRun> ExecuteModInMemoryAsync(
         SptDatabaseSnapshot snapshot,
         string rawProfile,
-        Action<KeysInLootCoreConfig>? configureCustom = null)
+        Action<DynamicKeyLootCoreConfig>? configureCustom = null)
     {
         var env = snapshot.CreateFreshEnvironment();
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
-        var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
+        var configLoader = new DynamicKeyLootConfigLoader(NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>(), modHelper);
 
         ApplyProfileToLoader(configLoader, rawProfile, configureCustom);
 
@@ -125,12 +119,12 @@ public static class ContainerLootSimulator
             env.TemplateTable,
             configLoader);
 
-        var plugin = new KeysInLootExtendedPlugin(
+        var plugin = new DynamicKeyLootPlugin(
             configLoader,
             lootService,
             priceService,
             gridService,
-            NoOpLoggerProxy.Create<KeysInLootExtendedPlugin>());
+            NoOpLoggerProxy.Create<DynamicKeyLootPlugin>());
 
         await plugin.OnLoadAsync(CancellationToken.None);
 
@@ -463,14 +457,14 @@ public static class ContainerLootSimulator
     }
 
     internal static void ApplyProfileToLoader(
-        KeysInLootConfigLoader configLoader,
+        DynamicKeyLootConfigLoader configLoader,
         string rawProfile,
-        Action<KeysInLootCoreConfig>? configureCustom = null)
+        Action<DynamicKeyLootCoreConfig>? configureCustom = null)
     {
         string configPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.jsonc");
-        var freshConfig = JsonSerializer.Deserialize<KeysInLootCoreConfig>(
+        var freshConfig = JsonSerializer.Deserialize<DynamicKeyLootCoreConfig>(
                 File.ReadAllText(configPath),
-                KeysInLootConfigLoader.JsonSettings)
+                DynamicKeyLootConfigLoader.JsonSettings)
             ?? throw new InvalidDataException("Failed to deserialize config.jsonc in test simulator.");
 
         if (string.Equals(rawProfile?.Trim(), "disabled", StringComparison.OrdinalIgnoreCase)
@@ -485,10 +479,10 @@ public static class ContainerLootSimulator
         }
 
         configureCustom?.Invoke(freshConfig);
-        KeysInLootConfigLoader.ApplyResolvedSettings(freshConfig);
+        DynamicKeyLootConfigLoader.ApplyResolvedSettings(freshConfig);
 
-        typeof(KeysInLootConfigLoader)
-            .GetProperty(nameof(KeysInLootConfigLoader.Config))!
+        typeof(DynamicKeyLootConfigLoader)
+            .GetProperty(nameof(DynamicKeyLootConfigLoader.Config))!
             .SetValue(configLoader, freshConfig);
     }
 

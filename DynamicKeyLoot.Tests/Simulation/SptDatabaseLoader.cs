@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
@@ -15,7 +11,7 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Json;
 
-namespace KeysInLootExtended.Tests.Simulation;
+namespace DynamicKeyLoot.Tests.Simulation;
 
 public sealed record ItemMetadata(
     MongoId Id,

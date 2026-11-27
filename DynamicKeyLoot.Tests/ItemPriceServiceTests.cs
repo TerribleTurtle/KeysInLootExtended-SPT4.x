@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using Xunit;
 
-namespace KeysInLootExtended.Tests
+namespace DynamicKeyLoot.Tests
 {
     public class ItemPriceServiceTests
     {

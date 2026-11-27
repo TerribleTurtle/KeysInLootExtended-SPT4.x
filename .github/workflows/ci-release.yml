@@ -36,20 +36,20 @@ jobs:
 
       - name: Restore Dependencies
         run: |
-          dotnet restore ./KeysInLootExtended/KeysInLootExtended.csproj
-          dotnet restore ./KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj
+          dotnet restore ./DynamicKeyLoot/DynamicKeyLoot.csproj
+          dotnet restore ./DynamicKeyLoot.Tests/DynamicKeyLoot.Tests.csproj
 
       - name: Build Mod (Release)
-        run: dotnet build ./KeysInLootExtended/KeysInLootExtended.csproj -c Release --no-restore
+        run: dotnet build ./DynamicKeyLoot/DynamicKeyLoot.csproj -c Release --no-restore
 
       - name: Run Unit & Integration Tests
-        run: dotnet test ./KeysInLootExtended.Tests/KeysInLootExtended.Tests.csproj -c Release --no-restore
+        run: dotnet test ./DynamicKeyLoot.Tests/DynamicKeyLoot.Tests.csproj -c Release --no-restore
 
       - name: Verify Release Zip Packaging
         shell: pwsh
         run: |
           ./release.ps1 -PackageOnly
-          Remove-Item -Path "KeysInLootExtended-*.zip" -Force
+          Remove-Item -Path "DynamicKeyLoot-*.zip" -Force
 
   release:
     name: Package & Publish Release
@@ -77,7 +77,7 @@ jobs:
           FORCE_OVERWRITE: ${{ inputs.overwrite }}
         run: |
           $ErrorActionPreference = "Stop"
-          $csprojPath = "./KeysInLootExtended/KeysInLootExtended.csproj"
+          $csprojPath = "./DynamicKeyLoot/DynamicKeyLoot.csproj"
           [xml]$project = Get-Content -LiteralPath $csprojPath -Raw -Encoding UTF8
           $versionNode = $project.SelectSingleNode("/Project/PropertyGroup/Version")
           $version = if ($null -ne $versionNode) { $versionNode.InnerText.Trim() } else { "" }
@@ -132,7 +132,7 @@ jobs:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            KeysInLootExtended-${{ steps.package.outputs.version }}.zip
+            DynamicKeyLoot-${{ steps.package.outputs.version }}.zip
 
       - name: Ensure VirusTotal Analysis Link in Release Body
         if: steps.package.outputs.published == 'true' && steps.vt.outputs.analysis != ''
@@ -163,7 +163,7 @@ jobs:
           }
           $vtSection = "`n`n🛡 [VirusTotal GitHub Action](https://github.com/crazy-max/ghaction-virustotal) analysis:`n" + ($links -join "`n")
           $updatedBody = ([string]$currentBody).TrimEnd() + $vtSection + "`n"
-          $tempBody = Join-Path ([System.IO.Path]::GetTempPath()) "kil_vt_notes_$([Guid]::NewGuid().ToString('N')).md"
+          $tempBody = Join-Path ([System.IO.Path]::GetTempPath()) "dkl_vt_notes_$([Guid]::NewGuid().ToString('N')).md"
           try {
               [System.IO.File]::WriteAllText($tempBody, $updatedBody, [System.Text.UTF8Encoding]::new($false))
               & gh @("release", "edit", $env:RELEASE_TAG, "--notes-file", $tempBody)

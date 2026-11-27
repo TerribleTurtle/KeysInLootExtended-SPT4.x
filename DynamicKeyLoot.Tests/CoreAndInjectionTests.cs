@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
@@ -20,7 +14,7 @@ using SPTarkov.Server.Core.Services.Items;
 using SPTarkov.Server.Core.Utils.Json;
 using Xunit;
 
-namespace KeysInLootExtended.Tests;
+namespace DynamicKeyLoot.Tests;
 
 public class NoOpLoggerProxy : DispatchProxy
 {
@@ -37,8 +31,9 @@ public class ModMetadataTests
         IModMetadata metadata = new ModMetadata();
         var asmVersion = typeof(ModMetadata).Assembly.GetName().Version!;
 
-        Assert.Equal("DJ-KeysInLootExtended", metadata.ModGuid);
-        Assert.Equal("https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x", metadata.Url);
+        Assert.Equal("TerribleTurtle-DynamicKeyLoot", metadata.ModGuid);
+        Assert.Equal("Dynamic Key Loot", metadata.Name);
+        Assert.Equal("https://github.com/TerribleTurtle/DynamicKeyLoot", metadata.Url);
         Assert.Equal(new SemanticVersioning.Version("3.0.0"), metadata.Version);
         Assert.Equal($"{asmVersion.Major}.{asmVersion.Minor}.{asmVersion.Build}", metadata.Version.ToString());
         Assert.True(metadata.SptVersion.IsSatisfied(new SemanticVersioning.Version("4.1.0")));
@@ -51,7 +46,7 @@ public class ModMetadataTests
     public void ConfigLoader_ShouldLoadRealV3ConfigAndAll13LocationFiles()
     {
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
-        var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
+        var configLoader = new DynamicKeyLootConfigLoader(NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>(), modHelper);
 
         Assert.NotNull(configLoader.Config);
         Assert.Equal(3, configLoader.Config.ConfigVersion);
@@ -78,7 +73,7 @@ public class ModMetadataTests
     [Fact]
     public void LoadOrMigrateCoreConfig_ShouldBackupLegacyV2Config_WriteFreshV3_SelfHealMissing_AndRejectBrokenJson()
     {
-        string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"kil_v3_test_{Guid.NewGuid():N}");
+        string tempDir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"dkl_v3_test_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
         try
         {
@@ -96,7 +91,7 @@ public class ModMetadataTests
             """;
             File.WriteAllText(configPath, legacyV2, Encoding.UTF8);
 
-            var migrated = KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>());
+            var migrated = DynamicKeyLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>());
 
             Assert.True(File.Exists(backupPath), "Expected legacy config.jsonc to be backed up to config.backup.jsonc");
             Assert.Contains("\"activeProfile\": \"Generous\"", File.ReadAllText(backupPath, Encoding.UTF8));
@@ -107,7 +102,7 @@ public class ModMetadataTests
 
             // 2. Missing config.jsonc -> self-heals by writing embedded default v3 config.jsonc
             File.Delete(configPath);
-            var healed = KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>());
+            var healed = DynamicKeyLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>());
             Assert.True(File.Exists(configPath), "Expected missing config.jsonc to be regenerated from embedded resource");
             Assert.Equal(3, healed.ConfigVersion);
             Assert.Equal("balanced", healed.Preset);
@@ -116,7 +111,7 @@ public class ModMetadataTests
             string brokenV3 = "{ \"configVersion\": 3, \"preset\": \"Balanced\", broken_token }";
             File.WriteAllText(configPath, brokenV3, Encoding.UTF8);
             Assert.Throws<JsonException>(() =>
-                KeysInLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<KeysInLootConfigLoader>()));
+                DynamicKeyLootConfigLoader.LoadOrMigrateCoreConfig(tempDir, NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>()));
             Assert.Equal(brokenV3, File.ReadAllText(configPath, Encoding.UTF8));
         }
         finally
@@ -137,8 +132,8 @@ public class ModMetadataTests
     [InlineData("", "balanced")]
     public void ApplyResolvedSettings_ShouldResolveValidPresets_AndFallbackUnknownToBalanced(string rawPreset, string expectedPreset)
     {
-        var cfg = new KeysInLootCoreConfig { ConfigVersion = 3, Preset = rawPreset };
-        KeysInLootConfigLoader.ApplyResolvedSettings(cfg);
+        var cfg = new DynamicKeyLootCoreConfig { ConfigVersion = 3, Preset = rawPreset };
+        DynamicKeyLootConfigLoader.ApplyResolvedSettings(cfg);
         Assert.Equal(expectedPreset, cfg.Preset);
     }
 
@@ -146,13 +141,13 @@ public class ModMetadataTests
     public void ApplyResolvedSettings_ShouldApplyReduceCommonKeys_SpawnMultiplier_AndPriceOverrides()
     {
         // 1. reduceCommonKeys cuts Common & NotExist by 85% (0.15x) while keeping Rare & SuperRare intact
-        var reducedCfg = new KeysInLootCoreConfig
+        var reducedCfg = new DynamicKeyLootCoreConfig
         {
             ConfigVersion = 3,
             Preset = "Balanced",
             ReduceCommonKeys = true
         };
-        KeysInLootConfigLoader.ApplyResolvedSettings(reducedCfg);
+        DynamicKeyLootConfigLoader.ApplyResolvedSettings(reducedCfg);
 
         Assert.Equal(30, reducedCfg.Resolved.KeyWeight.Common);   // 200 * 0.15 = 30
         Assert.Equal(30, reducedCfg.Resolved.KeyWeight.NotExist); // 200 * 0.15 = 30
@@ -162,7 +157,7 @@ public class ModMetadataTests
         Assert.Equal(20, reducedCfg.Resolved.KeycardWeight.SuperRare);
 
         // 2. SpawnWeightMultiplier + Price overrides stack cleanly on top of any preset
-        var scaledCfg = new KeysInLootCoreConfig
+        var scaledCfg = new DynamicKeyLootCoreConfig
         {
             ConfigVersion = 3,
             Preset = "Casual",
@@ -170,7 +165,7 @@ public class ModMetadataTests
             FleaPriceMultiplier = 1.0,
             TraderPriceMultiplier = 0.85
         };
-        KeysInLootConfigLoader.ApplyResolvedSettings(scaledCfg);
+        DynamicKeyLootConfigLoader.ApplyResolvedSettings(scaledCfg);
 
         Assert.Equal("casual", scaledCfg.Preset);
         Assert.Equal(600, scaledCfg.Resolved.KeyWeight.Common);
@@ -181,15 +176,15 @@ public class ModMetadataTests
         Assert.Equal(0.85, scaledCfg.Resolved.TraderPriceMultiplier);
 
         // 3. Preset = "Custom" clones Custom weights so ReduceCommonKeys & SpawnWeightMultiplier never mutate config.Custom
-        var customCfg = new KeysInLootCoreConfig
+        var customCfg = new DynamicKeyLootCoreConfig
         {
             ConfigVersion = 3,
             Preset = "Custom",
             ReduceCommonKeys = true,
             SpawnWeightMultiplier = 2.0
         };
-        customCfg.Custom.KeyWeight = new KeysInLootRarityConfig { NotExist = 100, Common = 100, Rare = 50, SuperRare = 20 };
-        KeysInLootConfigLoader.ApplyResolvedSettings(customCfg);
+        customCfg.Custom.KeyWeight = new DynamicKeyLootRarityConfig { NotExist = 100, Common = 100, Rare = 50, SuperRare = 20 };
+        DynamicKeyLootConfigLoader.ApplyResolvedSettings(customCfg);
 
         Assert.Equal(100, customCfg.Custom.KeyWeight.Common); // Unmutated source!
         Assert.Equal(30, customCfg.Resolved.KeyWeight.Common); // 100 * 2.0 * 0.15 = 30
@@ -200,7 +195,7 @@ public class ModMetadataTests
     public async Task EndToEnd_OnLoadAsync_ShouldInjectKeysViaLazyLoad_ScalePrices_BanFromFence_AndResizeGrids()
     {
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
-        var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
+        var configLoader = new DynamicKeyLootConfigLoader(NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>(), modHelper);
         configLoader.Config.BanKeysFromFence = true;
 
         var keyBaseId = new MongoId("543be5e94bdc2df1348b4568");
@@ -352,12 +347,12 @@ public class ModMetadataTests
             templateTable,
             configLoader);
 
-        var plugin = new KeysInLootExtendedPlugin(
+        var plugin = new DynamicKeyLootPlugin(
             configLoader,
             lootService,
             priceService,
             gridService,
-            NoOpLoggerProxy.Create<KeysInLootExtendedPlugin>());
+            NoOpLoggerProxy.Create<DynamicKeyLootPlugin>());
 
         await plugin.OnLoadAsync(CancellationToken.None);
 
@@ -444,7 +439,7 @@ public class ModMetadataTests
     [Fact]
     public void ScaleRarity_ShouldZeroOutWhenRatioIsZeroOrNegative_AndClampToOneWhenPositive()
     {
-        var rarity = new KeysInLootRarityConfig
+        var rarity = new DynamicKeyLootRarityConfig
         {
             NotExist = 100,
             Common = 100,
@@ -452,7 +447,7 @@ public class ModMetadataTests
             SuperRare = 100
         };
 
-        KeysInLootConfigLoader.ScaleRarity(rarity, 0.0, -0.5, 0.001, 2.0);
+        DynamicKeyLootConfigLoader.ScaleRarity(rarity, 0.0, -0.5, 0.001, 2.0);
 
         Assert.Equal(0, rarity.Common);
         Assert.Equal(0, rarity.Rare);
@@ -463,13 +458,13 @@ public class ModMetadataTests
     [Fact]
     public void ScaleContainer_ShouldApplySeparateKeyAndKeycardRatios()
     {
-        var container = new KeysInLootContainerConfig
+        var container = new DynamicKeyLootContainerConfig
         {
-            Key = new KeysInLootRarityConfig { Common = 200 },
-            Keycard = new KeysInLootRarityConfig { Common = 60 }
+            Key = new DynamicKeyLootRarityConfig { Common = 200 },
+            Keycard = new DynamicKeyLootRarityConfig { Common = 60 }
         };
 
-        KeysInLootConfigLoader.ScaleContainer(container, 1.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0);
+        DynamicKeyLootConfigLoader.ScaleContainer(container, 1.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0);
 
         Assert.Equal(300, container.Key!.Common);
         Assert.Equal(30, container.Keycard!.Common);

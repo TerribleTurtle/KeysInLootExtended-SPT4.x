@@ -1,7 +1,6 @@
-using System.Linq;
 using SPTarkov.Server.Core.Models.Common;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Maps logical loot container categories to standard and map-specific EFT template IDs.

@@ -5,19 +5,19 @@ using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 public record ModMetadata : IModMetadata
 {
-    public string ModGuid { get; init; } = "DJ-KeysInLootExtended";
-    public string Name { get; init; } = "KeysInLootExtended";
+    public string ModGuid { get; init; } = "TerribleTurtle-DynamicKeyLoot";
+    public string Name { get; init; } = "Dynamic Key Loot";
     public string Author { get; init; } = "TerribleTurtle";
     public SemanticVersioning.Version Version { get; init; } = new("3.0.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
-    public string? Url { get; init; } = "https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x";
+    public string? Url { get; init; } = "https://github.com/TerribleTurtle/DynamicKeyLoot";
     public bool HasPrepatcher { get; init; }
     public string License { get; init; } = "MIT";
     public List<string>? Contributors { get; init; }
@@ -27,12 +27,12 @@ public record ModMetadata : IModMetadata
 /// SPT startup entrypoint that runs loot injection, price scaling, and container grid resizing.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Routers + 2)]
-public class KeysInLootExtendedPlugin(
-    KeysInLootConfigLoader configLoader,
+public class DynamicKeyLootPlugin(
+    DynamicKeyLootConfigLoader configLoader,
     LootInjectionService lootInjectionService,
     ItemPriceService itemPriceService,
     ContainerGridService containerGridService,
-    ISptLogger<KeysInLootExtendedPlugin> logger) : IOnLoad
+    ISptLogger<DynamicKeyLootPlugin> logger) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
@@ -40,11 +40,11 @@ public class KeysInLootExtendedPlugin(
         {
             if (!configLoader.Config.Enabled)
             {
-                logger.Warning("[KeysInLootExtended] Mod is disabled in config.jsonc (enabled: false).");
+                logger.Warning("[DynamicKeyLoot] Mod is disabled in config.jsonc (enabled: false).");
                 return Task.CompletedTask;
             }
 
-            logger.Success($"[KeysInLootExtended] Initialized v{new ModMetadata().Version} (preset: {configLoader.Config.Preset}, reduceCommonKeys: {configLoader.Config.ReduceCommonKeys}).");
+            logger.Success($"[DynamicKeyLoot] Initialized v{new ModMetadata().Version} (preset: {configLoader.Config.Preset}, reduceCommonKeys: {configLoader.Config.ReduceCommonKeys}).");
 
             lootInjectionService.InjectKeysIntoLocations();
             itemPriceService.AdjustPrices();
@@ -52,7 +52,7 @@ public class KeysInLootExtendedPlugin(
         }
         catch (Exception ex)
         {
-            logger.Error($"[KeysInLootExtended] Unhandled error during initialization: {ex}");
+            logger.Error($"[DynamicKeyLoot] Unhandled error during initialization: {ex}");
         }
         
         return Task.CompletedTask;

@@ -1,10 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 public class CultureInvariantDoubleConverter : JsonConverter<double>
 {
@@ -67,7 +65,7 @@ public class NullableCultureInvariantDoubleConverter : JsonConverter<double?>
 /// <summary>
 /// v3.0.0 root configuration model deserialized from config.jsonc.
 /// </summary>
-public class KeysInLootCoreConfig
+public class DynamicKeyLootCoreConfig
 {
     /// <summary>
     /// Schema version. Files missing configVersion (deserializing as 0) are backed up and upgraded to v3.
@@ -121,7 +119,7 @@ public class KeysInLootCoreConfig
     public bool DebugLogs { get; set; } = false;
 
     [JsonPropertyName("custom")]
-    public KeysInLootCustomConfig Custom { get; set; } = new();
+    public DynamicKeyLootCustomConfig Custom { get; set; } = new();
 
     /// <summary>
     /// Computed effective settings after resolving the selected preset and applying top-level overrides.
@@ -133,13 +131,13 @@ public class KeysInLootCoreConfig
 /// <summary>
 /// Manual tables evaluated only when preset is set to "Custom".
 /// </summary>
-public class KeysInLootCustomConfig
+public class DynamicKeyLootCustomConfig
 {
     [JsonPropertyName("keyWeight")]
-    public KeysInLootRarityConfig KeyWeight { get; set; } = new();
+    public DynamicKeyLootRarityConfig KeyWeight { get; set; } = new();
 
     [JsonPropertyName("keycardWeight")]
-    public KeysInLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
+    public DynamicKeyLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
 
     [JsonPropertyName("fleaPriceMultiplier")]
     public double FleaPriceMultiplier { get; set; } = 0.4;
@@ -168,8 +166,8 @@ public class KeysInLootCustomConfig
 
 internal sealed class ResolvedLootSettings
 {
-    public KeysInLootRarityConfig KeyWeight { get; set; } = new();
-    public KeysInLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
+    public DynamicKeyLootRarityConfig KeyWeight { get; set; } = new();
+    public DynamicKeyLootRarityConfig KeycardWeight { get; set; } = new() { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 };
     public double FleaPriceMultiplier { get; set; } = 0.4;
     public double TraderPriceMultiplier { get; set; } = 0.4;
     public bool OverrideLootDistribution { get; set; } = true;
@@ -183,34 +181,34 @@ internal sealed class ResolvedLootSettings
 /// <summary>
 /// Configuration model representing map-specific baseline weights in the locations directory.
 /// </summary>
-public class KeysInLootLocationConfig
+public class DynamicKeyLootLocationConfig
 {
     [JsonPropertyName("jacketContainer")]
-    public KeysInLootContainerConfig? JacketContainer { get; set; } = null;
+    public DynamicKeyLootContainerConfig? JacketContainer { get; set; } = null;
 
     [JsonPropertyName("duffleBagContainer")]
-    public KeysInLootContainerConfig? DuffleBagContainer { get; set; } = null;
+    public DynamicKeyLootContainerConfig? DuffleBagContainer { get; set; } = null;
 
     [JsonPropertyName("deadScavContainer")]
-    public KeysInLootContainerConfig? DeadScavContainer { get; set; } = null;
+    public DynamicKeyLootContainerConfig? DeadScavContainer { get; set; } = null;
 }
 
 /// <summary>
 /// Defines weight baselines for a container category (Jacket, Duffle Bag, Dead Scav).
 /// </summary>
-public class KeysInLootContainerConfig
+public class DynamicKeyLootContainerConfig
 {
     [JsonPropertyName("key")]
-    public KeysInLootRarityConfig? Key { get; set; } = null;
+    public DynamicKeyLootRarityConfig? Key { get; set; } = null;
 
     [JsonPropertyName("keycard")]
-    public KeysInLootRarityConfig? Keycard { get; set; } = null;
+    public DynamicKeyLootRarityConfig? Keycard { get; set; } = null;
 }
 
 /// <summary>
 /// Relative spawn weights across the four EFT RarityPvE tiers.
 /// </summary>
-public class KeysInLootRarityConfig
+public class DynamicKeyLootRarityConfig
 {
     [JsonPropertyName("notExist")]
     public int NotExist { get; set; } = 200;
@@ -224,7 +222,7 @@ public class KeysInLootRarityConfig
     [JsonPropertyName("superRare")]
     public int SuperRare { get; set; } = 40;
 
-    public KeysInLootRarityConfig Clone() => new()
+    public DynamicKeyLootRarityConfig Clone() => new()
     {
         NotExist = NotExist,
         Common = Common,

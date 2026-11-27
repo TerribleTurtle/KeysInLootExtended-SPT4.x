@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
@@ -8,7 +5,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using Xunit;
 
-namespace KeysInLootExtended.Tests
+namespace DynamicKeyLoot.Tests
 {
     public class ContainerGridServiceTests
     {
@@ -127,7 +124,7 @@ namespace KeysInLootExtended.Tests
             typeof(TemplateTable).GetProperty("Items")!.SetValue(templateTable, items);
 
             var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
-            var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
+            var configLoader = new DynamicKeyLootConfigLoader(NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>(), modHelper);
             configLoader.Config.Resolved.OverrideLootDistribution = false;
             configLoader.Config.Resolved.MinCellsH = 5;
             configLoader.Config.Resolved.MinCellsV = 5;

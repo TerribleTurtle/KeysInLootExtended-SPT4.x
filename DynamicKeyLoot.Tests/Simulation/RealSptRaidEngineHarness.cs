@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.Server.Core.Generators.Loot;
 using SPTarkov.Server.Core.Helpers.InRaid;
@@ -24,7 +18,7 @@ using SPTarkov.Server.Core.Utils;
 using SPTarkov.Server.Core.Utils.Cloners;
 using SPTarkov.Server.Core.Utils.Json;
 
-namespace KeysInLootExtended.Tests.Simulation;
+namespace DynamicKeyLoot.Tests.Simulation;
 
 public sealed record RealRaidContainerStats(
     int RaidsSimulated,
@@ -159,20 +153,20 @@ public sealed class RealSptRaidEngineHarness
             typeof(LocationTable).GetProperty(propName)!.SetValue(locationTable, loc);
         }
 
-        // Execute the real KeysInLootExtended plugin against these live tables BEFORE raid generation!
+        // Execute the real DynamicKeyLoot plugin against these live tables BEFORE raid generation!
         var modHelper = (ModHelper)RuntimeHelpers.GetUninitializedObject(typeof(ModHelper));
-        var configLoader = new KeysInLootConfigLoader(NoOpLoggerProxy.Create<KeysInLootConfigLoader>(), modHelper);
+        var configLoader = new DynamicKeyLootConfigLoader(NoOpLoggerProxy.Create<DynamicKeyLootConfigLoader>(), modHelper);
         ContainerLootSimulator.ApplyProfileToLoader(configLoader, rawProfile);
 
         var itemFilter = new ItemFilterService(itemCfg);
         var injectedKeysSvc = new InjectedKeysService();
 
-        var plugin = new KeysInLootExtendedPlugin(
+        var plugin = new DynamicKeyLootPlugin(
             configLoader,
             new LootInjectionService(NoOpLoggerProxy.Create<LootInjectionService>(), templateTable, locationTable, configLoader, injectedKeysSvc, itemFilter),
             new ItemPriceService(NoOpLoggerProxy.Create<ItemPriceService>(), templateTable, configLoader, injectedKeysSvc, traderCfg),
             new ContainerGridService(NoOpLoggerProxy.Create<ContainerGridService>(), templateTable, configLoader),
-            NoOpLoggerProxy.Create<KeysInLootExtendedPlugin>());
+            NoOpLoggerProxy.Create<DynamicKeyLootPlugin>());
 
         await plugin.OnLoadAsync(CancellationToken.None);
 

@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KeysInLootExtended\KeysInLootExtended.csproj" />
+    <ProjectReference Include="..\DynamicKeyLoot\DynamicKeyLoot.csproj" />
   </ItemGroup>
 
   <ItemGroup>

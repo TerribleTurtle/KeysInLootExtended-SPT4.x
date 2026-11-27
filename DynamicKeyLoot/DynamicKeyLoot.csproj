@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>KeysInLootExtended</RootNamespace>
+    <RootNamespace>DynamicKeyLoot</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <Version>3.0.0</Version>
     <Authors>TerribleTurtle</Authors>
-    <OutputPath>..\dist\SPT\user\mods\KeysInLootExtended\</OutputPath>
+    <OutputPath>..\dist\SPT\user\mods\DynamicKeyLoot\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDependencyFile>false</GenerateDependencyFile>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\config.jsonc" LogicalName="KeysInLootExtended.default_config.jsonc" />
+    <EmbeddedResource Include="..\config.jsonc" LogicalName="DynamicKeyLoot.default_config.jsonc" />
     <None Include="..\config.jsonc">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

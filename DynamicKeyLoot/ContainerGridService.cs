@@ -1,13 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Expands Jacket, Duffle Bag, and Dead Scav container grids to configured minimums.
@@ -17,12 +14,12 @@ public class ContainerGridService
 {
     private readonly ISptLogger<ContainerGridService> _logger;
     private readonly TemplateTable _templateTable;
-    private readonly KeysInLootConfigLoader _configLoader;
+    private readonly DynamicKeyLootConfigLoader _configLoader;
 
     public ContainerGridService(
         ISptLogger<ContainerGridService> logger,
         TemplateTable templateTable,
-        KeysInLootConfigLoader configLoader)
+        DynamicKeyLootConfigLoader configLoader)
     {
         _logger = logger;
         _templateTable = templateTable;
@@ -47,7 +44,7 @@ public class ContainerGridService
 
         AdjustGridSizesInternal(items, clampedH, clampedV);
 
-        _logger.Success($"[KeysInLootExtended] Enforced minimum {clampedH}x{clampedV} container grid size across Jackets, Duffle Bags, and Dead Scavs.");
+        _logger.Success($"[DynamicKeyLoot] Enforced minimum {clampedH}x{clampedV} container grid size across Jackets, Duffle Bags, and Dead Scavs.");
     }
 
     public static void AdjustGridSizesInternal(Dictionary<MongoId, TemplateItem> items, int targetCellsH, int targetCellsV)
@@ -62,14 +59,14 @@ public class ContainerGridService
                 var grids = templateItem.Properties?.Grids;
                 if (grids == null)
                 {
-                    throw new InvalidOperationException($"[KeysInLootExtended] Critical Error: TemplateItem {containerId} is missing Properties or Grids. The SPT database schema may have changed.");
+                    throw new InvalidOperationException($"[DynamicKeyLoot] Critical Error: TemplateItem {containerId} is missing Properties or Grids. The SPT database schema may have changed.");
                 }
 
                 // Only resize the primary grid; secondary grids can hold special or nested slots.
                 var grid = grids.FirstOrDefault();
                 if (grid?.Properties == null)
                 {
-                    throw new InvalidOperationException($"[KeysInLootExtended] Critical Error: Grid or Grid.Properties is null for TemplateItem {containerId}.");
+                    throw new InvalidOperationException($"[DynamicKeyLoot] Critical Error: Grid or Grid.Properties is null for TemplateItem {containerId}.");
                 }
                 
                 int newH = Math.Max(grid.Properties.CellsH ?? 0, clampedH);

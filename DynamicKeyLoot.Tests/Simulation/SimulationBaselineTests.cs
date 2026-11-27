@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Services.Items;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace KeysInLootExtended.Tests.Simulation;
+namespace DynamicKeyLoot.Tests.Simulation;
 
 public class SimulationBaselineTests
 {
@@ -99,8 +94,8 @@ public class SimulationBaselineTests
         var customRun = await ContainerLootSimulator.ExecuteModInMemoryAsync(snapshot, "Custom", c =>
         {
             c.EnableLocationsConfig = false;
-            c.Custom.KeyWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
-            c.Custom.KeycardWeight = new KeysInLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
+            c.Custom.KeyWeight = new DynamicKeyLootRarityConfig { NotExist = 10, Common = 10, Rare = 5000, SuperRare = 10000 };
+            c.Custom.KeycardWeight = new DynamicKeyLootRarityConfig { NotExist = 10, Common = 10, Rare = 1000, SuperRare = 5000 };
             c.Custom.OverrideLootDistribution = true;
             c.Custom.JacketsItemCounts = sandboxCounts;
             c.Custom.MinCellsH = 5;

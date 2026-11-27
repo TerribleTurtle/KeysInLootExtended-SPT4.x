@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Shared cache of valid key and keycard template IDs discovered during loot injection

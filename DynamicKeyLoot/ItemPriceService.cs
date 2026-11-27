@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Common;
@@ -7,7 +5,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Models.Spt.Config;
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Scales Flea Market and Trader base prices for injected keys and optionally bans them from Fence.
@@ -17,14 +15,14 @@ public class ItemPriceService
 {
     private readonly ISptLogger<ItemPriceService> _logger;
     private readonly TemplateTable _templateTable;
-    private readonly KeysInLootConfigLoader _configLoader;
+    private readonly DynamicKeyLootConfigLoader _configLoader;
     private readonly InjectedKeysService _injectedKeysService;
     private readonly TraderConfig _traderConfig;
 
     public ItemPriceService(
         ISptLogger<ItemPriceService> logger,
         TemplateTable templateTable,
-        KeysInLootConfigLoader configLoader,
+        DynamicKeyLootConfigLoader configLoader,
         InjectedKeysService injectedKeysService,
         TraderConfig traderConfig)
     {
@@ -50,8 +48,8 @@ public class ItemPriceService
             resolved.FleaPriceMultiplier, 
             resolved.TraderPriceMultiplier);
 
-        _logger.Success($"[KeysInLootExtended] Flea prices adjusted by a {resolved.FleaPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
-        _logger.Success($"[KeysInLootExtended] Trader prices adjusted by a {resolved.TraderPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
+        _logger.Success($"[DynamicKeyLoot] Flea prices adjusted by a {resolved.FleaPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
+        _logger.Success($"[DynamicKeyLoot] Trader prices adjusted by a {resolved.TraderPriceMultiplier}x multiplier for {_injectedKeysService.InjectedKeyIds.Count} injected keys.");
 
         if (config.BanKeysFromFence)
         {
@@ -61,7 +59,7 @@ public class ItemPriceService
                 {
                     _traderConfig.Fence.Blacklist.Add(mongoId);
                 }
-                _logger.Success($"[KeysInLootExtended] Successfully banned {_injectedKeysService.InjectedKeyIds.Count} keys from Fence's assort inventory.");
+                _logger.Success($"[DynamicKeyLoot] Successfully banned {_injectedKeysService.InjectedKeyIds.Count} keys from Fence's assort inventory.");
             }
         }
     }

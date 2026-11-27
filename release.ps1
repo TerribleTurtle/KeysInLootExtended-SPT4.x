@@ -10,9 +10,9 @@ if ([string]::IsNullOrWhiteSpace($repoRoot)) {
     $repoRoot = (Get-Location).ProviderPath
 }
 
-$csprojPath = [System.IO.Path]::Combine($repoRoot, "KeysInLootExtended", "KeysInLootExtended.csproj")
-$testCsprojPath = [System.IO.Path]::Combine($repoRoot, "KeysInLootExtended.Tests", "KeysInLootExtended.Tests.csproj")
-$pluginPath = [System.IO.Path]::Combine($repoRoot, "KeysInLootExtended", "KeysInLootExtendedPlugin.cs")
+$csprojPath = [System.IO.Path]::Combine($repoRoot, "DynamicKeyLoot", "DynamicKeyLoot.csproj")
+$testCsprojPath = [System.IO.Path]::Combine($repoRoot, "DynamicKeyLoot.Tests", "DynamicKeyLoot.Tests.csproj")
+$pluginPath = [System.IO.Path]::Combine($repoRoot, "DynamicKeyLoot", "DynamicKeyLootPlugin.cs")
 $changelogPath = [System.IO.Path]::Combine($repoRoot, "CHANGELOG.md")
 $distSptPath = [System.IO.Path]::Combine($repoRoot, "dist", "SPT")
 
@@ -31,7 +31,7 @@ if ($pluginSource -notmatch 'SemanticVersioning\.Version\s+Version\s*\{[^}]*\}\s
 }
 $metadataVersion = $matches[1].Trim()
 if ($metadataVersion -ne $version) {
-    throw "Version mismatch: KeysInLootExtended.csproj <Version> is '$version', whereas ModMetadata.Version in KeysInLootExtendedPlugin.cs is '$metadataVersion'."
+    throw "Version mismatch: DynamicKeyLoot.csproj <Version> is '$version', whereas ModMetadata.Version in DynamicKeyLootPlugin.cs is '$metadataVersion'."
 }
 
 $releaseTag = if ([string]::IsNullOrWhiteSpace($TagName)) { $version } else { $TagName.Trim() }
@@ -83,11 +83,11 @@ foreach ($file in $stagedFiles) {
         throw "Staged file '$($file.FullName)' is outside '$stagePrefix'."
     }
     $relPosix = $file.FullName.Substring($stagePrefix.Length).Replace('\', '/')
-    if ($relPosix -eq "user/mods/KeysInLootExtended/KeysInLootExtended.dll") {
+    if ($relPosix -eq "user/mods/DynamicKeyLoot/DynamicKeyLoot.dll") {
         $hasDll = $true
-    } elseif ($relPosix -eq "user/mods/KeysInLootExtended/config.jsonc") {
+    } elseif ($relPosix -eq "user/mods/DynamicKeyLoot/config.jsonc") {
         $hasConfig = $true
-    } elseif ($relPosix -match '^user/mods/KeysInLootExtended/locations/[^/]+\.jsonc$') {
+    } elseif ($relPosix -match '^user/mods/DynamicKeyLoot/locations/[^/]+\.jsonc$') {
         $locationFileCount++
     } else {
         throw "Unexpected file staged in dist/SPT: '$relPosix'"
@@ -102,7 +102,7 @@ if (-not $hasDll -or -not $hasConfig -or $locationFileCount -lt 13) {
     throw "Incomplete staging tree in dist/SPT (dll=$hasDll, config=$hasConfig, locations=$locationFileCount)."
 }
 
-$zipName = "KeysInLootExtended-$version.zip"
+$zipName = "DynamicKeyLoot-$version.zip"
 $zipPath = [System.IO.Path]::Combine($repoRoot, $zipName)
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
@@ -151,7 +151,7 @@ if ($PackageOnly) {
 }
 
 $tempDir = if (-not [string]::IsNullOrWhiteSpace($env:TEMP)) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
-$notesFile = [System.IO.Path]::Combine($tempDir, "KeysInLootExtended_release_notes_${version}_$([Guid]::NewGuid().ToString('N')).md")
+$notesFile = [System.IO.Path]::Combine($tempDir, "DynamicKeyLoot_release_notes_${version}_$([Guid]::NewGuid().ToString('N')).md")
 $hasCustomNotes = $false
 
 try {

@@ -4,7 +4,7 @@
 
 > Compatibility: For SP-Tushonka / SPT `4.1.x` (if you are still on SPT `4.0.x`, stick with `v2.1.4`).
 >
-> Upgrading from `2.x`: Delete your old `user/mods/KeysInLootExtended` folder before extracting. If a mod manager keeps your old `config.jsonc`, the mod will back it up to `config.backup.jsonc` and start fresh on `Balanced` (if you previously had the mod disabled, set `"enabled": false` in the new file).
+> Rebrand & Upgrading from `2.x`: **KeysInLootExtended** is now **Dynamic Key Loot** (`user/mods/DynamicKeyLoot/`). Delete your old `user/mods/KeysInLootExtended` folder before extracting so both mods do not run together. If you copy over an older `config.jsonc`, the mod backs it up to `config.backup.jsonc` and starts fresh on `Balanced` (set `"enabled": false` in the new file if you previously had the mod disabled).
 
 ### What's New in 3.0.0
 * Three clear presets tuned around real playtime: Replaced the old 9-profile list with `Hardcore` (~2 keys per 2-hour session), `Balanced` (~6 to 7 keys and ~1 SuperRare room per session, default), `Casual` (~16 keys per session for limited playtime), and `Custom`, while keeping normal meds, food, and barter items in containers intact.

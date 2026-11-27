@@ -5,26 +5,26 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
 
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("KeysInLootExtended.Tests")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("DynamicKeyLoot.Tests")]
 
-namespace KeysInLootExtended;
+namespace DynamicKeyLoot;
 
 /// <summary>
 /// Loads, migrates, resolves, and scales config.jsonc and locations/*.jsonc.
 /// </summary>
 [Injectable(InjectionType.Singleton)]
-public class KeysInLootConfigLoader
+public class DynamicKeyLootConfigLoader
 {
     internal const int CurrentConfigVersion = 3;
-    internal const string EmbeddedConfigResourceName = "KeysInLootExtended.default_config.jsonc";
+    internal const string EmbeddedConfigResourceName = "DynamicKeyLoot.default_config.jsonc";
     internal const double ReduceCommonMultiplier = 0.15;
 
-    private readonly ISptLogger<KeysInLootConfigLoader> _logger;
+    private readonly ISptLogger<DynamicKeyLootConfigLoader> _logger;
     private readonly ModHelper _modHelper;
 
     internal static readonly JsonSerializerOptions JsonSettings;
 
-    static KeysInLootConfigLoader()
+    static DynamicKeyLootConfigLoader()
     {
         JsonSettings = new JsonSerializerOptions
         {
@@ -39,10 +39,10 @@ public class KeysInLootConfigLoader
     /// <summary>
     /// Cached global configuration resolved at startup.
     /// </summary>
-    public KeysInLootCoreConfig Config { get; private set; }
+    public DynamicKeyLootCoreConfig Config { get; private set; }
 
-    public KeysInLootConfigLoader(
-        ISptLogger<KeysInLootConfigLoader> logger,
+    public DynamicKeyLootConfigLoader(
+        ISptLogger<DynamicKeyLootConfigLoader> logger,
         ModHelper modHelper)
     {
         _logger = logger;
@@ -85,13 +85,13 @@ public class KeysInLootConfigLoader
             RelativeProbability = x.RelativeProbability
         }).ToList();
 
-    private static readonly Dictionary<string, Func<KeysInLootCoreConfig, ResolvedLootSettings>> PresetDefinitions =
+    private static readonly Dictionary<string, Func<DynamicKeyLootCoreConfig, ResolvedLootSettings>> PresetDefinitions =
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["hardcore"] = _ => new ResolvedLootSettings
             {
-                KeyWeight = new KeysInLootRarityConfig { NotExist = 65, Common = 65, Rare = 28, SuperRare = 10 },
-                KeycardWeight = new KeysInLootRarityConfig { NotExist = 20, Common = 20, Rare = 10, SuperRare = 6 },
+                KeyWeight = new DynamicKeyLootRarityConfig { NotExist = 65, Common = 65, Rare = 28, SuperRare = 10 },
+                KeycardWeight = new DynamicKeyLootRarityConfig { NotExist = 20, Common = 20, Rare = 10, SuperRare = 6 },
                 OverrideLootDistribution = false,
                 JacketsItemCounts = null,
                 DuffleBagsItemCounts = null,
@@ -104,8 +104,8 @@ public class KeysInLootConfigLoader
 
             ["balanced"] = _ => new ResolvedLootSettings
             {
-                KeyWeight = new KeysInLootRarityConfig { NotExist = 200, Common = 200, Rare = 100, SuperRare = 40 },
-                KeycardWeight = new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 },
+                KeyWeight = new DynamicKeyLootRarityConfig { NotExist = 200, Common = 200, Rare = 100, SuperRare = 40 },
+                KeycardWeight = new DynamicKeyLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 },
                 OverrideLootDistribution = true,
                 JacketsItemCounts = CreateGentleJacketCounts(),
                 DuffleBagsItemCounts = null,
@@ -118,8 +118,8 @@ public class KeysInLootConfigLoader
 
             ["casual"] = _ => new ResolvedLootSettings
             {
-                KeyWeight = new KeysInLootRarityConfig { NotExist = 300, Common = 300, Rare = 190, SuperRare = 85 },
-                KeycardWeight = new KeysInLootRarityConfig { NotExist = 90, Common = 90, Rare = 57, SuperRare = 45 },
+                KeyWeight = new DynamicKeyLootRarityConfig { NotExist = 300, Common = 300, Rare = 190, SuperRare = 85 },
+                KeycardWeight = new DynamicKeyLootRarityConfig { NotExist = 90, Common = 90, Rare = 57, SuperRare = 45 },
                 OverrideLootDistribution = true,
                 JacketsItemCounts = CreateCasualJacketCounts(),
                 DuffleBagsItemCounts = CreateCasualDuffleCounts(),
@@ -132,11 +132,11 @@ public class KeysInLootConfigLoader
 
             ["custom"] = c =>
             {
-                var custom = c.Custom ?? new KeysInLootCustomConfig();
+                var custom = c.Custom ?? new DynamicKeyLootCustomConfig();
                 return new ResolvedLootSettings
                 {
-                    KeyWeight = custom.KeyWeight?.Clone() ?? new KeysInLootRarityConfig(),
-                    KeycardWeight = custom.KeycardWeight?.Clone() ?? new KeysInLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 },
+                    KeyWeight = custom.KeyWeight?.Clone() ?? new DynamicKeyLootRarityConfig(),
+                    KeycardWeight = custom.KeycardWeight?.Clone() ?? new DynamicKeyLootRarityConfig { NotExist = 60, Common = 60, Rare = 30, SuperRare = 20 },
                     OverrideLootDistribution = custom.OverrideLootDistribution,
                     JacketsItemCounts = CloneCounts(custom.JacketsItemCounts),
                     DuffleBagsItemCounts = CloneCounts(custom.DuffleBagsItemCounts),
@@ -149,12 +149,12 @@ public class KeysInLootConfigLoader
             }
         };
 
-    internal static void ApplyResolvedSettings(KeysInLootCoreConfig config, ISptLogger<KeysInLootConfigLoader>? logger = null)
+    internal static void ApplyResolvedSettings(DynamicKeyLootCoreConfig config, ISptLogger<DynamicKeyLootConfigLoader>? logger = null)
     {
         string presetKey = config.Preset?.Trim().ToLowerInvariant() ?? string.Empty;
         if (!PresetDefinitions.TryGetValue(presetKey, out var buildResolved))
         {
-            logger?.Warning($"[KeysInLootExtended] Unknown preset '{config.Preset}' in config.jsonc. Falling back to 'Balanced'.");
+            logger?.Warning($"[DynamicKeyLoot] Unknown preset '{config.Preset}' in config.jsonc. Falling back to 'Balanced'.");
             presetKey = "balanced";
             buildResolved = PresetDefinitions["balanced"];
         }
@@ -190,13 +190,13 @@ public class KeysInLootConfigLoader
 
     private static string ReadEmbeddedDefaultConfig()
     {
-        using var stream = typeof(KeysInLootConfigLoader).Assembly.GetManifestResourceStream(EmbeddedConfigResourceName)
-            ?? throw new InvalidOperationException($"[KeysInLootExtended] Embedded default config resource '{EmbeddedConfigResourceName}' is missing from assembly.");
+        using var stream = typeof(DynamicKeyLootConfigLoader).Assembly.GetManifestResourceStream(EmbeddedConfigResourceName)
+            ?? throw new InvalidOperationException($"[DynamicKeyLoot] Embedded default config resource '{EmbeddedConfigResourceName}' is missing from assembly.");
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return reader.ReadToEnd();
     }
 
-    internal static KeysInLootCoreConfig LoadOrMigrateCoreConfig(string pathToMod, ISptLogger<KeysInLootConfigLoader> logger)
+    internal static DynamicKeyLootCoreConfig LoadOrMigrateCoreConfig(string pathToMod, ISptLogger<DynamicKeyLootConfigLoader> logger)
     {
         var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
         var configPath = Path.Combine(pathToMod, "config.jsonc");
@@ -204,12 +204,12 @@ public class KeysInLootConfigLoader
         {
             var freshDefault = ReadEmbeddedDefaultConfig();
             File.WriteAllText(configPath, freshDefault, utf8NoBom);
-            logger.Warning($"[KeysInLootExtended] config.jsonc not found at {configPath}; generated default v{CurrentConfigVersion} config.jsonc.");
+            logger.Warning($"[DynamicKeyLoot] config.jsonc not found at {configPath}; generated default v{CurrentConfigVersion} config.jsonc.");
         }
 
         var configText = File.ReadAllText(configPath, Encoding.UTF8);
-        var config = JsonSerializer.Deserialize<KeysInLootCoreConfig>(configText, JsonSettings)
-            ?? throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize config.jsonc to KeysInLootCoreConfig.");
+        var config = JsonSerializer.Deserialize<DynamicKeyLootCoreConfig>(configText, JsonSettings)
+            ?? throw new InvalidDataException("[DynamicKeyLoot] Failed to deserialize config.jsonc to DynamicKeyLootCoreConfig.");
 
         if (config.ConfigVersion < CurrentConfigVersion)
         {
@@ -218,38 +218,38 @@ public class KeysInLootConfigLoader
             var defaultV3Text = ReadEmbeddedDefaultConfig();
             File.WriteAllText(configPath, defaultV3Text, utf8NoBom);
             logger.Warning(
-                $"[KeysInLootExtended] Legacy config.jsonc detected (configVersion {config.ConfigVersion} < {CurrentConfigVersion}). " +
+                $"[DynamicKeyLoot] Legacy config.jsonc detected (configVersion {config.ConfigVersion} < {CurrentConfigVersion}). " +
                 $"Backed up old file to config.backup.jsonc and wrote fresh v{CurrentConfigVersion} config.jsonc " +
                 $"(reset to enabled: true, preset: Balanced; set enabled: false in config.jsonc if you previously ran Disabled).");
 
-            config = JsonSerializer.Deserialize<KeysInLootCoreConfig>(defaultV3Text, JsonSettings)
-                ?? throw new InvalidDataException("[KeysInLootExtended] Failed to deserialize embedded default v3 config.jsonc.");
+            config = JsonSerializer.Deserialize<DynamicKeyLootCoreConfig>(defaultV3Text, JsonSettings)
+                ?? throw new InvalidDataException("[DynamicKeyLoot] Failed to deserialize embedded default v3 config.jsonc.");
         }
 
         ApplyResolvedSettings(config, logger);
         return config;
     }
 
-    public KeysInLootLocationConfig? LoadLocationConfig(string locationName)
+    public DynamicKeyLootLocationConfig? LoadLocationConfig(string locationName)
     {
         var pathToMod = _modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         var configPath = Path.Combine(pathToMod, "locations", $"{locationName}.jsonc");
 
         if (!File.Exists(configPath))
         {
-            _logger.Warning($"[KeysInLootExtended] Location config not found at {configPath}. Falling back to global weights.");
+            _logger.Warning($"[DynamicKeyLoot] Location config not found at {configPath}. Falling back to global weights.");
             return null;
         }
 
         var configText = File.ReadAllText(configPath, Encoding.UTF8);
-        var locConfig = JsonSerializer.Deserialize<KeysInLootLocationConfig>(configText, JsonSettings)
-            ?? throw new InvalidDataException($"[KeysInLootExtended] Failed to deserialize location config {locationName}.jsonc.");
+        var locConfig = JsonSerializer.Deserialize<DynamicKeyLootLocationConfig>(configText, JsonSettings)
+            ?? throw new InvalidDataException($"[DynamicKeyLoot] Failed to deserialize location config {locationName}.jsonc.");
 
         ScaleLocationConfig(locConfig);
         return locConfig;
     }
 
-    internal void ScaleLocationConfig(KeysInLootLocationConfig locConfig)
+    internal void ScaleLocationConfig(DynamicKeyLootLocationConfig locConfig)
     {
         var resolved = Config?.Resolved;
         if (resolved?.KeyWeight == null) return;
@@ -270,7 +270,7 @@ public class KeysInLootConfigLoader
     }
 
     internal static void ScaleContainer(
-        KeysInLootContainerConfig? container,
+        DynamicKeyLootContainerConfig? container,
         double keyCommonRatio, double keyRareRatio, double keySuperRareRatio, double keyNotExistRatio,
         double keycardCommonRatio, double keycardRareRatio, double keycardSuperRareRatio, double keycardNotExistRatio)
     {
@@ -279,7 +279,7 @@ public class KeysInLootConfigLoader
         ScaleRarity(container.Keycard, keycardCommonRatio, keycardRareRatio, keycardSuperRareRatio, keycardNotExistRatio);
     }
 
-    internal static void ScaleRarity(KeysInLootRarityConfig? rarity, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
+    internal static void ScaleRarity(DynamicKeyLootRarityConfig? rarity, double commonRatio, double rareRatio, double superRareRatio, double notExistRatio)
     {
         if (rarity == null) return;
 
