@@ -1,7 +1,3 @@
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("KeysInLootExtended.Tests")]
-
-namespace KeysInLootExtended;
-
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -9,8 +5,12 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("KeysInLootExtended.Tests")]
+
+namespace KeysInLootExtended;
+
 /// <summary>
-/// Singleton service responsible for loading, migrating, resolving, and scaling config.jsonc and locations/*.jsonc.
+/// Loads, migrates, resolves, and scales config.jsonc and locations/*.jsonc.
 /// </summary>
 [Injectable(InjectionType.Singleton)]
 public class KeysInLootConfigLoader

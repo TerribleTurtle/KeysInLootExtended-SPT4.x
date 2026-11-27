@@ -1,12 +1,10 @@
-using System.Collections.Generic;
 using System.Linq;
 using SPTarkov.Server.Core.Models.Common;
 
 namespace KeysInLootExtended;
 
 /// <summary>
-/// Single source of truth mapping logical loot container categories to both universal
-/// EFT container template IDs and map-specific variants (such as Labyrinth).
+/// Maps logical loot container categories to standard and map-specific EFT template IDs.
 /// </summary>
 internal static class ContainerTargets
 {

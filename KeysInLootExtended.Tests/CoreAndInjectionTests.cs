@@ -9,7 +9,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using SPTarkov.Common.Models.Logging;
-using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -39,6 +38,7 @@ public class ModMetadataTests
         var asmVersion = typeof(ModMetadata).Assembly.GetName().Version!;
 
         Assert.Equal("DJ-KeysInLootExtended", metadata.ModGuid);
+        Assert.Equal("https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x", metadata.Url);
         Assert.Equal(new SemanticVersioning.Version("3.0.0"), metadata.Version);
         Assert.Equal($"{asmVersion.Major}.{asmVersion.Minor}.{asmVersion.Build}", metadata.Version.ToString());
         Assert.True(metadata.SptVersion.IsSatisfied(new SemanticVersioning.Version("4.1.0")));
@@ -112,7 +112,7 @@ public class ModMetadataTests
             Assert.Equal(3, healed.ConfigVersion);
             Assert.Equal("balanced", healed.Preset);
 
-            // 3. Broken JSON syntax in user's v3 config -> fails loudly with JsonException without clobbering their file
+            // 3. Broken JSON syntax in user's v3 config -> throws JsonException without clobbering their file
             string brokenV3 = "{ \"configVersion\": 3, \"preset\": \"Balanced\", broken_token }";
             File.WriteAllText(configPath, brokenV3, Encoding.UTF8);
             Assert.Throws<JsonException>(() =>

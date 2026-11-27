@@ -10,8 +10,7 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace KeysInLootExtended;
 
 /// <summary>
-/// Service responsible for adjusting the internal grid dimensions (CellsH, CellsV) 
-/// of specific loot containers (Jackets, Duffle Bags, Dead Scavs).
+/// Expands Jacket, Duffle Bag, and Dead Scav container grids to configured minimums.
 /// </summary>
 [Injectable(InjectionType.Singleton)]
 public class ContainerGridService
@@ -20,12 +19,6 @@ public class ContainerGridService
     private readonly TemplateTable _templateTable;
     private readonly KeysInLootConfigLoader _configLoader;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ContainerGridService"/> class.
-    /// </summary>
-    /// <param name="logger">The SPT logger.</param>
-    /// <param name="templateTable">The SPT template database table containing item definitions.</param>
-    /// <param name="configLoader">The configuration loader containing target grid sizes.</param>
     public ContainerGridService(
         ISptLogger<ContainerGridService> logger,
         TemplateTable templateTable,
@@ -36,14 +29,6 @@ public class ContainerGridService
         _configLoader = configLoader;
     }
 
-    /// <summary>
-    /// Main entry point to adjust grid sizes based on loaded configurations.
-    /// Safely exits early if the mod is disabled in config.jsonc.
-    /// </summary>
-    /// <remarks>
-    /// Escape from Tarkov UI has a hard limit where grids > 14x14 will fail to render 
-    /// properly or cause client issues, so we strictly clamp the dimensions.
-    /// </remarks>
     public void AdjustGridSizes()
     {
         var config = _configLoader.Config;
@@ -54,6 +39,7 @@ public class ContainerGridService
         if (!resolved.OverrideLootDistribution)
             return;
 
+        // EFT's container UI breaks above 14x14, so dimensions are clamped to [1, 14].
         int clampedH = Math.Clamp(resolved.MinCellsH, 1, 14);
         int clampedV = Math.Clamp(resolved.MinCellsV, 1, 14);
 
@@ -64,13 +50,6 @@ public class ContainerGridService
         _logger.Success($"[KeysInLootExtended] Enforced minimum {clampedH}x{clampedV} container grid size across Jackets, Duffle Bags, and Dead Scavs.");
     }
 
-    /// <summary>
-    /// Internal logic for overriding grid properties, separated for testability.
-    /// </summary>
-    /// <param name="items">The dictionary of all item templates.</param>
-    /// <param name="targetCellsH">The clamped horizontal cell count.</param>
-    /// <param name="targetCellsV">The clamped vertical cell count.</param>
-    /// <exception cref="InvalidOperationException">Thrown when a target container is missing required Properties or Grids.</exception>
     public static void AdjustGridSizesInternal(Dictionary<MongoId, TemplateItem> items, int targetCellsH, int targetCellsV)
     {
         int clampedH = Math.Clamp(targetCellsH, 1, 14);
@@ -80,15 +59,13 @@ public class ContainerGridService
         {
             if (items.TryGetValue(containerId, out var templateItem))
             {
-                // Enforce proper "Fail Loudly" by preventing raw NREs and throwing explicitly
                 var grids = templateItem.Properties?.Grids;
                 if (grids == null)
                 {
                     throw new InvalidOperationException($"[KeysInLootExtended] Critical Error: TemplateItem {containerId} is missing Properties or Grids. The SPT database schema may have changed.");
                 }
 
-                // We modify only the primary grid (FirstOrDefault). Secondary grids (if they exist)
-                // are usually intended for nested/secure slots which we do not want to arbitrarily expand.
+                // Only resize the primary grid; secondary grids can hold special or nested slots.
                 var grid = grids.FirstOrDefault();
                 if (grid?.Properties == null)
                 {
@@ -99,11 +76,8 @@ public class ContainerGridService
                 int newV = Math.Max(grid.Properties.CellsV ?? 0, clampedV);
                 grid.Properties.CellsH = newH;
                 grid.Properties.CellsV = newV;
-                
-                // CRITICAL FIX: Tarkov's item template grids define a hard cap on how many items can physically
-                // be spawned inside them (`MaxCount`). For example, Dead Scavs have a vanilla MaxCount of 5.
-                // If we resize the grid to 5x5 (25 slots) without raising MaxCount, the Loot Generator will
-                // successfully roll 25 items from staticLoot.json but physically discard 20 of them.
+
+                // EFT caps spawned items per grid via MaxCount (e.g. 5 on Dead Scavs), so raise it to match the resized grid.
                 grid.Properties.MaxCount = newH * newV;
             }
         }

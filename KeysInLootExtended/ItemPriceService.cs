@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -11,7 +10,7 @@ using SPTarkov.Server.Core.Models.Spt.Config;
 namespace KeysInLootExtended;
 
 /// <summary>
-/// Service responsible for intercepting the database and adjusting the Flea Market and Trader prices of injected keys.
+/// Scales Flea Market and Trader base prices for injected keys and optionally bans them from Fence.
 /// </summary>
 [Injectable(InjectionType.Singleton)]
 public class ItemPriceService
@@ -22,14 +21,6 @@ public class ItemPriceService
     private readonly InjectedKeysService _injectedKeysService;
     private readonly TraderConfig _traderConfig;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ItemPriceService"/> class.
-    /// </summary>
-    /// <param name="logger">The SPT logger.</param>
-    /// <param name="templateTable">The SPT template database table containing item prices and handbook entries.</param>
-    /// <param name="configLoader">The configuration loader containing user multipliers.</param>
-    /// <param name="injectedKeysService">The service containing the fast-lookup HashSet of injected keys.</param>
-    /// <param name="traderConfig">The SPT trader configuration containing Fence's blacklist.</param>
     public ItemPriceService(
         ISptLogger<ItemPriceService> logger,
         TemplateTable templateTable,
@@ -44,10 +35,6 @@ public class ItemPriceService
         _traderConfig = traderConfig;
     }
 
-    /// <summary>
-    /// Adjusts all key prices in the database based on the active configuration multipliers.
-    /// Safely exits early if the mod is disabled in config.jsonc.
-    /// </summary>
     public void AdjustPrices()
     {
         var config = _configLoader.Config;
@@ -79,19 +66,6 @@ public class ItemPriceService
         }
     }
 
-    /// <summary>
-    /// Internal logic for price adjustment, separated for unit testing without full server dependencies.
-    /// </summary>
-    /// <param name="fleaPrices">The dictionary of Flea Market prices from the database.</param>
-    /// <param name="handbookItems">The list of trader items from the Handbook.</param>
-    /// <param name="injectedKeyIds">The HashSet containing valid injected keys.</param>
-    /// <param name="fleaMultiplier">The user-configured scale (e.g., 1.0 = 100%, 0.4 = 40%).</param>
-    /// <param name="traderMultiplier">The user-configured scale (e.g., 1.0 = 100%, 0.4 = 40%).</param>
-    /// <example>
-    /// <code>
-    /// ItemPriceService.AdjustPricesInternal(fleaDb, handbookDb, keysSet, 0.4, 0.4);
-    /// </code>
-    /// </example>
     public static void AdjustPricesInternal(
         Dictionary<MongoId, double> fleaPrices,
         List<HandbookItem> handbookItems, 
@@ -99,16 +73,14 @@ public class ItemPriceService
         double fleaMultiplier, 
         double traderMultiplier)
     {
-        // Sanitize multipliers: Prevent negative multipliers, and fallback to 1.0 if NaN or Infinity is somehow passed.
         double safeFleaMultiplier = SanitizeMultiplier(fleaMultiplier);
         double safeTraderMultiplier = SanitizeMultiplier(traderMultiplier);
 
+        // Scale Flea Market prices, rounding to whole roubles and keeping positive prices at >= 1 RUB.
         foreach (var mongoId in injectedKeyIds)
         {
-            // 1. Flea Market Prices (O(1) Dictionary Lookup)
             if (fleaPrices.TryGetValue(mongoId, out var currentFleaPrice))
             {
-                // We use Math.Round to ensure clean integer values in the game UI, preventing float rounding errors.
                 double rounded = Math.Round(currentFleaPrice * safeFleaMultiplier);
                 fleaPrices[mongoId] = (safeFleaMultiplier > 0 && currentFleaPrice > 0)
                     ? Math.Max(1.0, rounded)
@@ -116,9 +88,7 @@ public class ItemPriceService
             }
         }
 
-        // 2. Trader Base Prices (O(N) Iteration with O(1) HashSet Lookup)
-        // We purposefully iterate over the Handbook instead of the individual Traders' Assorts.
-        // The Handbook acts as the global base price for all traders, avoiding expensive O(N*M) assort iterations.
+        // Scale Handbook base prices so all trader buy/sell calculations inherit the multiplier.
         foreach (var handbookEntry in handbookItems)
         {
             if (injectedKeyIds.Contains(handbookEntry.Id))

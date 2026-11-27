@@ -1,5 +1,3 @@
-using System.Reflection;
-using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -11,8 +9,7 @@ using SPTarkov.Server.Core.Services.Items;
 namespace KeysInLootExtended;
 
 /// <summary>
-/// Service responsible for injecting Keys and Keycards into specific static loot containers.
-/// Parses database templates and mutates container probabilities.
+/// Registers static loot transformers that inject keys and keycards into target containers.
 /// </summary>
 [Injectable(InjectionType.Singleton)]
 public class LootInjectionService
@@ -24,15 +21,6 @@ public class LootInjectionService
     private readonly InjectedKeysService _injectedKeysService;
     private readonly ItemFilterService _itemFilterService;
 
-    /// <summary>
-    /// Initializes the LootInjectionService.
-    /// </summary>
-    /// <param name="logger">The SPT logger instance.</param>
-    /// <param name="templateTable">The SPT template database table containing item templates.</param>
-    /// <param name="locationTable">The SPT location database table containing map definitions.</param>
-    /// <param name="configLoader">The global configuration loader service.</param>
-    /// <param name="injectedKeysService">Shared service that stores the MongoIds of all valid keys and keycards discovered during initialization.</param>
-    /// <param name="itemFilterService">SPT service for checking global item blacklists.</param>
     public LootInjectionService(
         ISptLogger<LootInjectionService> logger,
         TemplateTable templateTable,
@@ -49,10 +37,6 @@ public class LootInjectionService
         _itemFilterService = itemFilterService;
     }
 
-    /// <summary>
-    /// Executes the primary loot injection routine.
-    /// Safely exits early if the mod is disabled in config.jsonc.
-    /// </summary>
     public void InjectKeysIntoLocations()
     {
         var config = _configLoader.Config;
@@ -65,17 +49,15 @@ public class LootInjectionService
 
         var allItems = _templateTable.Items.Values;
         
-        // Find keys and keycards
-        // Note: These baseclass IDs are hardcoded native EFT IDs for "Key" and "Keycard" categories.
+        // Native EFT parent template IDs for Key and Keycard categories.
         const string KEY_BASECLASS = "543be5e94bdc2df1348b4568";
         const string KEYCARD_BASECLASS = "5c164d2286f774194c5e69fa";
 
         var keys = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
         var keycards = new List<(TemplateItem Item, MongoId Id, string ResolvedRarity)>();
 
-        // Build an O(1) lookup of genuine tradable Handbook items (Price > 1 RUB).
-        // This structurally excludes unfinished cut placeholder keys (absent from Handbook)
-        // and in-raid puzzle mechanics (such as Labyrinth's 1-RUB Valve handwheel and Ariadne symbol key).
+        // Only include items in the Handbook priced above 1 RUB; this skips unfinished placeholder
+        // keys (missing from Handbook) and 1-RUB in-raid puzzle items (e.g. Labyrinth valve/Ariadne items).
         var validHandbookItemIds = new HashSet<MongoId>();
         var handbookItems = _templateTable.Handbook?.Items;
         bool enforceHandbookFilter = handbookItems is { Count: > 0 };
@@ -98,7 +80,7 @@ public class LootInjectionService
 
             while (!string.IsNullOrEmpty(currentId))
             {
-                if (!visited.Add(currentId)) break; // Prevent infinite loops from poorly made circular mod templates
+                if (!visited.Add(currentId)) break; // Guard against circular parent chains in custom templates
                 
                 if (currentId == targetBaseclass) return true;
                 try
@@ -122,7 +104,7 @@ public class LootInjectionService
 
         foreach (var item in allItems)
         {
-            // Filter out developer keys, test items, and quest-specific keys to prevent them from leaking into the game economy (e.g. Fence assort)
+            // Skip quest-only keys and category nodes so they never leak into containers or Fence.
             if (item.Properties?.QuestItem == true) continue;
             if (string.Equals(item.Type, "Node", StringComparison.OrdinalIgnoreCase)) continue;
             
@@ -159,8 +141,7 @@ public class LootInjectionService
 
         _logger.Success($"[KeysInLootExtended] Found {keys.Count} Keys and {keycards.Count} Keycards in the database.");
 
-        // Internal dictionary to map raw location IDs from the database to cleaner enum-style names
-        // used by our custom JSON configuration files. "Sandbox" is internally "Ground Zero".
+        // Map SPT location IDs to locations/*.jsonc filenames ("Sandbox" is Ground Zero).
         var locationIdToEnum = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             {"bigmap", "customs"},
@@ -178,7 +159,6 @@ public class LootInjectionService
             {"Labyrinth", "labyrinth"}
         };
 
-        // Precompute count distribution arrays to prevent repeated allocations inside the loop
         ItemCountDistribution[]? jacketCounts = null;
         ItemCountDistribution[]? duffleCounts = null;
         ItemCountDistribution[]? deadScavCounts = null;
@@ -193,7 +173,6 @@ public class LootInjectionService
         int registeredLocations = 0;
         bool isDebugVerbosity = config.DebugLogs;
 
-        // Retrieve all registered map locations via SPT 4.1's strongly-typed LocationTable dictionary.
         var validLocations = _locationTable.GetDictionary().Values;
 
         foreach (var location in validLocations)
@@ -235,19 +214,8 @@ public class LootInjectionService
                 ("DeadScav", ContainerTargets.DeadScavs, deadScavKeyWeight, deadScavKeycardWeight, deadScavCounts)
             };
 
-            // -----------------------------------------------------------------------------------------
-            // SPT 4.0 ARCHITECTURE NOTE: The LazyLoad<T> Caching Paradigm
-            // -----------------------------------------------------------------------------------------
-            // In previous SPT versions, reading `.Value` generated a cached dictionary in memory,
-            // which mods could mutate directly. In SPT 4.0, LazyLoad<T> was rewritten to remove caching.
-            // Accessing `.Value` now parses the JSON file from disk every single time.
-            // If we mutate the result of `.Value` directly, our changes are immediately discarded, 
-            // and the server will load a pristine Vanilla copy when a raid starts.
-            //
-            // To fix this, we must use `.AddTransformer()`. This registers our closure into the 
-            // deserialization pipeline. Whenever the server requests the static loot, our transformer 
-            // natively intercepts and injects our custom keys and loot distributions on the fly.
-            // -----------------------------------------------------------------------------------------
+            // SPT 4's LazyLoad<T> reloads static loot from disk on each access, so mutating .Value directly
+            // is discarded; AddTransformer injects our changes whenever a raid loads the map.
             int debugLoggedOnce = 0;
             Func<Dictionary<MongoId, StaticLootDetails>?, Dictionary<MongoId, StaticLootDetails>?> transformer = dict => 
             {
@@ -263,9 +231,7 @@ public class LootInjectionService
                             {
                                 ModifyContainer(container, keys, target.KeyWeight, keycards, target.KeycardWeight);
                                 
-                                // We must instantiate a new array of ItemCountDistribution here rather than assigning
-                                // the raw precomputed array, as the SPT engine or other mods may unexpectedly hold
-                                // references that we don't want to inadvertently cross-contaminate.
+                                // Clone count entries per call so SPT or other mods cannot mutate our shared template array.
                                 if (target.Counts is { Length: > 0 }) 
                                     container.ItemCountDistribution = target.Counts.Select(x => new ItemCountDistribution { Count = x.Count, RelativeProbability = x.RelativeProbability }).ToArray();
 
@@ -326,14 +292,6 @@ public class LootInjectionService
         { "679b9819a2f2dd4da9023512", "Superrare" }  // Labrys access keycard
     };
 
-    /// <summary>
-    /// Internal routine to apply keys and keycards to a single container's loot distribution.
-    /// </summary>
-    /// <param name="container">The specific StaticLoot container to modify.</param>
-    /// <param name="keys">The list of generic key items to inject.</param>
-    /// <param name="keyWeights">The targeted spawn weights for standard keys.</param>
-    /// <param name="keycards">The list of keycard items to inject.</param>
-    /// <param name="keycardWeights">The targeted spawn weights for keycards.</param>
     private void ModifyContainer(StaticLootDetails container, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keys, KeysInLootRarityConfig keyWeights, List<(TemplateItem Item, MongoId Id, string ResolvedRarity)> keycards, KeysInLootRarityConfig keycardWeights)
     {
         var existingItems = container.ItemDistribution?.ToList() ?? new List<ItemDistribution>();
@@ -365,8 +323,7 @@ public class LootInjectionService
 
                 if (targetWeight <= 0) 
                 {
-                    // If target weight is 0 (banned), ensure we remove any existing vanilla entries from the pool
-                    // rather than skipping it and letting the vanilla weight leak through.
+                    // Remove existing vanilla entries when a tier is set to 0 so vanilla weights do not leak through.
                     if (distDict.ContainsKey(itemMongoId))
                     {
                         distDict.Remove(itemMongoId);
@@ -376,8 +333,7 @@ public class LootInjectionService
 
                 if (distDict.TryGetValue(itemMongoId, out var existingEntries))
                 {
-                    // To prevent exponential multiplying of duplicate vanilla entries, we clear duplicates
-                    // and just add one normalized entry with our intended weight.
+                    // Collapse duplicate vanilla entries for the same template into a single normalized weight.
                     var updatedList = new List<ItemDistribution>
                     {
                         new ItemDistribution { Tpl = existingEntries.First().Tpl, RelativeProbability = targetWeight }
@@ -401,7 +357,7 @@ public class LootInjectionService
         ProcessItems(keys, keyWeights);
         ProcessItems(keycards, keycardWeights);
 
-        // Clamp total weight to prevent SPT map load crashes and leave ecosystem headroom
+        // Normalize weights above int.MaxValue / 2 to avoid int overflow in SPT's loot roller while leaving headroom for other mods.
         long totalWeight = distDict.Values.SelectMany(x => x).Sum(x => (long)(x.RelativeProbability ?? 0));
         int safeCeiling = int.MaxValue / 2;
         if (totalWeight > safeCeiling)

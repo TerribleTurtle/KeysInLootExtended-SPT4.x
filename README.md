@@ -10,7 +10,7 @@ In vanilla Tarkov, nearly a third of all keys and keycards (including every Labs
 
 ## Install
 
-1. Download `KeysInLootExtended-3.0.0.zip` from [Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases).
+1. Download `KeysInLootExtended-<Version>.zip` from [Releases](https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x/releases).
 2. Extract it straight into your SPT root folder (`<SPT_Root>/user/mods/KeysInLootExtended/`).
 
 *Upgrading from 2.x?* Delete your old `KeysInLootExtended` folder first. If a mod manager keeps your old `config.jsonc`, the mod backs it up to `config.backup.jsonc` and starts fresh on **Balanced** (set `"enabled": false` in the new file if you previously had the mod disabled).

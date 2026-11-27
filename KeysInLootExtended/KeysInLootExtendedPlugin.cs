@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -8,9 +7,6 @@ using SPTarkov.Server.Core.Models.Spt.Mod;
 
 namespace KeysInLootExtended;
 
-/// <summary>
-/// Defines the required metadata for the mod to be recognized by the SPT server.
-/// </summary>
 public record ModMetadata : IModMetadata
 {
     public string ModGuid { get; init; } = "DJ-KeysInLootExtended";
@@ -21,15 +17,14 @@ public record ModMetadata : IModMetadata
     
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
-    public string? Url { get; init; }
+    public string? Url { get; init; } = "https://github.com/TerribleTurtle/KeysInLootExtended-SPT4.x";
     public bool HasPrepatcher { get; init; }
     public string License { get; init; } = "MIT";
     public List<string>? Contributors { get; init; }
 }
 
 /// <summary>
-/// The main entry point for the KeysInLootExtended mod. 
-/// Orchestrates configuration loading, loot injection, and economy adjustments.
+/// SPT startup entrypoint that runs loot injection, price scaling, and container grid resizing.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Routers + 2)]
 public class KeysInLootExtendedPlugin(
